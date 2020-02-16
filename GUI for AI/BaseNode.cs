@@ -16,9 +16,12 @@ public abstract class BaseNode : ScriptableObject
         windowTitle = EditorGUILayout.TextField("Title", windowTitle);
     }
 
-    public abstract void DrawCurves();
+    public virtual void DrawCurves()
+    {
 
-    public virtual void SetInput(BaseInputNode input, Vector2 clickPos)
+    }
+
+    public virtual void SetInput(BaseNode input, Vector2 clickPos)
     {
 
     }
@@ -28,8 +31,13 @@ public abstract class BaseNode : ScriptableObject
 
     }
 
-    public virtual BaseInputNode ClickedOnInput(Vector2 pos)
+    public virtual BaseNode ClickedOnNode(Vector2 pos)
     {
         return null;
+    }
+
+    public virtual string getResult()
+    {
+        return "None";
     }
 }

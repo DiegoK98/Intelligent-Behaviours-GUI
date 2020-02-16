@@ -30,6 +30,7 @@ public class NodeEditor : EditorWindow
             if (e.type == EventType.MouseDown)
             {
                 bool clickedOnWindow = false;
+                bool clickedOnCurve = false;
                 int selectIndex = -1;
 
                 for (int i = 0; i < windows.Count; i++)
@@ -45,8 +46,16 @@ public class NodeEditor : EditorWindow
                 {
                     GenericMenu menu = new GenericMenu();
 
-                    menu.AddItem(new GUIContent("Add Input Node"), false, ContextCallback, "inputNode");
-                    menu.AddItem(new GUIContent("Add Output Node"), false, ContextCallback, "outputNode");
+                    menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, "Node");
+
+                    menu.ShowAsContext();
+                    e.Use();
+                }
+                else if (clickedOnCurve)
+                {
+                    GenericMenu menu = new GenericMenu();
+
+                    menu.AddItem(new GUIContent("Delete Transition"), false, ContextCallback, "deleteTransition");
 
                     menu.ShowAsContext();
                     e.Use();
@@ -80,7 +89,7 @@ public class NodeEditor : EditorWindow
             }
             if (clickedOnWindow && !windows[selectIndex].Equals(selectednode))
             {
-                windows[selectIndex].SetInput((BaseInputNode)selectednode, mousePos);
+                windows[selectIndex].SetInput(selectednode, mousePos);
                 makeTransitionMode = false;
                 selectednode = null;
             }
@@ -95,7 +104,7 @@ public class NodeEditor : EditorWindow
         }
         else if (e.button == 0 && e.type == EventType.MouseDown && !makeTransitionMode)
         {
-            bool clickedOnWindow = false;
+            /*bool clickedOnWindow = false;
             int selectIndex = -1;
 
             for (int i = 0; i < windows.Count; i++)
@@ -110,17 +119,17 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnWindow)
             {
-                BaseInputNode nodeToChange = windows[selectIndex].ClickedOnInput(mousePos);
+                BaseInputNode nodeToChange = windows[selectIndex].ClickedOnNode(mousePos);
 
                 if (nodeToChange != null)
                 {
                     selectednode = nodeToChange;
                     makeTransitionMode = true;
                 }
-            }
+            }*/
         }
 
-        if(makeTransitionMode && selectednode != null)
+        if (makeTransitionMode && selectednode != null)
         {
             Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
 
@@ -129,14 +138,14 @@ public class NodeEditor : EditorWindow
             Repaint();
         }
 
-        foreach(BaseNode n in windows)
+        foreach (BaseNode n in windows)
         {
             n.DrawCurves();
         }
 
         BeginWindows();
 
-        for(int i = 0; i < windows.Count; i++)
+        for (int i = 0; i < windows.Count; i++)
         {
             windows[i].windowRect = GUI.Window(i, windows[i].windowRect, DrawNodeWindow, windows[i].windowTitle);
         }
@@ -154,19 +163,14 @@ public class NodeEditor : EditorWindow
     {
         string clb = obj.ToString();
 
-        if(clb.Equals("inputNode"))
+        if (clb.Equals("Node"))
         {
-            InputNode inputNode = new InputNode();
-            inputNode.windowRect = new Rect(mousePos.x, mousePos.y, 200, 150);
+            Node node = new Node();
+            node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            windows.Add(inputNode);
-        } else if(clb.Equals("outputNode"))
-        {
-            OutputNode outputNode = new OutputNode();
-            outputNode.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
-
-            windows.Add(outputNode);
-        } else if(clb.Equals("makeTransition"))
+            windows.Add(node);
+        }
+        else if (clb.Equals("makeTransition"))
         {
             bool clickedOnWindow = false;
             int selectIndex = -1;
@@ -181,12 +185,13 @@ public class NodeEditor : EditorWindow
                 }
             }
 
-            if(clickedOnWindow)
+            if (clickedOnWindow)
             {
                 selectednode = windows[selectIndex];
                 makeTransitionMode = true;
             }
-        } else if(clb.Equals("deleteNode"))
+        }
+        else if (clb.Equals("deleteNode"))
         {
             bool clickedOnWindow = false;
             int selectIndex = -1;
@@ -201,12 +206,12 @@ public class NodeEditor : EditorWindow
                 }
             }
 
-            if(clickedOnWindow)
+            if (clickedOnWindow)
             {
                 BaseNode selNode = windows[selectIndex];
                 windows.RemoveAt(selectIndex);
 
-                foreach(BaseNode n in windows)
+                foreach (BaseNode n in windows)
                 {
                     n.NodeDeleted(selNode);
                 }
@@ -222,9 +227,9 @@ public class NodeEditor : EditorWindow
         Vector3 endTan = endPos + Vector3.left * 50;
         Color shadowCol = new Color(0, 0, 0, 0.06f);
 
-        for(int i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++)
         {
-            Handles.DrawBezier(startPos, endPos, startTan, endTan, shadowCol, null, (i+1) * 5);
+            Handles.DrawBezier(startPos, endPos, startTan, endTan, shadowCol, null, (i + 1) * 5);
         }
 
         Handles.DrawBezier(startPos, endPos, startTan, endTan, Color.black, null, 1);
