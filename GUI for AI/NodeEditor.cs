@@ -6,6 +6,7 @@ using UnityEditor;
 public class NodeEditor : EditorWindow
 {
     private List<Node> windows = new List<Node>();
+    private List<Transition> transitions = new List<Transition>();
 
     private Vector2 mousePos;
 
@@ -30,7 +31,7 @@ public class NodeEditor : EditorWindow
             if (e.type == EventType.MouseDown)
             {
                 bool clickedOnWindow = false;
-                bool clickedOnCurve = false;
+                bool clickedOnTransition = false;
                 int selectIndex = -1;
 
                 for (int i = 0; i < windows.Count; i++)
@@ -42,7 +43,16 @@ public class NodeEditor : EditorWindow
                         break;
                     }
                 }
-                if (!clickedOnWindow)
+                foreach (Transition trans in transitions)
+                {
+                    if (trans.textBox.Contains(mousePos))
+                    {
+                        clickedOnTransition = true;
+                        break;
+                    }
+                }
+
+                if (!clickedOnWindow && !clickedOnTransition)
                 {
                     GenericMenu menu = new GenericMenu();
 
@@ -51,7 +61,7 @@ public class NodeEditor : EditorWindow
                     menu.ShowAsContext();
                     e.Use();
                 }
-                else if (clickedOnCurve)
+                else if (clickedOnTransition)
                 {
                     GenericMenu menu = new GenericMenu();
 
@@ -60,7 +70,7 @@ public class NodeEditor : EditorWindow
                     menu.ShowAsContext();
                     e.Use();
                 }
-                else
+                else if (clickedOnWindow)
                 {
                     GenericMenu menu = new GenericMenu();
 
@@ -117,6 +127,7 @@ public class NodeEditor : EditorWindow
         foreach (Node n in windows)
         {
             n.DrawCurves();
+            transitions.AddRange(n.possibleTransitions);
         }
 
         BeginWindows();
@@ -193,6 +204,32 @@ public class NodeEditor : EditorWindow
                 }
             }
         }
+        else if (clb.Equals("deleteTransition"))
+        {
+            bool clickedOnTransition = false;
+            int selectIndex = -1;
+
+            for (int i = 0; i < transitions.Count; i++)
+            {
+                if (transitions[i].textBox.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnTransition = true;
+                    break;
+                }
+            }
+
+            if (clickedOnTransition)
+            {
+                Transition selTrans = transitions[selectIndex];
+                transitions.RemoveAt(selectIndex);
+
+                foreach (Node n in windows)
+                {
+                    n.TransitionDeleted(selTrans);
+                }
+            }
+        }
     }
 
     public static void DrawNodeCurve(Rect start, Rect end)
@@ -209,5 +246,19 @@ public class NodeEditor : EditorWindow
         }
 
         Handles.DrawBezier(startPos, endPos, startTan, endTan, Color.black, null, 1);
+    }
+
+    public static Rect DrawTextBox(Transition trans)
+    {
+        Vector2 pos = new Vector2(trans.fromNode.windowRect.center.x + (trans.toNode.windowRect.x - trans.fromNode.windowRect.x) / 2, trans.fromNode.windowRect.center.y + (trans.toNode.windowRect.y - trans.fromNode.windowRect.y) / 2);
+        Rect textBox = new Rect(pos.x - 75, pos.y - 15, 150, 30);
+
+        GUIStyle style = new GUIStyle();
+
+        style.alignment = TextAnchor.UpperCenter;
+
+        EditorGUI.LabelField(textBox, trans.transitionName, style);
+
+        return textBox;
     }
 }

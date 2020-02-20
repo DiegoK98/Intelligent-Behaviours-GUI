@@ -13,7 +13,7 @@ public class Node : ScriptableObject
 
     public string stateName = "";
 
-    private List<Transition> possibleTransitions;
+    public List<Transition> possibleTransitions;
 
     public Node()
     {
@@ -30,30 +30,35 @@ public class Node : ScriptableObject
 
     public void DrawCurves()
     {
-        if (possibleTransitions.Count > 0)
+        foreach (Transition elem in possibleTransitions)
         {
-            foreach (Transition elem in possibleTransitions) {
-                Rect fromNodeRect = new Rect(windowRect);
-                fromNodeRect.x = windowRect.x + fromNodeRect.width / 2;
+            Rect fromNodeRect = new Rect(windowRect);
+            fromNodeRect.x = windowRect.x + fromNodeRect.width / 2;
 
-                Rect toNodeRect = new Rect(elem.toNode.windowRect);
-                toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
+            Rect toNodeRect = new Rect(elem.toNode.windowRect);
+            toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
 
-                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect);
-            }
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect);
+
+            elem.textBox = NodeEditor.DrawTextBox(elem);
         }
     }
 
     public void NodeDeleted(Node node)
     {
-        foreach(Transition t in possibleTransitions)
+        foreach (Transition t in possibleTransitions)
         {
-            if(t.toNode == node)
+            if (t.toNode == node)
             {
                 possibleTransitions.Remove(t);
                 break;
             }
         }
+    }
+
+    public void TransitionDeleted(Transition trans)
+    {
+        possibleTransitions.Remove(trans);
     }
 
     public void SetInput(Node input, Vector2 clickPos)
