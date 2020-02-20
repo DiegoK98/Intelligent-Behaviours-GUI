@@ -5,11 +5,11 @@ using UnityEditor;
 
 public class NodeEditor : EditorWindow
 {
-    private List<BaseNode> windows = new List<BaseNode>();
+    private List<Node> windows = new List<Node>();
 
     private Vector2 mousePos;
 
-    private BaseNode selectednode;
+    private Node selectednode;
 
     private bool makeTransitionMode = false;
 
@@ -102,43 +102,19 @@ public class NodeEditor : EditorWindow
 
             e.Use();
         }
-        else if (e.button == 0 && e.type == EventType.MouseDown && !makeTransitionMode)
-        {
-            /*bool clickedOnWindow = false;
-            int selectIndex = -1;
-
-            for (int i = 0; i < windows.Count; i++)
-            {
-                if (windows[i].windowRect.Contains(mousePos))
-                {
-                    selectIndex = i;
-                    clickedOnWindow = true;
-                    break;
-                }
-            }
-
-            if (clickedOnWindow)
-            {
-                BaseInputNode nodeToChange = windows[selectIndex].ClickedOnNode(mousePos);
-
-                if (nodeToChange != null)
-                {
-                    selectednode = nodeToChange;
-                    makeTransitionMode = true;
-                }
-            }*/
-        }
 
         if (makeTransitionMode && selectednode != null)
         {
             Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
+            Rect nodeRect = new Rect(selectednode.windowRect);
+            nodeRect.x = selectednode.windowRect.x + nodeRect.width / 2;
 
-            DrawNodeCurve(selectednode.windowRect, mouseRect);
+            DrawNodeCurve(nodeRect, mouseRect);
 
             Repaint();
         }
 
-        foreach (BaseNode n in windows)
+        foreach (Node n in windows)
         {
             n.DrawCurves();
         }
@@ -147,7 +123,7 @@ public class NodeEditor : EditorWindow
 
         for (int i = 0; i < windows.Count; i++)
         {
-            windows[i].windowRect = GUI.Window(i, windows[i].windowRect, DrawNodeWindow, windows[i].windowTitle);
+            windows[i].windowRect = GUI.Window(i, windows[i].windowRect, DrawNodeWindow, windows[i].stateName);
         }
 
         EndWindows();
@@ -208,10 +184,10 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnWindow)
             {
-                BaseNode selNode = windows[selectIndex];
+                Node selNode = windows[selectIndex];
                 windows.RemoveAt(selectIndex);
 
-                foreach (BaseNode n in windows)
+                foreach (Node n in windows)
                 {
                     n.NodeDeleted(selNode);
                 }

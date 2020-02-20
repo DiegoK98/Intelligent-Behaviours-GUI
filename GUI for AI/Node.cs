@@ -4,78 +4,64 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-public class Node : BaseNode
+public class Node : ScriptableObject
 {
 
-    private BaseNode connectedNode;
-    private Rect connectedNodeRect;
+    public Rect windowRect;
+
+    public bool hasInputs = false;
+
+    public string stateName = "";
+
+    private List<Transition> possibleTransitions;
 
     public Node()
     {
-        windowTitle = "Input Node";
+        possibleTransitions = new List<Transition>();
+
+        stateName = "New State";
         hasInputs = true;
     }
 
-    public override void DrawWindow()
+    public void DrawWindow()
     {
-        base.DrawWindow();
+        stateName = EditorGUILayout.TextField("State Name", stateName);
+    }
 
-        Event e = Event.current;
-
-        GUILayout.Label("O");
-
-        if (e.type == EventType.Repaint)
+    public void DrawCurves()
+    {
+        if (possibleTransitions.Count > 0)
         {
-            connectedNodeRect = GUILayoutUtility.GetLastRect();
+            foreach (Transition elem in possibleTransitions) {
+                Rect fromNodeRect = new Rect(windowRect);
+                fromNodeRect.x = windowRect.x + fromNodeRect.width / 2;
+
+                Rect toNodeRect = new Rect(elem.toNode.windowRect);
+                toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
+
+                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect);
+            }
         }
     }
 
-    public override void DrawCurves()
+    public void NodeDeleted(Node node)
     {
-        if (connectedNode)
+        foreach(Transition t in possibleTransitions)
         {
-            Rect rect = windowRect;
-            rect.x += connectedNodeRect.x;
-            rect.y += connectedNodeRect.y + connectedNodeRect.height / 2;
-            rect.width = 1;
-            rect.height = 1;
-
-            NodeEditor.DrawNodeCurve(connectedNode.windowRect, rect);
+            if(t.toNode == node)
+            {
+                possibleTransitions.Remove(t);
+                break;
+            }
         }
     }
 
-    public override void NodeDeleted(BaseNode node)
+    public void SetInput(Node input, Vector2 clickPos)
     {
-        if (node.Equals(connectedNode))
+        if (windowRect.Contains(clickPos))
         {
-            connectedNode = null;
-        }
-    }
-
-    public override BaseNode ClickedOnNode(Vector2 pos)
-    {
-        BaseNode retVal = null;
-
-        pos.x -= windowRect.x;
-        pos.y -= windowRect.y;
-
-        if (connectedNodeRect.Contains(pos))
-        {
-            retVal = connectedNode;
-            connectedNode = null;
-        }
-
-        return retVal;
-    }
-
-    public override void SetInput(BaseNode input, Vector2 clickPos)
-    {
-        clickPos.x -= windowRect.x;
-        clickPos.y -= windowRect.y;
-
-        if (connectedNodeRect.Contains(clickPos))
-        {
-            connectedNode = input;
+            //Le ponemos la transicion al node que ha llamado a setinput, que es del que viene la transición
+            input.possibleTransitions.Add(new Transition("New Transition", input, this));
         }
     }
 }
