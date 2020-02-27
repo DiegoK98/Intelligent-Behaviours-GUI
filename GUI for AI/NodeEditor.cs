@@ -5,14 +5,15 @@ using UnityEditor;
 
 public class NodeEditor : EditorWindow
 {
-    private List<Node> windows = new List<Node>();
-    private List<Transition> transitions = new List<Transition>();
-
     private Vector2 mousePos;
 
     private Node selectednode;
 
     private bool makeTransitionMode = false;
+
+    private List<FSM> FSMs = new List<FSM>();
+
+    private FSM currentFSM;
 
     [MenuItem("Window/Node Editor")]
     static void ShowEditor()
@@ -34,25 +35,42 @@ public class NodeEditor : EditorWindow
                 bool clickedOnTransition = false;
                 int selectIndex = -1;
 
-                for (int i = 0; i < windows.Count; i++)
+                if (currentFSM)
                 {
-                    if (windows[i].windowRect.Contains(mousePos))
+                    for (int i = 0; i < currentFSM.states.Count; i++)
                     {
-                        selectIndex = i;
-                        clickedOnWindow = true;
-                        break;
-                    }
-                }
-                foreach (Transition trans in transitions)
-                {
-                    if (trans.textBox.Contains(mousePos))
-                    {
-                        clickedOnTransition = true;
-                        break;
+                        if (currentFSM.states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
                     }
                 }
 
-                if (!clickedOnWindow && !clickedOnTransition)
+                if (currentFSM)
+                {
+                    foreach (Transition trans in currentFSM.transitions)
+                    {
+                        if (trans.textBox.Contains(mousePos))
+                        {
+                            clickedOnTransition = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!clickedOnWindow && !clickedOnTransition && currentFSM == null)
+                {
+                    GenericMenu menu = new GenericMenu();
+
+                    menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, "FSM");
+
+                    menu.ShowAsContext();
+                    e.Use();
+                }
+                else
+                if (!clickedOnWindow && !clickedOnTransition && currentFSM != null)
                 {
                     GenericMenu menu = new GenericMenu();
 
@@ -88,18 +106,22 @@ public class NodeEditor : EditorWindow
             bool clickedOnWindow = false;
             int selectIndex = -1;
 
-            for (int i = 0; i < windows.Count; i++)
+            for (int i = 0; i < currentFSM.states.Count; i++)
             {
-                if (windows[i].windowRect.Contains(mousePos))
+                if (currentFSM.states[i].windowRect.Contains(mousePos))
                 {
                     selectIndex = i;
                     clickedOnWindow = true;
                     break;
                 }
             }
-            if (clickedOnWindow && !windows[selectIndex].Equals(selectednode))
+            if (clickedOnWindow && !currentFSM.states[selectIndex].Equals(selectednode))
             {
-                windows[selectIndex].SetInput(selectednode, mousePos);
+                selectednode.SetTransitionTo(currentFSM.states[selectIndex]);
+                if (currentFSM.states[selectIndex].type == Node.stateType.Unconnected)
+                    currentFSM.states[selectIndex].type = Node.stateType.Default;
+                if (selectednode.type == Node.stateType.Unconnected)
+                    selectednode.type = Node.stateType.Default;
                 makeTransitionMode = false;
                 selectednode = null;
             }
@@ -124,25 +146,67 @@ public class NodeEditor : EditorWindow
             Repaint();
         }
 
-        foreach (Node n in windows)
+        if (currentFSM)
         {
-            n.DrawCurves();
-            transitions.AddRange(n.possibleTransitions);
+            foreach (Node n in currentFSM.states)
+            {
+                n.DrawCurves();
+                foreach (Transition t in n.transitions)
+                {
+                    if(!currentFSM.transitions.Contains(t)) currentFSM.transitions.Add(t);
+                }
+            }
         }
 
         BeginWindows();
 
-        for (int i = 0; i < windows.Count; i++)
+        if (currentFSM)
         {
-            windows[i].windowRect = GUI.Window(i, windows[i].windowRect, DrawNodeWindow, windows[i].stateName);
+            for (int i = 0; i < currentFSM.states.Count; i++)
+            {
+                GUIStyle style = new GUIStyle();
+                style.contentOffset = new Vector2(0, -20);
+                style.normal.background = MakeTex(2, 2, (int)currentFSM.states[i].type);
+
+                currentFSM.states[i].windowRect = GUI.Window(i, currentFSM.states[i].windowRect, DrawNodeWindow, currentFSM.states[i].stateName, style);
+            }
         }
 
         EndWindows();
     }
 
+    //Habrá que cambiarlo
+    private Texture2D MakeTex(int width, int height, int type)
+    {
+        Color col;
+
+        if (type == 1)
+        {
+            col = Color.green;
+        }
+        else if (type == 2)
+        {
+            col = Color.red;
+        }
+        else
+        {
+            col = Color.grey;
+        }
+
+        Color[] pix = new Color[width * height];
+        for (int i = 0; i < pix.Length; ++i)
+        {
+            pix[i] = col;
+        }
+        Texture2D result = new Texture2D(width, height);
+        result.SetPixels(pix);
+        result.Apply();
+        return result;
+    }
+
     void DrawNodeWindow(int id)
     {
-        windows[id].DrawWindow();
+        currentFSM.states[id].DrawWindow();
         GUI.DragWindow();
     }
 
@@ -150,21 +214,40 @@ public class NodeEditor : EditorWindow
     {
         string clb = obj.ToString();
 
-        if (clb.Equals("Node"))
+        if (clb.Equals("FSM"))
         {
-            Node node = new Node();
+            Node node = new Node(1);
             node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            windows.Add(node);
+            currentFSM = new FSM(node);
+
+            FSMs.Add(currentFSM);
+        }
+        else if (clb.Equals("Node"))
+        {
+            var type = 1;
+            foreach (Node n in currentFSM.states)
+            {
+                if (n.type == Node.stateType.Entry)
+                {
+                    type = 2;
+                    break;
+                }
+            }
+
+            Node node = new Node(type);
+            node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
+
+            currentFSM.AddState(node);
         }
         else if (clb.Equals("makeTransition"))
         {
             bool clickedOnWindow = false;
             int selectIndex = -1;
 
-            for (int i = 0; i < windows.Count; i++)
+            for (int i = 0; i < currentFSM.states.Count; i++)
             {
-                if (windows[i].windowRect.Contains(mousePos))
+                if (currentFSM.states[i].windowRect.Contains(mousePos))
                 {
                     selectIndex = i;
                     clickedOnWindow = true;
@@ -174,7 +257,7 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnWindow)
             {
-                selectednode = windows[selectIndex];
+                selectednode = currentFSM.states[selectIndex];
                 makeTransitionMode = true;
             }
         }
@@ -183,9 +266,9 @@ public class NodeEditor : EditorWindow
             bool clickedOnWindow = false;
             int selectIndex = -1;
 
-            for (int i = 0; i < windows.Count; i++)
+            for (int i = 0; i < currentFSM.states.Count; i++)
             {
-                if (windows[i].windowRect.Contains(mousePos))
+                if (currentFSM.states[i].windowRect.Contains(mousePos))
                 {
                     selectIndex = i;
                     clickedOnWindow = true;
@@ -195,12 +278,17 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnWindow)
             {
-                Node selNode = windows[selectIndex];
-                windows.RemoveAt(selectIndex);
+                Node selNode = currentFSM.states[selectIndex];
+                currentFSM.states.RemoveAt(selectIndex);
 
-                foreach (Node n in windows)
+                foreach (Node n in currentFSM.states)
                 {
                     n.NodeDeleted(selNode);
+                }
+
+                if (currentFSM.isEntryState(selNode))
+                {
+                    FSMs.Remove(currentFSM);
                 }
             }
         }
@@ -209,9 +297,9 @@ public class NodeEditor : EditorWindow
             bool clickedOnTransition = false;
             int selectIndex = -1;
 
-            for (int i = 0; i < transitions.Count; i++)
+            for (int i = 0; i < currentFSM.transitions.Count; i++)
             {
-                if (transitions[i].textBox.Contains(mousePos))
+                if (currentFSM.transitions[i].textBox.Contains(mousePos))
                 {
                     selectIndex = i;
                     clickedOnTransition = true;
@@ -221,10 +309,10 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnTransition)
             {
-                Transition selTrans = transitions[selectIndex];
-                transitions.RemoveAt(selectIndex);
+                Transition selTrans = currentFSM.transitions[selectIndex];
+                currentFSM.transitions.RemoveAt(selectIndex);
 
-                foreach (Node n in windows)
+                foreach (Node n in currentFSM.states)
                 {
                     n.TransitionDeleted(selTrans);
                 }

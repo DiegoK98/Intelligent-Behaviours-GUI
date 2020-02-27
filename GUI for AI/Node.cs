@@ -6,6 +6,12 @@ using System;
 
 public class Node : ScriptableObject
 {
+    public enum stateType
+    {
+        Default,
+        Entry,
+        Unconnected
+    }
 
     public Rect windowRect;
 
@@ -13,14 +19,52 @@ public class Node : ScriptableObject
 
     public string stateName = "";
 
-    public List<Transition> possibleTransitions;
+    public stateType type;
 
-    public Node()
+    public List<Transition> transitions;
+
+    public List<Node> connectedNodes;
+
+    public readonly long identificator;
+
+    public Node(int typeNumber)
     {
-        possibleTransitions = new List<Transition>();
+        transitions = new List<Transition>();
+        connectedNodes = new List<Node>();
 
         stateName = "New State";
         hasInputs = true;
+
+        type = (stateType)typeNumber;
+
+        identificator = UniqueID();
+    }
+
+    public long UniqueID()
+    {
+        long i = 1;
+
+        foreach (byte b in Guid.NewGuid().ToByteArray())
+        {
+            i *= ((int)b + 1);
+        }
+
+        long number = (DateTime.Now.Ticks / 10) % 1000000000;
+
+        return number;
+    }
+
+    public override bool Equals(object other)
+    {
+        if (!base.Equals((Node)other))
+            return false;
+        if (this.stateName != ((Node)other).stateName)
+            return false;
+        if (this.identificator != ((Node)other).identificator)
+            return false;
+
+        return true;
+
     }
 
     public void DrawWindow()
@@ -30,43 +74,49 @@ public class Node : ScriptableObject
 
     public void DrawCurves()
     {
-        foreach (Transition elem in possibleTransitions)
+        foreach (Transition elem in transitions)
         {
-            Rect fromNodeRect = new Rect(windowRect);
-            fromNodeRect.x = windowRect.x + fromNodeRect.width / 2;
+            if (Equals(elem.fromNode))
+            {
+                Rect fromNodeRect = new Rect(windowRect);
+                fromNodeRect.x = windowRect.x + fromNodeRect.width / 2;
 
-            Rect toNodeRect = new Rect(elem.toNode.windowRect);
-            toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
+                Rect toNodeRect = new Rect(elem.toNode.windowRect);
+                toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect);
+                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect);
 
-            elem.textBox = NodeEditor.DrawTextBox(elem);
+                elem.textBox = NodeEditor.DrawTextBox(elem);
+            }
         }
     }
 
     public void NodeDeleted(Node node)
     {
-        foreach (Transition t in possibleTransitions)
+        foreach (Transition t in transitions)
         {
-            if (t.toNode == node)
+            if (node.Equals(t.toNode) || node.Equals(t.fromNode))
             {
-                possibleTransitions.Remove(t);
+                TransitionDeleted(t);
                 break;
             }
         }
     }
 
-    public void TransitionDeleted(Transition trans)
+    public void TransitionDeleted(Transition t)
     {
-        possibleTransitions.Remove(trans);
+        //REDO Entry deberia guardar todos los nodos por los que puede pasar (excluyendo asi los que estan conectados pero nunca llegarían porque es una transición de vuelta, sin ninguna ida)
+        transitions.Remove(t);
+        if (t.fromNode.type != stateType.Entry && !t.fromNode.connectedNodes.Find(o => o.type == stateType.Entry))
+            t.fromNode.type = stateType.Unconnected;
+        if (t.toNode.type != stateType.Entry && !t.toNode.connectedNodes.Find(o => o.type == stateType.Entry))
+            t.toNode.type = stateType.Unconnected;
+
     }
 
-    public void SetInput(Node input, Vector2 clickPos)
+    public void SetTransitionTo(Node input)
     {
-        if (windowRect.Contains(clickPos))
-        {
-            //Le ponemos la transicion al node que ha llamado a setinput, que es del que viene la transición
-            input.possibleTransitions.Add(new Transition("New Transition", input, this));
-        }
+        this.transitions.Add(new Transition("New Transition", this, input));
+        input.transitions.Add(new Transition("New Transition", this, input));
     }
 }
