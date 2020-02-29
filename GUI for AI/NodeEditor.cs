@@ -117,11 +117,16 @@ public class NodeEditor : EditorWindow
             }
             if (clickedOnWindow && !currentFSM.states[selectIndex].Equals(selectednode))
             {
-                selectednode.SetTransitionTo(currentFSM.states[selectIndex]);
-                if (currentFSM.states[selectIndex].type == Node.stateType.Unconnected)
+                Transition transition = new Transition("New Transition", selectednode, currentFSM.states[selectIndex]);
+                transition.textBox = DrawTextBox(transition);
+
+                currentFSM.AddTransition(transition);
+
+                if (currentFSM.states[selectIndex].type == Node.stateType.Unconnected && currentFSM.CheckConnected(currentFSM.states[selectIndex]))
                     currentFSM.states[selectIndex].type = Node.stateType.Default;
-                if (selectednode.type == Node.stateType.Unconnected)
+                if (selectednode.type == Node.stateType.Unconnected && currentFSM.CheckConnected(selectednode))
                     selectednode.type = Node.stateType.Default;
+
                 makeTransitionMode = false;
                 selectednode = null;
             }
@@ -151,10 +156,6 @@ public class NodeEditor : EditorWindow
             foreach (Node n in currentFSM.states)
             {
                 n.DrawCurves();
-                foreach (Transition t in n.transitions)
-                {
-                    if(!currentFSM.transitions.Contains(t)) currentFSM.transitions.Add(t);
-                }
             }
         }
 
@@ -219,7 +220,7 @@ public class NodeEditor : EditorWindow
             Node node = new Node(1);
             node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            currentFSM = new FSM(node);
+            currentFSM = new FSM("New FSM", node);
 
             FSMs.Add(currentFSM);
         }
@@ -279,16 +280,13 @@ public class NodeEditor : EditorWindow
             if (clickedOnWindow)
             {
                 Node selNode = currentFSM.states[selectIndex];
-                currentFSM.states.RemoveAt(selectIndex);
 
-                foreach (Node n in currentFSM.states)
-                {
-                    n.NodeDeleted(selNode);
-                }
+                currentFSM.DeleteNode(selNode);
 
                 if (currentFSM.isEntryState(selNode))
                 {
                     FSMs.Remove(currentFSM);
+                    currentFSM = null;
                 }
             }
         }
@@ -309,13 +307,9 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnTransition)
             {
-                Transition selTrans = currentFSM.transitions[selectIndex];
-                currentFSM.transitions.RemoveAt(selectIndex);
+                Transition transition = currentFSM.transitions[selectIndex];
 
-                foreach (Node n in currentFSM.states)
-                {
-                    n.TransitionDeleted(selTrans);
-                }
+                currentFSM.DeleteTransition(transition);
             }
         }
     }

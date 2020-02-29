@@ -21,16 +21,13 @@ public class Node : ScriptableObject
 
     public stateType type;
 
-    public List<Transition> transitions;
-
-    public List<Node> connectedNodes;
+    public List<Transition> nodeTransitions;
 
     public readonly long identificator;
 
     public Node(int typeNumber)
     {
-        transitions = new List<Transition>();
-        connectedNodes = new List<Node>();
+        nodeTransitions = new List<Transition>();
 
         stateName = "New State";
         hasInputs = true;
@@ -64,7 +61,6 @@ public class Node : ScriptableObject
             return false;
 
         return true;
-
     }
 
     public void DrawWindow()
@@ -74,7 +70,7 @@ public class Node : ScriptableObject
 
     public void DrawCurves()
     {
-        foreach (Transition elem in transitions)
+        foreach (Transition elem in nodeTransitions)
         {
             if (Equals(elem.fromNode))
             {
@@ -93,30 +89,12 @@ public class Node : ScriptableObject
 
     public void NodeDeleted(Node node)
     {
-        foreach (Transition t in transitions)
+        for (int i = 0; i < nodeTransitions.Count; i++)
         {
-            if (node.Equals(t.toNode) || node.Equals(t.fromNode))
+            if (node.Equals(nodeTransitions[i].toNode) || node.Equals(nodeTransitions[i].fromNode))
             {
-                TransitionDeleted(t);
-                break;
+                nodeTransitions.Remove(nodeTransitions[i]);
             }
         }
-    }
-
-    public void TransitionDeleted(Transition t)
-    {
-        //REDO Entry deberia guardar todos los nodos por los que puede pasar (excluyendo asi los que estan conectados pero nunca llegarían porque es una transición de vuelta, sin ninguna ida)
-        transitions.Remove(t);
-        if (t.fromNode.type != stateType.Entry && !t.fromNode.connectedNodes.Find(o => o.type == stateType.Entry))
-            t.fromNode.type = stateType.Unconnected;
-        if (t.toNode.type != stateType.Entry && !t.toNode.connectedNodes.Find(o => o.type == stateType.Entry))
-            t.toNode.type = stateType.Unconnected;
-
-    }
-
-    public void SetTransitionTo(Node input)
-    {
-        this.transitions.Add(new Transition("New Transition", this, input));
-        input.transitions.Add(new Transition("New Transition", this, input));
     }
 }
