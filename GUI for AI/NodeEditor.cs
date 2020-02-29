@@ -9,6 +9,8 @@ public class NodeEditor : EditorWindow
 
     private Node selectednode;
 
+    private Node focusedNode;
+
     private bool makeTransitionMode = false;
 
     private List<FSM> FSMs = new List<FSM>();
@@ -107,12 +109,12 @@ public class NodeEditor : EditorWindow
                 }
             }
         }
-        else if (e.button == 0 && e.type == EventType.MouseDown && makeTransitionMode)
+        else if (e.button == 0 && e.type == EventType.MouseDown)
         {
             bool clickedOnWindow = false;
             int selectIndex = -1;
 
-            for (int i = 0; i < currentFSM.states.Count; i++)
+            for (int i = 0; i < currentFSM?.states.Count; i++)
             {
                 if (currentFSM.states[i].windowRect.Contains(mousePos))
                 {
@@ -121,24 +123,42 @@ public class NodeEditor : EditorWindow
                     break;
                 }
             }
-            if (clickedOnWindow && !currentFSM.states[selectIndex].Equals(selectednode))
+
+            if (makeTransitionMode)
             {
-                Transition transition = new Transition("New Transition", selectednode, currentFSM.states[selectIndex]);
-                transition.textBox = DrawTextBox(transition);
+                if (clickedOnWindow && !currentFSM.states[selectIndex].Equals(selectednode))
+                {
+                    Transition transition = new Transition("New Transition", selectednode, currentFSM.states[selectIndex]);
+                    transition.textBox = DrawTextBox(transition);
 
-                currentFSM.AddTransition(transition);
+                    currentFSM.AddTransition(transition);
 
-                makeTransitionMode = false;
-                selectednode = null;
+                    makeTransitionMode = false;
+                    selectednode = null;
+                }
+
+                if (!clickedOnWindow)
+                {
+                    makeTransitionMode = false;
+                    selectednode = null;
+                }
+
+                e.Use();
             }
 
-            if (!clickedOnWindow)
+            if (clickedOnWindow)
             {
-                makeTransitionMode = false;
-                selectednode = null;
+                if(focusedNode) focusedNode.isFocused = false;
+                currentFSM.states[selectIndex].isFocused = true;
+                focusedNode = currentFSM.states[selectIndex];
             }
+            else
+            {
+                if (focusedNode) focusedNode.isFocused = false;
+                focusedNode = null;
 
-            e.Use();
+                e.Use();
+            }
         }
 
         if (makeTransitionMode && selectednode != null)
@@ -168,17 +188,35 @@ public class NodeEditor : EditorWindow
             {
                 GUIStyle style = new GUIStyle();
                 style.contentOffset = new Vector2(0, -20);
-                style.normal.background = MakeTex(2, 2, (int)currentFSM.states[i].type);
+                style.normal.background = MakeBackground(2, 2, (int)currentFSM.states[i].type, currentFSM.states[i].isFocused);
 
                 currentFSM.states[i].windowRect = GUI.Window(i, currentFSM.states[i].windowRect, DrawNodeWindow, currentFSM.states[i].stateName, style);
             }
         }
 
         EndWindows();
+
+        if (e.isKey)
+        {
+            if (!makeTransitionMode && Event.current.keyCode == KeyCode.Delete && focusedNode != null)
+            {
+                currentFSM.DeleteNode(focusedNode);
+
+                if (currentFSM.isEntryState(focusedNode))
+                {
+                    FSMs.Remove(currentFSM);
+                    currentFSM = null;
+                }
+
+                focusedNode = null;
+
+                e.Use();
+            }
+        }
     }
 
     //Habrá que cambiarlo
-    private Texture2D MakeTex(int width, int height, int type)
+    private Texture2D MakeBackground(int width, int height, int type, bool isFocused)
     {
         Color col;
 
@@ -195,14 +233,19 @@ public class NodeEditor : EditorWindow
             col = Color.grey;
         }
 
+        if (!isFocused)
+            col.a = 0.5f;
+
         Color[] pix = new Color[width * height];
         for (int i = 0; i < pix.Length; ++i)
         {
             pix[i] = col;
         }
+
         Texture2D result = new Texture2D(width, height);
         result.SetPixels(pix);
         result.Apply();
+
         return result;
     }
 

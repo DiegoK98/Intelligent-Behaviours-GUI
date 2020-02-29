@@ -16,6 +16,7 @@ public class Node : ScriptableObject
     public Rect windowRect;
 
     public bool hasInputs = false;
+    public bool isFocused = false;
 
     public string stateName = "";
 
