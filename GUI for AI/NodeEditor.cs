@@ -96,6 +96,12 @@ public class NodeEditor : EditorWindow
                     menu.AddSeparator("");
                     menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, "deleteNode");
 
+                    if (!currentFSM.isEntryState(currentFSM.states[selectIndex]))
+                    {
+                        menu.AddSeparator("");
+                        menu.AddItem(new GUIContent("Convert to Entry State"), false, ContextCallback, "entryState");
+                    }
+
                     menu.ShowAsContext();
                     e.Use();
                 }
@@ -121,11 +127,6 @@ public class NodeEditor : EditorWindow
                 transition.textBox = DrawTextBox(transition);
 
                 currentFSM.AddTransition(transition);
-
-                if (currentFSM.states[selectIndex].type == Node.stateType.Unconnected && currentFSM.CheckConnected(currentFSM.states[selectIndex]))
-                    currentFSM.states[selectIndex].type = Node.stateType.Default;
-                if (selectednode.type == Node.stateType.Unconnected && currentFSM.CheckConnected(selectednode))
-                    selectednode.type = Node.stateType.Default;
 
                 makeTransitionMode = false;
                 selectednode = null;
@@ -310,6 +311,28 @@ public class NodeEditor : EditorWindow
                 Transition transition = currentFSM.transitions[selectIndex];
 
                 currentFSM.DeleteTransition(transition);
+            }
+        }
+        else if (clb.Equals("entryState"))
+        {
+            bool clickedOnWindow = false;
+            int selectIndex = -1;
+
+            for (int i = 0; i < currentFSM.states.Count; i++)
+            {
+                if (currentFSM.states[i].windowRect.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnWindow = true;
+                    break;
+                }
+            }
+
+            if (clickedOnWindow)
+            {
+                Node selNode = currentFSM.states[selectIndex];
+
+                currentFSM.SetAsEntry(selNode);
             }
         }
     }

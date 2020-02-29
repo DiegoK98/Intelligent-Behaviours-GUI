@@ -39,6 +39,15 @@ public class FSM : ScriptableObject
         EntryState = node;
     }
 
+    public void SetAsEntry(Node node)
+    {
+        EntryState.type = Node.stateType.Unconnected;
+        node.type = Node.stateType.Entry;
+        EntryState = node;
+
+        CheckConnected();
+    }
+
     public void AddState(Node node)
     {
         states.Add(node);
@@ -63,9 +72,9 @@ public class FSM : ScriptableObject
     {
         states.Remove(node);
 
-        for (int i = 0; i < transitions.Count; i++)
+        for (int i = 0; i < node.nodeTransitions.Count; i++)
         {
-            DeleteTransition(transitions[i]);
+            DeleteTransition(node.nodeTransitions[i]);
         }
 
         foreach (Node n in states)
@@ -78,29 +87,37 @@ public class FSM : ScriptableObject
     {
         transitions.Remove(deletedTrans);
 
-        if (deletedTrans.fromNode.type != Node.stateType.Entry && !CheckConnected(deletedTrans.fromNode))
-            deletedTrans.fromNode.type = Node.stateType.Unconnected;
-        if (deletedTrans.toNode.type != Node.stateType.Entry && !CheckConnected(deletedTrans.toNode))
-            deletedTrans.toNode.type = Node.stateType.Unconnected;
-
         foreach (Node n in states)
         {
             n.nodeTransitions.Remove(deletedTrans);
         }
+
+        CheckConnected();
     }
 
-    public bool CheckConnected(Node baseNode)
+    public void CheckConnected(Node baseNode = null)
     {
-        if (isEntryState(baseNode))
-            return true;
-
-        foreach (Transition elem in baseNode.nodeTransitions.FindAll(o => o.toNode.Equals(baseNode)))
+        if (baseNode == null)
         {
-            if (CheckConnected(elem.fromNode))
-                return true;
+            baseNode = EntryState;
+
+            foreach (Node elem in states.FindAll(o => o.type != Node.stateType.Entry))
+            {
+                elem.type = Node.stateType.Unconnected;
+            }
+        }
+        else if(baseNode.type == Node.stateType.Unconnected)
+        {
+            baseNode.type = Node.stateType.Default;
+        } else
+        {
+            return;
         }
 
-        return false;
+        foreach (Transition elem in baseNode.nodeTransitions.FindAll(o => o.fromNode.Equals(baseNode)))
+        {
+            CheckConnected(elem.toNode);
+        }
     }
 
     public void AddTransition(Transition newTransition)
@@ -109,5 +126,7 @@ public class FSM : ScriptableObject
 
         newTransition.fromNode.nodeTransitions.Add(newTransition);
         newTransition.toNode.nodeTransitions.Add(newTransition);
+
+        CheckConnected();
     }
 }
