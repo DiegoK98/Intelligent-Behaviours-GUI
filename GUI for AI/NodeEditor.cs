@@ -9,7 +9,7 @@ public class NodeEditor : EditorWindow
 
     private Node selectednode;
 
-    private Node focusedNode;
+    private object focusedObj;
 
     private bool makeTransitionMode = false;
 
@@ -37,28 +37,22 @@ public class NodeEditor : EditorWindow
                 bool clickedOnTransition = false;
                 int selectIndex = -1;
 
-                if (currentFSM)
+                for (int i = 0; i < currentFSM?.states.Count; i++)
                 {
-                    for (int i = 0; i < currentFSM.states.Count; i++)
+                    if (currentFSM.states[i].windowRect.Contains(mousePos))
                     {
-                        if (currentFSM.states[i].windowRect.Contains(mousePos))
-                        {
-                            selectIndex = i;
-                            clickedOnWindow = true;
-                            break;
-                        }
+                        selectIndex = i;
+                        clickedOnWindow = true;
+                        break;
                     }
                 }
 
-                if (currentFSM)
+                for (int i = 0; i < currentFSM?.transitions.Count; i++)
                 {
-                    foreach (Transition trans in currentFSM.transitions)
+                    if (currentFSM.transitions[i].textBox.Contains(mousePos))
                     {
-                        if (trans.textBox.Contains(mousePos))
-                        {
-                            clickedOnTransition = true;
-                            break;
-                        }
+                        clickedOnTransition = true;
+                        break;
                     }
                 }
 
@@ -112,6 +106,7 @@ public class NodeEditor : EditorWindow
         else if (e.button == 0 && e.type == EventType.MouseDown)
         {
             bool clickedOnWindow = false;
+            bool clickedOnTransition = false;
             int selectIndex = -1;
 
             for (int i = 0; i < currentFSM?.states.Count; i++)
@@ -122,6 +117,44 @@ public class NodeEditor : EditorWindow
                     clickedOnWindow = true;
                     break;
                 }
+            }
+
+            for (int i = 0; i < currentFSM?.transitions.Count; i++)
+            {
+                if (currentFSM.transitions[i].textBox.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnTransition = true;
+                    break;
+                }
+            }
+
+            if (clickedOnTransition)
+            {
+                if (focusedObj is Transition) ((Transition)focusedObj).isFocused = false;
+                if (focusedObj is Node) ((Node)focusedObj).isFocused = false;
+                currentFSM.transitions[selectIndex].isFocused = true;
+                focusedObj = currentFSM.transitions[selectIndex];
+
+                e.Use();
+            }
+            else if (clickedOnWindow)
+            {
+                if (focusedObj is Transition) ((Transition)focusedObj).isFocused = false;
+                if (focusedObj is Node) ((Node)focusedObj).isFocused = false;
+                currentFSM.states[selectIndex].isFocused = true;
+                focusedObj = currentFSM.states[selectIndex];
+
+                //e.Use();
+            }
+            else
+            {
+                if (focusedObj is Transition) ((Transition)focusedObj).isFocused = false;
+                if (focusedObj is Node) ((Node)focusedObj).isFocused = false;
+
+                focusedObj = null;
+
+                e.Use();
             }
 
             if (makeTransitionMode)
@@ -145,20 +178,6 @@ public class NodeEditor : EditorWindow
 
                 e.Use();
             }
-
-            if (clickedOnWindow)
-            {
-                if(focusedNode) focusedNode.isFocused = false;
-                currentFSM.states[selectIndex].isFocused = true;
-                focusedNode = currentFSM.states[selectIndex];
-            }
-            else
-            {
-                if (focusedNode) focusedNode.isFocused = false;
-                focusedNode = null;
-
-                e.Use();
-            }
         }
 
         if (makeTransitionMode && selectednode != null)
@@ -167,7 +186,7 @@ public class NodeEditor : EditorWindow
             Rect nodeRect = new Rect(selectednode.windowRect);
             nodeRect.x = selectednode.windowRect.x + nodeRect.width / 2;
 
-            DrawNodeCurve(nodeRect, mouseRect);
+            DrawNodeCurve(nodeRect, mouseRect, true);
 
             Repaint();
         }
@@ -198,19 +217,30 @@ public class NodeEditor : EditorWindow
 
         if (e.isKey)
         {
-            if (!makeTransitionMode && Event.current.keyCode == KeyCode.Delete && focusedNode != null)
+            if (!makeTransitionMode && Event.current.keyCode == KeyCode.Delete)
             {
-                currentFSM.DeleteNode(focusedNode);
-
-                if (currentFSM.isEntryState(focusedNode))
+                if (focusedObj is Node)
                 {
-                    FSMs.Remove(currentFSM);
-                    currentFSM = null;
+                    currentFSM.DeleteNode(((Node)focusedObj));
+
+                    if (currentFSM.isEntryState(((Node)focusedObj)))
+                    {
+                        FSMs.Remove(currentFSM);
+                        currentFSM = null;
+                    }
+
+                    focusedObj = null;
+
+                    e.Use();
                 }
+                if (focusedObj is Transition)
+                {
+                    currentFSM.DeleteTransition(((Transition)focusedObj));
 
-                focusedNode = null;
+                    focusedObj = null;
 
-                e.Use();
+                    e.Use();
+                }
             }
         }
     }
@@ -380,15 +410,22 @@ public class NodeEditor : EditorWindow
         }
     }
 
-    public static void DrawNodeCurve(Rect start, Rect end)
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused)
     {
         Vector3 startPos = new Vector3(start.x + start.width / 2, start.y + start.height / 2, 0);
         Vector3 endPos = new Vector3(end.x + end.width / 2, end.y + end.height / 2, 0);
         Vector3 startTan = startPos + Vector3.right * 50;
         Vector3 endTan = endPos + Vector3.left * 50;
         Color shadowCol = new Color(0, 0, 0, 0.06f);
+        int focusFactor = 3;
 
-        for (int i = 0; i < 3; i++)
+        if (isFocused)
+        {
+            shadowCol = new Color(1, 1, 1, 0.1f);
+            focusFactor = 10;
+        }
+
+        for (int i = 0; i < focusFactor; i++)
         {
             Handles.DrawBezier(startPos, endPos, startTan, endTan, shadowCol, null, (i + 1) * 5);
         }

@@ -10,6 +10,8 @@ public class Transition : ScriptableObject
     public Node fromNode;
     public Node toNode;
 
+    public bool isFocused = false;
+
     public Rect textBox;
 
     public Transition(string name, Node from, Node to)

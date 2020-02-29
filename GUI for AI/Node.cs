@@ -81,7 +81,7 @@ public class Node : ScriptableObject
                 Rect toNodeRect = new Rect(elem.toNode.windowRect);
                 toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
 
-                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect);
+                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
 
                 elem.textBox = NodeEditor.DrawTextBox(elem);
             }
