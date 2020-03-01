@@ -9,11 +9,11 @@ public class NodeEditor : EditorWindow
 
     private Node selectednode;
 
-    private object focusedObj;
+    private GUIElement focusedObj;
 
     private bool makeTransitionMode = false;
 
-    private List<FSM> FSMs = new List<FSM>();
+    private List<ClickableElement> Elements = new List<ClickableElement>();
 
     private FSM currentFSM;
 
@@ -105,9 +105,20 @@ public class NodeEditor : EditorWindow
         }
         else if (e.button == 0 && e.type == EventType.MouseDown)
         {
+            bool clickedOnElement = false;
             bool clickedOnWindow = false;
             bool clickedOnTransition = false;
             int selectIndex = -1;
+
+            for (int i = 0; i < Elements?.Count; i++)
+            {
+                if (Elements[i].windowRect.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnElement = true;
+                    break;
+                }
+            }
 
             for (int i = 0; i < currentFSM?.states.Count; i++)
             {
@@ -129,10 +140,15 @@ public class NodeEditor : EditorWindow
                 }
             }
 
-            if (clickedOnTransition)
+            if (clickedOnElement)
             {
-                if (focusedObj is Transition) ((Transition)focusedObj).isFocused = false;
-                if (focusedObj is Node) ((Node)focusedObj).isFocused = false;
+                if (focusedObj != null) focusedObj.isFocused = false;
+                Elements[selectIndex].isFocused = true;
+                focusedObj = Elements[selectIndex];
+            }
+            else if (clickedOnTransition)
+            {
+                if (focusedObj != null) focusedObj.isFocused = false;
                 currentFSM.transitions[selectIndex].isFocused = true;
                 focusedObj = currentFSM.transitions[selectIndex];
 
@@ -140,17 +156,13 @@ public class NodeEditor : EditorWindow
             }
             else if (clickedOnWindow)
             {
-                if (focusedObj is Transition) ((Transition)focusedObj).isFocused = false;
-                if (focusedObj is Node) ((Node)focusedObj).isFocused = false;
+                if (focusedObj != null) focusedObj.isFocused = false;
                 currentFSM.states[selectIndex].isFocused = true;
                 focusedObj = currentFSM.states[selectIndex];
-
-                //e.Use();
             }
             else
             {
-                if (focusedObj is Transition) ((Transition)focusedObj).isFocused = false;
-                if (focusedObj is Node) ((Node)focusedObj).isFocused = false;
+                if (focusedObj != null) focusedObj.isFocused = false;
 
                 focusedObj = null;
 
@@ -178,6 +190,11 @@ public class NodeEditor : EditorWindow
 
                 e.Use();
             }
+
+            if(Event.current.clickCount == 2)
+            {
+                currentFSM = (FSM)Elements[selectIndex];
+            }
         }
 
         if (makeTransitionMode && selectednode != null)
@@ -201,13 +218,24 @@ public class NodeEditor : EditorWindow
 
         BeginWindows();
 
-        if (currentFSM)
+        if (!currentFSM)
+        {
+            for (int i = 0; i < Elements.Count; i++)
+            {
+                GUIStyle style = new GUIStyle();
+                style.contentOffset = new Vector2(0, -20);
+                style.normal.background = MakeBackground(2, 2, 0, (int)Elements[i].type, Elements[i].isFocused);
+
+                Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, Elements[i].elementName, style);
+            }
+        }
+        else
         {
             for (int i = 0; i < currentFSM.states.Count; i++)
             {
                 GUIStyle style = new GUIStyle();
                 style.contentOffset = new Vector2(0, -20);
-                style.normal.background = MakeBackground(2, 2, (int)currentFSM.states[i].type, currentFSM.states[i].isFocused);
+                style.normal.background = MakeBackground(2, 2, 1, (int)currentFSM.states[i].type, currentFSM.states[i].isFocused);
 
                 currentFSM.states[i].windowRect = GUI.Window(i, currentFSM.states[i].windowRect, DrawNodeWindow, currentFSM.states[i].stateName, style);
             }
@@ -221,11 +249,11 @@ public class NodeEditor : EditorWindow
             {
                 if (focusedObj is Node)
                 {
-                    currentFSM.DeleteNode(((Node)focusedObj));
+                    currentFSM.DeleteNode((Node)focusedObj);
 
-                    if (currentFSM.isEntryState(((Node)focusedObj)))
+                    if (currentFSM.isEntryState((Node)focusedObj))
                     {
-                        FSMs.Remove(currentFSM);
+                        Elements.Remove(currentFSM);
                         currentFSM = null;
                     }
 
@@ -235,7 +263,23 @@ public class NodeEditor : EditorWindow
                 }
                 if (focusedObj is Transition)
                 {
-                    currentFSM.DeleteTransition(((Transition)focusedObj));
+                    currentFSM.DeleteTransition((Transition)focusedObj);
+
+                    focusedObj = null;
+
+                    e.Use();
+                }
+                if (focusedObj is FSM)
+                {
+                    Elements.Remove((FSM)focusedObj);
+
+                    focusedObj = null;
+
+                    e.Use();
+                }
+                if (focusedObj is BehaviourTree)
+                {
+                    Elements.Remove((BehaviourTree)focusedObj);
 
                     focusedObj = null;
 
@@ -246,21 +290,42 @@ public class NodeEditor : EditorWindow
     }
 
     //Habrá que cambiarlo
-    private Texture2D MakeBackground(int width, int height, int type, bool isFocused)
+    private Texture2D MakeBackground(int width, int height, int typeOfItem, int type, bool isFocused)
     {
         Color col;
 
-        if (type == 1)
+        if (typeOfItem == 0)
         {
-            col = Color.green;
-        }
-        else if (type == 2)
-        {
-            col = Color.red;
+            switch (type)
+            {
+                case 0:
+                    col = Color.blue;
+                    break;
+                case 1:
+                    col = Color.black;
+                    break;
+                default:
+                    col = Color.white;
+                    break;
+            }
         }
         else
         {
-            col = Color.grey;
+            switch (type)
+            {
+                case 0:
+                    col = Color.grey;
+                    break;
+                case 1:
+                    col = Color.green;
+                    break;
+                case 2:
+                    col = Color.red;
+                    break;
+                default:
+                    col = Color.white;
+                    break;
+            }
         }
 
         if (!isFocused)
@@ -285,6 +350,12 @@ public class NodeEditor : EditorWindow
         GUI.DragWindow();
     }
 
+    void DrawElementWindow(int id)
+    {
+        Elements[id].DrawWindow();
+        GUI.DragWindow();
+    }
+
     void ContextCallback(object obj)
     {
         string clb = obj.ToString();
@@ -294,20 +365,17 @@ public class NodeEditor : EditorWindow
             Node node = new Node(1);
             node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            currentFSM = new FSM("New FSM", node);
+            ClickableElement newFSM = new FSM("New FSM", node);
+            newFSM.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            FSMs.Add(currentFSM);
+            Elements.Add(newFSM);
         }
         else if (clb.Equals("Node"))
         {
             var type = 1;
-            foreach (Node n in currentFSM.states)
+            if (currentFSM.states.Exists(n => n.type == Node.stateType.Entry))
             {
-                if (n.type == Node.stateType.Entry)
-                {
-                    type = 2;
-                    break;
-                }
+                type = 2;
             }
 
             Node node = new Node(type);
@@ -359,7 +427,7 @@ public class NodeEditor : EditorWindow
 
                 if (currentFSM.isEntryState(selNode))
                 {
-                    FSMs.Remove(currentFSM);
+                    Elements.Remove(currentFSM);
                     currentFSM = null;
                 }
             }

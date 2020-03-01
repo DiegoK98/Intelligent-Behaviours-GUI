@@ -3,18 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FSM : ClickableElement
+public class BehaviourTree : ClickableElement
 {
+    public string BTName = "";
     private Node EntryState;
 
     public List<Node> states = new List<Node>();
 
     public List<Transition> transitions;
 
-    public FSM(string name, Node node)
+    public BehaviourTree(string name, Node node)
     {
-        elementName = name;
-        type = elementType.FSM;
+        BTName = name;
 
         AddEntryState(node);
 
@@ -23,11 +23,11 @@ public class FSM : ClickableElement
 
     public override bool Equals(object other)
     {
-        if (!base.Equals((FSM)other))
+        if (!base.Equals((BehaviourTree)other))
             return false;
-        if (this.elementName != ((FSM)other).elementName)
+        if (this.BTName != ((BehaviourTree)other).BTName)
             return false;
-        if (!this.EntryState.Equals(((FSM)other).EntryState))
+        if (this.EntryState.Equals(((BehaviourTree)other).EntryState))
             return false;
 
         return true;

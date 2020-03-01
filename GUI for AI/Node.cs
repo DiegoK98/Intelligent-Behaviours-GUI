@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-public class Node : ScriptableObject
+public class Node : GUIElement
 {
     public enum stateType
     {
@@ -16,7 +16,6 @@ public class Node : ScriptableObject
     public Rect windowRect;
 
     public bool hasInputs = false;
-    public bool isFocused = false;
 
     public string stateName = "";
 

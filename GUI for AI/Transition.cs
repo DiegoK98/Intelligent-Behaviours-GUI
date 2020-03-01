@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class Transition : ScriptableObject
+public class Transition : GUIElement
 {
-
     public string transitionName;
     public Node fromNode;
     public Node toNode;
-
-    public bool isFocused = false;
 
     public Rect textBox;
 
