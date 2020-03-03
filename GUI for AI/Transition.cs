@@ -6,12 +6,12 @@ using UnityEditor;
 public class Transition : GUIElement
 {
     public string transitionName;
-    public Node fromNode;
-    public Node toNode;
+    public BaseNode fromNode;
+    public BaseNode toNode;
 
     public Rect textBox;
 
-    public Transition(string name, Node from, Node to)
+    public Transition(string name, BaseNode from, BaseNode to)
     {
         transitionName = name;
 

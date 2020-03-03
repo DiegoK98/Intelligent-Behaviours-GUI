@@ -5,15 +5,17 @@ using UnityEngine;
 
 public class FSM : ClickableElement
 {
-    private Node EntryState;
+    private StateNode EntryState;
+    public readonly long identificator;
 
-    public List<Node> states = new List<Node>();
-
+    public List<StateNode> states = new List<StateNode>();
     public List<Transition> transitions;
 
-    public FSM(string name, Node node)
+    public FSM(string name, StateNode node)
     {
         elementName = name;
+        identificator = UniqueID();
+
         type = elementType.FSM;
 
         AddEntryState(node);
@@ -27,48 +29,33 @@ public class FSM : ClickableElement
             return false;
         if (this.elementName != ((FSM)other).elementName)
             return false;
-        if (!this.EntryState.Equals(((FSM)other).EntryState))
+        if (this.identificator != ((FSM)other).identificator)
             return false;
 
         return true;
     }
 
-    public void AddEntryState(Node node)
+    public void AddEntryState(StateNode node)
     {
         states.Add(node);
         EntryState = node;
     }
 
-    public void SetAsEntry(Node node)
+    public void SetAsEntry(StateNode node)
     {
-        EntryState.type = Node.stateType.Unconnected;
-        node.type = Node.stateType.Entry;
+        EntryState.type = StateNode.stateType.Unconnected;
+        node.type = StateNode.stateType.Entry;
         EntryState = node;
 
         CheckConnected();
     }
 
-    public void AddState(Node node)
-    {
-        states.Add(node);
-    }
-
-    public Node[] GetState(Node node)
-    {
-        return states.FindAll(o => o.Equals(node)).ToArray();
-    }
-
-    public bool RemoveState(Node node)
-    {
-        return states.Remove(node);
-    }
-
-    public bool isEntryState(Node node)
+    public bool isEntryState(StateNode node)
     {
         return node.Equals(EntryState);
     }
 
-    public void DeleteNode(Node node)
+    public void DeleteNode(StateNode node)
     {
         states.Remove(node);
 
@@ -77,7 +64,7 @@ public class FSM : ClickableElement
             DeleteTransition(node.nodeTransitions[i]);
         }
 
-        foreach (Node n in states)
+        foreach (StateNode n in states)
         {
             n.NodeDeleted(node);
         }
@@ -87,7 +74,7 @@ public class FSM : ClickableElement
     {
         transitions.Remove(deletedTrans);
 
-        foreach (Node n in states)
+        foreach (StateNode n in states)
         {
             n.nodeTransitions.Remove(deletedTrans);
         }
@@ -95,28 +82,29 @@ public class FSM : ClickableElement
         CheckConnected();
     }
 
-    public void CheckConnected(Node baseNode = null)
+    public void CheckConnected(StateNode baseNode = null)
     {
         if (baseNode == null)
         {
             baseNode = EntryState;
 
-            foreach (Node elem in states.FindAll(o => o.type != Node.stateType.Entry))
+            foreach (StateNode elem in states.FindAll(o => o.type != StateNode.stateType.Entry))
             {
-                elem.type = Node.stateType.Unconnected;
+                elem.type = StateNode.stateType.Unconnected;
             }
         }
-        else if(baseNode.type == Node.stateType.Unconnected)
+        else if (baseNode.type == StateNode.stateType.Unconnected)
         {
-            baseNode.type = Node.stateType.Default;
-        } else
+            baseNode.type = StateNode.stateType.Default;
+        }
+        else
         {
             return;
         }
 
         foreach (Transition elem in baseNode.nodeTransitions.FindAll(o => o.fromNode.Equals(baseNode)))
         {
-            CheckConnected(elem.toNode);
+            CheckConnected((StateNode)elem.toNode);
         }
     }
 
@@ -124,8 +112,8 @@ public class FSM : ClickableElement
     {
         transitions.Add(newTransition);
 
-        newTransition.fromNode.nodeTransitions.Add(newTransition);
-        newTransition.toNode.nodeTransitions.Add(newTransition);
+        ((StateNode)newTransition.fromNode).nodeTransitions.Add(newTransition);
+        ((StateNode)newTransition.toNode).nodeTransitions.Add(newTransition);
 
         CheckConnected();
     }

@@ -7,7 +7,7 @@ public class NodeEditor : EditorWindow
 {
     private Vector2 mousePos;
 
-    private Node selectednode;
+    private BaseNode selectednode;
 
     private GUIElement focusedObj;
 
@@ -15,7 +15,7 @@ public class NodeEditor : EditorWindow
 
     private List<ClickableElement> Elements = new List<ClickableElement>();
 
-    private FSM currentFSM;
+    private ClickableElement currentElem;
 
     [MenuItem("Window/Node Editor")]
     static void ShowEditor()
@@ -37,40 +37,66 @@ public class NodeEditor : EditorWindow
                 bool clickedOnTransition = false;
                 int selectIndex = -1;
 
-                for (int i = 0; i < currentFSM?.states.Count; i++)
+                if (currentElem is FSM)
                 {
-                    if (currentFSM.states[i].windowRect.Contains(mousePos))
+                    for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
                     {
-                        selectIndex = i;
-                        clickedOnWindow = true;
-                        break;
+                        if (((FSM)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
+                    {
+                        if (((FSM)currentElem).transitions[i].textBox.Contains(mousePos))
+                        {
+                            clickedOnTransition = true;
+                            break;
+                        }
                     }
                 }
 
-                for (int i = 0; i < currentFSM?.transitions.Count; i++)
+                if (currentElem is BehaviourTree)
                 {
-                    if (currentFSM.transitions[i].textBox.Contains(mousePos))
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
-                        clickedOnTransition = true;
-                        break;
+                        if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
                     }
                 }
 
-                if (!clickedOnWindow && !clickedOnTransition && currentFSM == null)
+                if (!clickedOnWindow && !clickedOnTransition && currentElem is null)
                 {
                     GenericMenu menu = new GenericMenu();
 
                     menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, "FSM");
+                    menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, "BT");
 
                     menu.ShowAsContext();
                     e.Use();
                 }
-                else
-                if (!clickedOnWindow && !clickedOnTransition && currentFSM != null)
+                else if (!clickedOnWindow && !clickedOnTransition && currentElem is FSM)
                 {
                     GenericMenu menu = new GenericMenu();
 
                     menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, "Node");
+
+                    menu.ShowAsContext();
+                    e.Use();
+                }
+                else if (!clickedOnWindow && !clickedOnTransition && currentElem is BehaviourTree)
+                {
+                    GenericMenu menu = new GenericMenu();
+
+                    menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, "Sequence");
+                    menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, "Selector");
 
                     menu.ShowAsContext();
                     e.Use();
@@ -84,7 +110,7 @@ public class NodeEditor : EditorWindow
                     menu.ShowAsContext();
                     e.Use();
                 }
-                else if (clickedOnWindow)
+                else if (clickedOnWindow && currentElem is FSM)
                 {
                     GenericMenu menu = new GenericMenu();
 
@@ -92,11 +118,22 @@ public class NodeEditor : EditorWindow
                     menu.AddSeparator("");
                     menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, "deleteNode");
 
-                    if (!currentFSM.isEntryState(currentFSM.states[selectIndex]))
+                    if (!((FSM)currentElem).isEntryState(((FSM)currentElem).states[selectIndex]))
                     {
                         menu.AddSeparator("");
                         menu.AddItem(new GUIContent("Convert to Entry State"), false, ContextCallback, "entryState");
                     }
+
+                    menu.ShowAsContext();
+                    e.Use();
+                }
+                else if (clickedOnWindow && currentElem is BehaviourTree)
+                {
+                    GenericMenu menu = new GenericMenu();
+
+                    menu.AddItem(new GUIContent("Add Leaf Node"), false, ContextCallback, "leafNode");
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, "deleteNode");
 
                     menu.ShowAsContext();
                     e.Use();
@@ -120,23 +157,39 @@ public class NodeEditor : EditorWindow
                 }
             }
 
-            for (int i = 0; i < currentFSM?.states.Count; i++)
+            if (currentElem is FSM)
             {
-                if (currentFSM.states[i].windowRect.Contains(mousePos))
+                for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
                 {
-                    selectIndex = i;
-                    clickedOnWindow = true;
-                    break;
+                    if (((FSM)currentElem).states[i].windowRect.Contains(mousePos))
+                    {
+                        selectIndex = i;
+                        clickedOnWindow = true;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
+                {
+                    if (((FSM)currentElem).transitions[i].textBox.Contains(mousePos))
+                    {
+                        selectIndex = i;
+                        clickedOnTransition = true;
+                        break;
+                    }
                 }
             }
 
-            for (int i = 0; i < currentFSM?.transitions.Count; i++)
+            if (currentElem is BehaviourTree)
             {
-                if (currentFSM.transitions[i].textBox.Contains(mousePos))
+                for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                 {
-                    selectIndex = i;
-                    clickedOnTransition = true;
-                    break;
+                    if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                    {
+                        selectIndex = i;
+                        clickedOnWindow = true;
+                        break;
+                    }
                 }
             }
 
@@ -145,20 +198,31 @@ public class NodeEditor : EditorWindow
                 if (focusedObj != null) focusedObj.isFocused = false;
                 Elements[selectIndex].isFocused = true;
                 focusedObj = Elements[selectIndex];
+
+                if (Event.current.clickCount == 2)
+                {
+                    currentElem = Elements[selectIndex];
+                }
             }
-            else if (clickedOnTransition)
+            else if (clickedOnTransition && currentElem is FSM)
             {
                 if (focusedObj != null) focusedObj.isFocused = false;
-                currentFSM.transitions[selectIndex].isFocused = true;
-                focusedObj = currentFSM.transitions[selectIndex];
+                ((FSM)currentElem).transitions[selectIndex].isFocused = true;
+                focusedObj = ((FSM)currentElem).transitions[selectIndex];
 
                 e.Use();
             }
-            else if (clickedOnWindow)
+            else if (clickedOnWindow && currentElem is FSM)
             {
                 if (focusedObj != null) focusedObj.isFocused = false;
-                currentFSM.states[selectIndex].isFocused = true;
-                focusedObj = currentFSM.states[selectIndex];
+                ((FSM)currentElem).states[selectIndex].isFocused = true;
+                focusedObj = ((FSM)currentElem).states[selectIndex];
+            }
+            else if (clickedOnWindow && currentElem is BehaviourTree)
+            {
+                if (focusedObj != null) focusedObj.isFocused = false;
+                ((BehaviourTree)currentElem).states[selectIndex].isFocused = true;
+                focusedObj = ((BehaviourTree)currentElem).states[selectIndex];
             }
             else
             {
@@ -169,14 +233,14 @@ public class NodeEditor : EditorWindow
                 e.Use();
             }
 
-            if (makeTransitionMode)
+            if (makeTransitionMode && currentElem is FSM)
             {
-                if (clickedOnWindow && !currentFSM.states[selectIndex].Equals(selectednode))
+                if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
                 {
-                    Transition transition = new Transition("New Transition", selectednode, currentFSM.states[selectIndex]);
+                    Transition transition = new Transition("New Transition", selectednode, ((FSM)currentElem).states[selectIndex]);
                     transition.textBox = DrawTextBox(transition);
 
-                    currentFSM.AddTransition(transition);
+                    ((FSM)currentElem).AddTransition(transition);
 
                     makeTransitionMode = false;
                     selectednode = null;
@@ -189,11 +253,6 @@ public class NodeEditor : EditorWindow
                 }
 
                 e.Use();
-            }
-
-            if(Event.current.clickCount == 2)
-            {
-                currentFSM = (FSM)Elements[selectIndex];
             }
         }
 
@@ -208,9 +267,9 @@ public class NodeEditor : EditorWindow
             Repaint();
         }
 
-        if (currentFSM)
+        if (currentElem is FSM)
         {
-            foreach (Node n in currentFSM.states)
+            foreach (StateNode n in ((FSM)currentElem).states)
             {
                 n.DrawCurves();
             }
@@ -218,114 +277,177 @@ public class NodeEditor : EditorWindow
 
         BeginWindows();
 
-        if (!currentFSM)
+        if (currentElem is null)
         {
             for (int i = 0; i < Elements.Count; i++)
             {
                 GUIStyle style = new GUIStyle();
                 style.contentOffset = new Vector2(0, -20);
-                style.normal.background = MakeBackground(2, 2, 0, (int)Elements[i].type, Elements[i].isFocused);
+                style.normal.background = MakeBackground(2, 2, "Elements", (int)Elements[i].type, Elements[i].isFocused);
 
                 Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, Elements[i].elementName, style);
             }
         }
-        else
+        else if (currentElem is FSM)
         {
-            for (int i = 0; i < currentFSM.states.Count; i++)
+            for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
             {
                 GUIStyle style = new GUIStyle();
                 style.contentOffset = new Vector2(0, -20);
-                style.normal.background = MakeBackground(2, 2, 1, (int)currentFSM.states[i].type, currentFSM.states[i].isFocused);
+                style.normal.background = MakeBackground(2, 2, "FSM", (int)((FSM)currentElem).states[i].type, ((FSM)currentElem).states[i].isFocused);
 
-                currentFSM.states[i].windowRect = GUI.Window(i, currentFSM.states[i].windowRect, DrawNodeWindow, currentFSM.states[i].stateName, style);
+                ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].nodeName, style);
+            }
+        }
+        else if (currentElem is BehaviourTree)
+        {
+            for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
+            {
+                GUIStyle style = new GUIStyle();
+                style.contentOffset = new Vector2(0, -20);
+                style.normal.background = MakeBackground(2, 2, "BT", (int)((BehaviourTree)currentElem).states[i].type, ((BehaviourTree)currentElem).states[i].isFocused);
+
+                ((BehaviourTree)currentElem).states[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).states[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).states[i].nodeName, style);
             }
         }
 
         EndWindows();
 
-        if (e.isKey)
+        if (e.isKey && e.type == EventType.KeyUp)
         {
-            if (!makeTransitionMode && Event.current.keyCode == KeyCode.Delete)
+            if (!makeTransitionMode)
             {
-                if (focusedObj is Node)
+                switch (Event.current.keyCode)
                 {
-                    currentFSM.DeleteNode((Node)focusedObj);
+                    case KeyCode.Delete:
+                        if (focusedObj is BaseNode)
+                        {
+                            if (currentElem is FSM)
+                            {
+                                ((FSM)currentElem).DeleteNode((StateNode)focusedObj);
 
-                    if (currentFSM.isEntryState((Node)focusedObj))
-                    {
-                        Elements.Remove(currentFSM);
-                        currentFSM = null;
-                    }
+                                if (((FSM)currentElem).isEntryState((StateNode)focusedObj))
+                                {
+                                    Elements.Remove(currentElem);
+                                    currentElem = null;
+                                }
+                            }
 
-                    focusedObj = null;
+                            if (currentElem is BehaviourTree)
+                            {
+                                ((BehaviourTree)currentElem).DeleteNode((BehaviourNode)focusedObj);
+                            }
 
-                    e.Use();
+                            focusedObj = null;
+
+                            e.Use();
+                        }
+                        if (focusedObj is Transition)
+                        {
+                            if (currentElem is FSM)
+                            {
+                                ((FSM)currentElem).DeleteTransition((Transition)focusedObj);
+                            }
+
+                            focusedObj = null;
+
+                            e.Use();
+                        }
+                        if (focusedObj is FSM)
+                        {
+                            Elements.Remove((FSM)focusedObj);
+
+                            focusedObj = null;
+
+                            e.Use();
+                        }
+                        if (focusedObj is BehaviourTree)
+                        {
+                            Elements.Remove((BehaviourTree)focusedObj);
+
+                            focusedObj = null;
+
+                            e.Use();
+                        }
+                        break;
+                    case KeyCode.Escape:
+                        currentElem = null;
+
+                        e.Use();
+                        break;
                 }
-                if (focusedObj is Transition)
+            }
+            else
+            {
+                switch (Event.current.keyCode)
                 {
-                    currentFSM.DeleteTransition((Transition)focusedObj);
-
-                    focusedObj = null;
-
-                    e.Use();
-                }
-                if (focusedObj is FSM)
-                {
-                    Elements.Remove((FSM)focusedObj);
-
-                    focusedObj = null;
-
-                    e.Use();
-                }
-                if (focusedObj is BehaviourTree)
-                {
-                    Elements.Remove((BehaviourTree)focusedObj);
-
-                    focusedObj = null;
-
-                    e.Use();
+                    case KeyCode.Escape:
+                    case KeyCode.Delete:
+                        makeTransitionMode = false;
+                        break;
                 }
             }
         }
     }
 
     //Habrá que cambiarlo
-    private Texture2D MakeBackground(int width, int height, int typeOfItem, int type, bool isFocused)
+    private Texture2D MakeBackground(int width, int height, string typeOfItem, int type, bool isFocused)
     {
         Color col;
 
-        if (typeOfItem == 0)
+        switch (typeOfItem)
         {
-            switch (type)
-            {
-                case 0:
-                    col = Color.blue;
-                    break;
-                case 1:
-                    col = Color.black;
-                    break;
-                default:
-                    col = Color.white;
-                    break;
-            }
-        }
-        else
-        {
-            switch (type)
-            {
-                case 0:
-                    col = Color.grey;
-                    break;
-                case 1:
-                    col = Color.green;
-                    break;
-                case 2:
-                    col = Color.red;
-                    break;
-                default:
-                    col = Color.white;
-                    break;
-            }
+            case "Elements":
+                switch (type)
+                {
+                    case 0:
+                        col = Color.blue;
+                        break;
+                    case 1:
+                        col = Color.cyan;
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+            case "FSM":
+                switch (type)
+                {
+                    case 0:
+                        col = Color.grey;
+                        break;
+                    case 1:
+                        col = Color.green;
+                        break;
+                    case 2:
+                        col = Color.red;
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+            case "BT":
+                switch (type)
+                {
+                    case 0:
+                        col = Color.yellow;
+                        break;
+                    case 1:
+                        col = new Color(1, 0.5f, 0, 1); //orange
+                        break;
+                    case 2:
+                        col = new Color(0, 0.75f, 0, 1); //dark green
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+            default:
+                col = Color.clear;
+                break;
         }
 
         if (!isFocused)
@@ -346,7 +468,10 @@ public class NodeEditor : EditorWindow
 
     void DrawNodeWindow(int id)
     {
-        currentFSM.states[id].DrawWindow();
+        if (currentElem is FSM)
+            ((FSM)currentElem).states[id].DrawWindow();
+        if (currentElem is BehaviourTree)
+            ((BehaviourTree)currentElem).states[id].DrawWindow();
         GUI.DragWindow();
     }
 
@@ -360,121 +485,204 @@ public class NodeEditor : EditorWindow
     {
         string clb = obj.ToString();
 
-        if (clb.Equals("FSM"))
+        switch (clb)
         {
-            Node node = new Node(1);
-            node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
+            case "FSM":
+                StateNode entryNode = new StateNode(1);
+                entryNode.windowRect = new Rect(50, 50, 200, 100);
 
-            ClickableElement newFSM = new FSM("New FSM", node);
-            newFSM.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
+                ClickableElement newFSM = new FSM("New FSM", entryNode);
+                newFSM.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            Elements.Add(newFSM);
-        }
-        else if (clb.Equals("Node"))
-        {
-            var type = 1;
-            if (currentFSM.states.Exists(n => n.type == Node.stateType.Entry))
-            {
-                type = 2;
-            }
+                Elements.Add(newFSM);
+                break;
+            case "BT":
+                ClickableElement newBT = new BehaviourTree("New BT");
+                newBT.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            Node node = new Node(type);
-            node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
-
-            currentFSM.AddState(node);
-        }
-        else if (clb.Equals("makeTransition"))
-        {
-            bool clickedOnWindow = false;
-            int selectIndex = -1;
-
-            for (int i = 0; i < currentFSM.states.Count; i++)
-            {
-                if (currentFSM.states[i].windowRect.Contains(mousePos))
+                Elements.Add(newBT);
+                break;
+            case "Node":
+                if (currentElem is FSM)
                 {
-                    selectIndex = i;
-                    clickedOnWindow = true;
-                    break;
+                    var type = 1;
+                    if (((FSM)currentElem).states.Exists(n => n.type == StateNode.stateType.Entry))
+                    {
+                        type = 2;
+                    }
+
+                    StateNode node = new StateNode(type);
+                    node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
+
+                    ((FSM)currentElem).states.Add(node);
                 }
-            }
-
-            if (clickedOnWindow)
-            {
-                selectednode = currentFSM.states[selectIndex];
-                makeTransitionMode = true;
-            }
-        }
-        else if (clb.Equals("deleteNode"))
-        {
-            bool clickedOnWindow = false;
-            int selectIndex = -1;
-
-            for (int i = 0; i < currentFSM.states.Count; i++)
-            {
-                if (currentFSM.states[i].windowRect.Contains(mousePos))
+                break;
+            case "Sequence":
+                if (currentElem is BehaviourTree)
                 {
-                    selectIndex = i;
-                    clickedOnWindow = true;
-                    break;
+                    BehaviourNode node = new BehaviourNode(0);
+                    node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
+
+                    ((BehaviourTree)currentElem).states.Add(node);
                 }
-            }
-
-            if (clickedOnWindow)
-            {
-                Node selNode = currentFSM.states[selectIndex];
-
-                currentFSM.DeleteNode(selNode);
-
-                if (currentFSM.isEntryState(selNode))
+                break;
+            case "Selector":
+                if (currentElem is BehaviourTree)
                 {
-                    Elements.Remove(currentFSM);
-                    currentFSM = null;
-                }
-            }
-        }
-        else if (clb.Equals("deleteTransition"))
-        {
-            bool clickedOnTransition = false;
-            int selectIndex = -1;
+                    BehaviourNode node = new BehaviourNode(1);
+                    node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-            for (int i = 0; i < currentFSM.transitions.Count; i++)
-            {
-                if (currentFSM.transitions[i].textBox.Contains(mousePos))
+                    ((BehaviourTree)currentElem).states.Add(node);
+                }
+                break;
+            case "leafNode":
+                if (currentElem is BehaviourTree)
                 {
-                    selectIndex = i;
-                    clickedOnTransition = true;
-                    break;
+                    BehaviourNode node = new BehaviourNode(2);
+                    node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
+
+                    ((BehaviourTree)currentElem).states.Add(node);
                 }
-            }
+                break;
+            case "makeTransition":
+                bool clickedOnWindow = false;
+                int selectIndex = -1;
 
-            if (clickedOnTransition)
-            {
-                Transition transition = currentFSM.transitions[selectIndex];
-
-                currentFSM.DeleteTransition(transition);
-            }
-        }
-        else if (clb.Equals("entryState"))
-        {
-            bool clickedOnWindow = false;
-            int selectIndex = -1;
-
-            for (int i = 0; i < currentFSM.states.Count; i++)
-            {
-                if (currentFSM.states[i].windowRect.Contains(mousePos))
+                if (currentElem is FSM)
                 {
-                    selectIndex = i;
-                    clickedOnWindow = true;
-                    break;
+                    for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
+                    {
+                        if (((FSM)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
+                    }
+
+                    if (clickedOnWindow)
+                    {
+                        selectednode = ((FSM)currentElem).states[selectIndex];
+                        makeTransitionMode = true;
+                    }
                 }
-            }
+                else if (currentElem is BehaviourTree)
+                {
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
+                    {
+                        if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
+                    }
 
-            if (clickedOnWindow)
-            {
-                Node selNode = currentFSM.states[selectIndex];
+                    if (clickedOnWindow)
+                    {
+                        selectednode = ((BehaviourTree)currentElem).states[selectIndex];
+                        makeTransitionMode = true;
+                    }
+                }
+                break;
+            case "deleteNode":
+                clickedOnWindow = false;
+                selectIndex = -1;
 
-                currentFSM.SetAsEntry(selNode);
-            }
+                if (currentElem is FSM)
+                {
+                    for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
+                    {
+                        if (((FSM)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
+                    }
+
+                    if (clickedOnWindow)
+                    {
+                        StateNode selNode = ((FSM)currentElem).states[selectIndex];
+
+                        ((FSM)currentElem).DeleteNode(selNode);
+
+                        if (((FSM)currentElem).isEntryState(selNode))
+                        {
+                            Elements.Remove(currentElem);
+                            currentElem = null;
+                        }
+                    }
+                }
+
+                if (currentElem is BehaviourTree)
+                {
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
+                    {
+                        if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
+                    }
+
+                    if (clickedOnWindow)
+                    {
+                        BehaviourNode selNode = ((BehaviourTree)currentElem).states[selectIndex];
+
+                        ((BehaviourTree)currentElem).DeleteNode(selNode);
+                    }
+                }
+                break;
+            case "deleteTransition":
+                bool clickedOnTransition = false;
+                selectIndex = -1;
+
+                if (currentElem is FSM)
+                {
+                    for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
+                    {
+                        if (((FSM)currentElem).transitions[i].textBox.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnTransition = true;
+                            break;
+                        }
+                    }
+
+                    if (clickedOnTransition)
+                    {
+                        Transition transition = ((FSM)currentElem).transitions[selectIndex];
+
+                        ((FSM)currentElem).DeleteTransition(transition);
+                    }
+                }
+                break;
+            case "entryState":
+                clickedOnWindow = false;
+                selectIndex = -1;
+
+                if (currentElem is FSM)
+                {
+                    for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
+                    {
+                        if (((FSM)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            selectIndex = i;
+                            clickedOnWindow = true;
+                            break;
+                        }
+                    }
+
+                    if (clickedOnWindow)
+                    {
+                        StateNode selNode = ((FSM)currentElem).states[selectIndex];
+
+                        ((FSM)currentElem).SetAsEntry(selNode);
+                    }
+                }
+                break;
         }
     }
 

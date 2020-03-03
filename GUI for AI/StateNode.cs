@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-public class Node : GUIElement
+public class StateNode : BaseNode
 {
     public enum stateType
     {
@@ -13,59 +13,17 @@ public class Node : GUIElement
         Unconnected
     }
 
-    public Rect windowRect;
-
-    public bool hasInputs = false;
-
-    public string stateName = "";
-
     public stateType type;
 
     public List<Transition> nodeTransitions;
 
-    public readonly long identificator;
-
-    public Node(int typeNumber)
+    public StateNode(int typeNumber) : base()
     {
         nodeTransitions = new List<Transition>();
 
-        stateName = "New State";
-        hasInputs = true;
+        nodeName = "New State";
 
         type = (stateType)typeNumber;
-
-        identificator = UniqueID();
-    }
-
-    public long UniqueID()
-    {
-        long i = 1;
-
-        foreach (byte b in Guid.NewGuid().ToByteArray())
-        {
-            i *= ((int)b + 1);
-        }
-
-        long number = (DateTime.Now.Ticks / 10) % 1000000000;
-
-        return number;
-    }
-
-    public override bool Equals(object other)
-    {
-        if (!base.Equals((Node)other))
-            return false;
-        if (this.stateName != ((Node)other).stateName)
-            return false;
-        if (this.identificator != ((Node)other).identificator)
-            return false;
-
-        return true;
-    }
-
-    public void DrawWindow()
-    {
-        stateName = EditorGUILayout.TextField("State Name", stateName);
     }
 
     public void DrawCurves()
@@ -87,7 +45,7 @@ public class Node : GUIElement
         }
     }
 
-    public void NodeDeleted(Node node)
+    public void NodeDeleted(StateNode node)
     {
         for (int i = 0; i < nodeTransitions.Count; i++)
         {

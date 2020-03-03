@@ -6,17 +6,17 @@ using UnityEngine;
 public class BehaviourTree : ClickableElement
 {
     public string BTName = "";
-    private Node EntryState;
+    public readonly long identificator;
 
-    public List<Node> states = new List<Node>();
-
+    public List<BehaviourNode> states = new List<BehaviourNode>();
     public List<Transition> transitions;
 
-    public BehaviourTree(string name, Node node)
+    public BehaviourTree(string name)
     {
         BTName = name;
+        identificator = UniqueID();
 
-        AddEntryState(node);
+        type = elementType.BT;
 
         transitions = new List<Transition>();
     }
@@ -27,106 +27,19 @@ public class BehaviourTree : ClickableElement
             return false;
         if (this.BTName != ((BehaviourTree)other).BTName)
             return false;
-        if (this.EntryState.Equals(((BehaviourTree)other).EntryState))
+        if (this.identificator != ((BehaviourTree)other).identificator)
             return false;
 
         return true;
     }
 
-    public void AddEntryState(Node node)
-    {
-        states.Add(node);
-        EntryState = node;
-    }
-
-    public void SetAsEntry(Node node)
-    {
-        EntryState.type = Node.stateType.Unconnected;
-        node.type = Node.stateType.Entry;
-        EntryState = node;
-
-        CheckConnected();
-    }
-
-    public void AddState(Node node)
-    {
-        states.Add(node);
-    }
-
-    public Node[] GetState(Node node)
-    {
-        return states.FindAll(o => o.Equals(node)).ToArray();
-    }
-
-    public bool RemoveState(Node node)
-    {
-        return states.Remove(node);
-    }
-
-    public bool isEntryState(Node node)
-    {
-        return node.Equals(EntryState);
-    }
-
-    public void DeleteNode(Node node)
+    public void DeleteNode(BehaviourNode node)
     {
         states.Remove(node);
 
-        for (int i = 0; i < node.nodeTransitions.Count; i++)
+        foreach (Transition transition in transitions.FindAll(t => node.Equals(t.fromNode) || node.Equals(t.toNode)))
         {
-            DeleteTransition(node.nodeTransitions[i]);
+            transitions.Remove(transition);
         }
-
-        foreach (Node n in states)
-        {
-            n.NodeDeleted(node);
-        }
-    }
-
-    public void DeleteTransition(Transition deletedTrans)
-    {
-        transitions.Remove(deletedTrans);
-
-        foreach (Node n in states)
-        {
-            n.nodeTransitions.Remove(deletedTrans);
-        }
-
-        CheckConnected();
-    }
-
-    public void CheckConnected(Node baseNode = null)
-    {
-        if (baseNode == null)
-        {
-            baseNode = EntryState;
-
-            foreach (Node elem in states.FindAll(o => o.type != Node.stateType.Entry))
-            {
-                elem.type = Node.stateType.Unconnected;
-            }
-        }
-        else if(baseNode.type == Node.stateType.Unconnected)
-        {
-            baseNode.type = Node.stateType.Default;
-        } else
-        {
-            return;
-        }
-
-        foreach (Transition elem in baseNode.nodeTransitions.FindAll(o => o.fromNode.Equals(baseNode)))
-        {
-            CheckConnected(elem.toNode);
-        }
-    }
-
-    public void AddTransition(Transition newTransition)
-    {
-        transitions.Add(newTransition);
-
-        newTransition.fromNode.nodeTransitions.Add(newTransition);
-        newTransition.toNode.nodeTransitions.Add(newTransition);
-
-        CheckConnected();
     }
 }

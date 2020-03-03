@@ -18,6 +18,6 @@ public class ClickableElement : GUIElement
 
     public void DrawWindow()
     {
-        elementName = EditorGUILayout.TextField("FSM Name", elementName);
+        elementName = EditorGUILayout.TextField(type + " name", elementName);
     }
 }
