@@ -8,10 +8,12 @@ public class NodeEditor : EditorWindow
     private Vector2 mousePos;
 
     private BaseNode selectednode;
+    private BaseNode toCreateNode;
 
     private GUIElement focusedObj;
 
     private bool makeTransitionMode = false;
+    private bool makeBehaviourMode = false;
 
     private List<ClickableElement> Elements = new List<ClickableElement>();
 
@@ -29,11 +31,12 @@ public class NodeEditor : EditorWindow
 
         mousePos = e.mousePosition;
 
-        if (e.button == 1 && !makeTransitionMode)
+        if (e.button == 1 && !makeTransitionMode && !makeBehaviourMode)
         {
             if (e.type == EventType.MouseDown)
             {
                 bool clickedOnWindow = false;
+                bool clickedOnLeaf = false;
                 bool clickedOnTransition = false;
                 int selectIndex = -1;
 
@@ -67,6 +70,7 @@ public class NodeEditor : EditorWindow
                         {
                             selectIndex = i;
                             clickedOnWindow = true;
+                            if (((BehaviourTree)currentElem).states[i].type == BehaviourNode.behaviourType.Leaf) clickedOnLeaf = true;
                             break;
                         }
                     }
@@ -131,8 +135,15 @@ public class NodeEditor : EditorWindow
                 {
                     GenericMenu menu = new GenericMenu();
 
-                    menu.AddItem(new GUIContent("Add Leaf Node"), false, ContextCallback, "leafNode");
-                    menu.AddSeparator("");
+                    if (!clickedOnLeaf)
+                    {
+                        menu.AddItem(new GUIContent("Add Leaf Node"), false, ContextCallback, "leafNode");
+                        menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, "Sequence");
+                        menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, "Selector");
+
+                        menu.AddSeparator("");
+                    }
+
                     menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, "deleteNode");
 
                     menu.ShowAsContext();
@@ -254,15 +265,36 @@ public class NodeEditor : EditorWindow
 
                 e.Use();
             }
+
+            if (makeBehaviourMode && currentElem is BehaviourTree)
+            {
+                toCreateNode.windowRect.position = new Vector2(mousePos.x, mousePos.y);
+                ((BehaviourTree)currentElem).states.Add((BehaviourNode)toCreateNode);
+
+                Transition transition = new Transition("", selectednode, toCreateNode);
+                transition.textBox = DrawTextBox(transition);
+
+                ((BehaviourTree)currentElem).transitions.Add(transition);
+
+                makeBehaviourMode = false;
+                selectednode = null;
+                toCreateNode = null;
+
+                e.Use();
+            }
         }
 
-        if (makeTransitionMode && selectednode != null)
+        if ((makeTransitionMode || makeBehaviourMode) && selectednode != null)
         {
             Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
             Rect nodeRect = new Rect(selectednode.windowRect);
-            nodeRect.x = selectednode.windowRect.x + nodeRect.width / 2;
 
-            DrawNodeCurve(nodeRect, mouseRect, true);
+            if (currentElem is FSM)
+                nodeRect.x = selectednode.windowRect.x + nodeRect.width / 2;
+            if (currentElem is BehaviourTree)
+                nodeRect.y = selectednode.windowRect.y + nodeRect.height / 2;
+
+            DrawNodeCurve(nodeRect, mouseRect, true, currentElem is BehaviourTree);
 
             Repaint();
         }
@@ -273,6 +305,11 @@ public class NodeEditor : EditorWindow
             {
                 n.DrawCurves();
             }
+        }
+
+        if (currentElem is BehaviourTree)
+        {
+            ((BehaviourTree)currentElem).DrawCurves();
         }
 
         BeginWindows();
@@ -520,28 +557,94 @@ public class NodeEditor : EditorWindow
             case "Sequence":
                 if (currentElem is BehaviourTree)
                 {
+                    bool clickedOnSequence = false;
+                    int nodeIndex = -1;
+
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type != BehaviourNode.behaviourType.Leaf).Count; i++)
+                    {
+                        if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            nodeIndex = i;
+                            clickedOnSequence = true;
+                            break;
+                        }
+                    }
+
                     BehaviourNode node = new BehaviourNode(0);
                     node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-                    ((BehaviourTree)currentElem).states.Add(node);
+                    if (clickedOnSequence)
+                    {
+                        selectednode = ((BehaviourTree)currentElem).states[nodeIndex];
+                        toCreateNode = node;
+                        makeBehaviourMode = true;
+                    }
+                    else
+                    {
+                        ((BehaviourTree)currentElem).states.Add(node);
+                    }
                 }
                 break;
             case "Selector":
                 if (currentElem is BehaviourTree)
                 {
+                    bool clickedOnSelector = false;
+                    int nodeIndex = -1;
+
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type != BehaviourNode.behaviourType.Leaf).Count; i++)
+                    {
+                        if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            nodeIndex = i;
+                            clickedOnSelector = true;
+                            break;
+                        }
+                    }
+
                     BehaviourNode node = new BehaviourNode(1);
                     node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-                    ((BehaviourTree)currentElem).states.Add(node);
+                    if (clickedOnSelector)
+                    {
+                        selectednode = ((BehaviourTree)currentElem).states[nodeIndex];
+                        toCreateNode = node;
+                        makeBehaviourMode = true;
+                    }
+                    else
+                    {
+                        ((BehaviourTree)currentElem).states.Add(node);
+                    }
                 }
                 break;
             case "leafNode":
                 if (currentElem is BehaviourTree)
                 {
+                    bool clickedOnSequence = false;
+                    int nodeIndex = -1;
+
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type != BehaviourNode.behaviourType.Leaf).Count; i++)
+                    {
+                        if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                        {
+                            nodeIndex = i;
+                            clickedOnSequence = true;
+                            break;
+                        }
+                    }
+
                     BehaviourNode node = new BehaviourNode(2);
                     node.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
-                    ((BehaviourTree)currentElem).states.Add(node);
+                    if (clickedOnSequence)
+                    {
+                        selectednode = ((BehaviourTree)currentElem).states[nodeIndex];
+                        toCreateNode = node;
+                        makeBehaviourMode = true;
+                    }
+                    else
+                    {
+                        Debug.Log("Shouldn't happen. You didn't click on the node and still got the context menu for when you do");
+                    }
                 }
                 break;
             case "makeTransition":
@@ -566,7 +669,7 @@ public class NodeEditor : EditorWindow
                         makeTransitionMode = true;
                     }
                 }
-                else if (currentElem is BehaviourTree)
+                if (currentElem is BehaviourTree)
                 {
                     for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
@@ -686,12 +789,12 @@ public class NodeEditor : EditorWindow
         }
     }
 
-    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused)
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isBT = false)
     {
         Vector3 startPos = new Vector3(start.x + start.width / 2, start.y + start.height / 2, 0);
         Vector3 endPos = new Vector3(end.x + end.width / 2, end.y + end.height / 2, 0);
-        Vector3 startTan = startPos + Vector3.right * 50;
-        Vector3 endTan = endPos + Vector3.left * 50;
+        Vector3 startTan = isBT ? startPos + Vector3.up * 50 : startPos + Vector3.right * 50;
+        Vector3 endTan = isBT ? endPos + Vector3.down * 50 : endPos + Vector3.left * 50;
         Color shadowCol = new Color(0, 0, 0, 0.06f);
         int focusFactor = 3;
 
