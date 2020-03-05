@@ -25,7 +25,7 @@ public class FSM : ClickableElement
 
     public override bool Equals(object other)
     {
-        if (!base.Equals((FSM)other))
+        if (!base.Equals(other))
             return false;
         if (this.elementName != ((FSM)other).elementName)
             return false;

@@ -5,7 +5,7 @@ using UnityEditor;
 
 public class Transition : GUIElement
 {
-    public string transitionName;
+    public string transitionName = "";
     public BaseNode fromNode;
     public BaseNode toNode;
 
@@ -17,6 +17,11 @@ public class Transition : GUIElement
 
         fromNode = from;
         toNode = to;
+    }
+
+    public void DrawBox()
+    {
+        transitionName = EditorGUILayout.TextField("Name: ", transitionName);
     }
 
     public override bool Equals(object other)

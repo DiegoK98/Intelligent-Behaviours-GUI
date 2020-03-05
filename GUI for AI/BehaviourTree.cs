@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class BehaviourTree : ClickableElement
 {
-    public string BTName = "";
     public readonly long identificator;
 
     public List<BehaviourNode> states = new List<BehaviourNode>();
@@ -13,7 +12,7 @@ public class BehaviourTree : ClickableElement
 
     public BehaviourTree(string name)
     {
-        BTName = name;
+        elementName = name;
         identificator = UniqueID();
 
         type = elementType.BT;
@@ -23,9 +22,9 @@ public class BehaviourTree : ClickableElement
 
     public override bool Equals(object other)
     {
-        if (!base.Equals((BehaviourTree)other))
+        if (!base.Equals(other))
             return false;
-        if (this.BTName != ((BehaviourTree)other).BTName)
+        if (this.elementName != ((BehaviourTree)other).elementName)
             return false;
         if (this.identificator != ((BehaviourTree)other).identificator)
             return false;
@@ -51,9 +50,26 @@ public class BehaviourTree : ClickableElement
     {
         states.Remove(node);
 
-        foreach (Transition transition in transitions.FindAll(t => node.Equals(t.fromNode) || node.Equals(t.toNode)))
+        foreach (Transition transition in transitions.FindAll(t => node.Equals(t.fromNode)))
+        {
+            transitions.Remove(transition);
+            DeleteNode((BehaviourNode)transition.toNode);
+        }
+        foreach (Transition transition in transitions.FindAll(t => node.Equals(t.toNode)))
         {
             transitions.Remove(transition);
         }
+    }
+
+    public int SonsCount(int i)
+    {
+        int res = 0;
+
+        foreach (Transition transition in transitions.FindAll(t => states[i].Equals(t.fromNode)))
+        {
+            res += SonsCount(states.IndexOf((BehaviourNode)transition.toNode)) + 1;
+        }
+
+        return res;
     }
 }

@@ -17,12 +17,14 @@ public class NodeEditor : EditorWindow
 
     private List<ClickableElement> Elements = new List<ClickableElement>();
 
-    private ClickableElement currentElem;
+    public ClickableElement currentElem;
+    private readonly int MAX_N_STATES = 100;
 
     [MenuItem("Window/Node Editor")]
     static void ShowEditor()
     {
-        NodeEditor editor = EditorWindow.GetWindow<NodeEditor>();
+        PopupWindow.ClosePopup(GetWindow<PopupWindow>());
+        GetWindow<NodeEditor>();
     }
 
     private void OnGUI()
@@ -158,13 +160,16 @@ public class NodeEditor : EditorWindow
             bool clickedOnTransition = false;
             int selectIndex = -1;
 
-            for (int i = 0; i < Elements?.Count; i++)
+            if (currentElem is null)
             {
-                if (Elements[i].windowRect.Contains(mousePos))
+                for (int i = 0; i < Elements?.Count; i++)
                 {
-                    selectIndex = i;
-                    clickedOnElement = true;
-                    break;
+                    if (Elements[i].windowRect.Contains(mousePos))
+                    {
+                        selectIndex = i;
+                        clickedOnElement = true;
+                        break;
+                    }
                 }
             }
 
@@ -249,7 +254,6 @@ public class NodeEditor : EditorWindow
                 if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
                 {
                     Transition transition = new Transition("New Transition", selectednode, ((FSM)currentElem).states[selectIndex]);
-                    transition.textBox = DrawTextBox(transition);
 
                     ((FSM)currentElem).AddTransition(transition);
 
@@ -272,7 +276,6 @@ public class NodeEditor : EditorWindow
                 ((BehaviourTree)currentElem).states.Add((BehaviourNode)toCreateNode);
 
                 Transition transition = new Transition("", selectednode, toCreateNode);
-                transition.textBox = DrawTextBox(transition);
 
                 ((BehaviourTree)currentElem).transitions.Add(transition);
 
@@ -335,6 +338,17 @@ public class NodeEditor : EditorWindow
 
                 ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].nodeName, style);
             }
+
+            for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
+            {
+                Transition elem = ((FSM)currentElem).transitions[i];
+
+                Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
+                                          elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
+                Rect textBox = new Rect(pos.x - 75, pos.y - 15, 200, 50);
+
+                elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, elem.transitionName);
+            }
         }
         else if (currentElem is BehaviourTree)
         {
@@ -359,50 +373,28 @@ public class NodeEditor : EditorWindow
                     case KeyCode.Delete:
                         if (focusedObj is BaseNode)
                         {
-                            if (currentElem is FSM)
-                            {
-                                ((FSM)currentElem).DeleteNode((StateNode)focusedObj);
-
-                                if (((FSM)currentElem).isEntryState((StateNode)focusedObj))
-                                {
-                                    Elements.Remove(currentElem);
-                                    currentElem = null;
-                                }
-                            }
-
-                            if (currentElem is BehaviourTree)
-                            {
-                                ((BehaviourTree)currentElem).DeleteNode((BehaviourNode)focusedObj);
-                            }
-
-                            focusedObj = null;
+                            if(currentElem is FSM)
+                                PopupWindow.Init(this, ((FSM)currentElem).states.IndexOf((StateNode)focusedObj), "Node");
+                            else
+                                PopupWindow.Init(this, ((BehaviourTree)currentElem).states.IndexOf((BehaviourNode)focusedObj), "Node");
 
                             e.Use();
                         }
                         if (focusedObj is Transition)
                         {
-                            if (currentElem is FSM)
-                            {
-                                ((FSM)currentElem).DeleteTransition((Transition)focusedObj);
-                            }
-
-                            focusedObj = null;
+                            PopupWindow.Init(this, ((FSM)currentElem).transitions.IndexOf((Transition)focusedObj), "Transition");
 
                             e.Use();
                         }
                         if (focusedObj is FSM)
                         {
-                            Elements.Remove((FSM)focusedObj);
-
-                            focusedObj = null;
+                            PopupWindow.Init(this, Elements.IndexOf((FSM)focusedObj), "FSM");
 
                             e.Use();
                         }
                         if (focusedObj is BehaviourTree)
                         {
-                            Elements.Remove((BehaviourTree)focusedObj);
-
-                            focusedObj = null;
+                            PopupWindow.Init(this, Elements.IndexOf((BehaviourTree)focusedObj), "Behaviour Tree");
 
                             e.Use();
                         }
@@ -516,6 +508,11 @@ public class NodeEditor : EditorWindow
     {
         Elements[id].DrawWindow();
         GUI.DragWindow();
+    }
+
+    void DrawTransitionBox(int id)
+    {
+        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox();
     }
 
     void ContextCallback(object obj)
@@ -706,15 +703,7 @@ public class NodeEditor : EditorWindow
 
                     if (clickedOnWindow)
                     {
-                        StateNode selNode = ((FSM)currentElem).states[selectIndex];
-
-                        ((FSM)currentElem).DeleteNode(selNode);
-
-                        if (((FSM)currentElem).isEntryState(selNode))
-                        {
-                            Elements.Remove(currentElem);
-                            currentElem = null;
-                        }
+                        PopupWindow.Init(this, selectIndex, "Node");
                     }
                 }
 
@@ -732,9 +721,7 @@ public class NodeEditor : EditorWindow
 
                     if (clickedOnWindow)
                     {
-                        BehaviourNode selNode = ((BehaviourTree)currentElem).states[selectIndex];
-
-                        ((BehaviourTree)currentElem).DeleteNode(selNode);
+                        PopupWindow.Init(this, selectIndex, "Node");
                     }
                 }
                 break;
@@ -756,9 +743,7 @@ public class NodeEditor : EditorWindow
 
                     if (clickedOnTransition)
                     {
-                        Transition transition = ((FSM)currentElem).transitions[selectIndex];
-
-                        ((FSM)currentElem).DeleteTransition(transition);
+                        PopupWindow.Init(this, selectIndex, "Transition");
                     }
                 }
                 break;
@@ -789,6 +774,57 @@ public class NodeEditor : EditorWindow
         }
     }
 
+    public void Delete(string type, int selectIndex)
+    {
+        switch (type)
+        {
+            case "Node":
+                if (currentElem is FSM)
+                {
+                    StateNode selNode = ((FSM)currentElem).states[selectIndex];
+
+                    ((FSM)currentElem).DeleteNode(selNode);
+
+                    if (((FSM)currentElem).isEntryState(selNode))
+                    {
+                        Elements.Remove(currentElem);
+                        currentElem = null;
+                    }
+                }
+                if (currentElem is BehaviourTree)
+                {
+                    BehaviourNode selNode = ((BehaviourTree)currentElem).states[selectIndex];
+
+                    ((BehaviourTree)currentElem).DeleteNode(selNode);
+                }
+
+                focusedObj = null;
+
+                break;
+            case "Transition":
+                Transition transition = ((FSM)currentElem).transitions[selectIndex];
+
+                ((FSM)currentElem).DeleteTransition(transition);
+
+                focusedObj = null;
+                break;
+            case "FSM":
+                FSM fsm = (FSM)Elements[selectIndex];
+
+                Elements.Remove(fsm);
+
+                focusedObj = null;
+                break;
+            case "Behaviour Tree":
+                BehaviourTree bt = (BehaviourTree)Elements[selectIndex];
+
+                Elements.Remove(bt);
+
+                focusedObj = null;
+                break;
+        }
+    }
+
     public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isBT = false)
     {
         Vector3 startPos = new Vector3(start.x + start.width / 2, start.y + start.height / 2, 0);
@@ -810,19 +846,5 @@ public class NodeEditor : EditorWindow
         }
 
         Handles.DrawBezier(startPos, endPos, startTan, endTan, Color.black, null, 1);
-    }
-
-    public static Rect DrawTextBox(Transition trans)
-    {
-        Vector2 pos = new Vector2(trans.fromNode.windowRect.center.x + (trans.toNode.windowRect.x - trans.fromNode.windowRect.x) / 2, trans.fromNode.windowRect.center.y + (trans.toNode.windowRect.y - trans.fromNode.windowRect.y) / 2);
-        Rect textBox = new Rect(pos.x - 75, pos.y - 15, 150, 30);
-
-        GUIStyle style = new GUIStyle();
-
-        style.alignment = TextAnchor.UpperCenter;
-
-        EditorGUI.LabelField(textBox, trans.transitionName, style);
-
-        return textBox;
     }
 }
