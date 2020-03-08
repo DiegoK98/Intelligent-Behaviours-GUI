@@ -211,6 +211,7 @@ public class NodeEditor : EditorWindow
 
             if (clickedOnElement)
             {
+                GUI.FocusControl(null);
                 if (focusedObj != null) focusedObj.isFocused = false;
                 Elements[selectIndex].isFocused = true;
                 focusedObj = Elements[selectIndex];
@@ -219,29 +220,51 @@ public class NodeEditor : EditorWindow
                 {
                     currentElem = Elements[selectIndex];
                 }
+
+                if (GUI.GetNameOfFocusedControl() is null)
+                {
+                    e.Use();
+                }
             }
             else if (clickedOnTransition && currentElem is FSM)
             {
+                GUI.FocusControl(null);
                 if (focusedObj != null) focusedObj.isFocused = false;
                 ((FSM)currentElem).transitions[selectIndex].isFocused = true;
                 focusedObj = ((FSM)currentElem).transitions[selectIndex];
 
-                e.Use();
+                if (GUI.GetNameOfFocusedControl() is null)
+                {
+                    e.Use();
+                }
             }
             else if (clickedOnWindow && currentElem is FSM)
             {
+                GUI.FocusControl(null);
                 if (focusedObj != null) focusedObj.isFocused = false;
                 ((FSM)currentElem).states[selectIndex].isFocused = true;
                 focusedObj = ((FSM)currentElem).states[selectIndex];
+
+                if (GUI.GetNameOfFocusedControl() is null)
+                {
+                    e.Use();
+                }
             }
             else if (clickedOnWindow && currentElem is BehaviourTree)
             {
+                GUI.FocusControl(null);
                 if (focusedObj != null) focusedObj.isFocused = false;
                 ((BehaviourTree)currentElem).states[selectIndex].isFocused = true;
                 focusedObj = ((BehaviourTree)currentElem).states[selectIndex];
+
+                if (GUI.GetNameOfFocusedControl() is null)
+                {
+                    e.Use();
+                }
             }
             else
             {
+                GUI.FocusControl(null);
                 if (focusedObj != null) focusedObj.isFocused = false;
 
                 focusedObj = null;
@@ -345,9 +368,13 @@ public class NodeEditor : EditorWindow
 
                 Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
-                Rect textBox = new Rect(pos.x - 75, pos.y - 15, 200, 50);
+                Rect textBox = new Rect(pos.x - 75, pos.y - 15, 200, 30);
 
-                elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, elem.transitionName);
+                GUIStyle style = new GUIStyle();
+                style.contentOffset = new Vector2(0, -20);
+                style.normal.background = MakeBackground(2, 2, "Transition", 0, ((FSM)currentElem).transitions[i].isFocused);
+
+                elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, elem.transitionName, style);
             }
         }
         else if (currentElem is BehaviourTree)
@@ -419,6 +446,11 @@ public class NodeEditor : EditorWindow
         }
     }
 
+    private void OnDestroy()
+    {
+        PopupWindow.ClosePopup(GetWindow<PopupWindow>());
+    }
+
     //Habrá que cambiarlo
     private Texture2D MakeBackground(int width, int height, string typeOfItem, int type, bool isFocused)
     {
@@ -474,6 +506,9 @@ public class NodeEditor : EditorWindow
                         break;
                 }
                 break;
+            case "Transition":
+                col = Color.yellow;
+                break;
             default:
                 col = Color.clear;
                 break;
@@ -513,6 +548,7 @@ public class NodeEditor : EditorWindow
     void DrawTransitionBox(int id)
     {
         ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox();
+        GUI.DragWindow();
     }
 
     void ContextCallback(object obj)

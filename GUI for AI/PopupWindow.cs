@@ -11,6 +11,9 @@ public class PopupWindow : EditorWindow
     static NodeEditor senderEditor;
     static int locIndex;
 
+    static int width = 250;
+    static int height = 150;
+
     public static void Init(NodeEditor sender, int index, string type)
     {
         senderEditor = sender;
@@ -19,7 +22,7 @@ public class PopupWindow : EditorWindow
         typeOfElem = type;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
-        window.position = new Rect(Screen.width / 2, Screen.height / 2, 250, 150);
+        window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
         window.ShowPopup();
     }
 
@@ -60,6 +63,16 @@ public class PopupWindow : EditorWindow
         {
             this.Close();
         }
+
+        if (Event.current.isKey && Event.current.type == EventType.KeyUp)
+        {
+            switch (Event.current.keyCode)
+            {
+                case KeyCode.Escape:
+                    this.Close();
+                    break;
+            }
+        }
     }
 
     //Habrá que cambiarlo
@@ -76,5 +89,10 @@ public class PopupWindow : EditorWindow
         result.Apply();
 
         return result;
+    }
+
+    private void OnLostFocus()
+    {
+        this.Close();
     }
 }
