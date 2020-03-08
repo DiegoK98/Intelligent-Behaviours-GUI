@@ -28,8 +28,25 @@ public class BaseNode : GUIElement
         return true;
     }
 
-    public void DrawWindow()
+    public void DrawWindow(NodeEditor parent)
     {
         nodeName = EditorGUILayout.TextField("State Name", nodeName);
+
+        if (!parent.popupShown)
+        {
+            //En vez de is null deberia checkeear si ha cambiado
+            if (parent.focusedObj is null && CheckNameExisting(parent, nodeName))
+            {
+                parent.popupShown = true;
+                PopupWindow.InitNameRepeated(parent, nodeName, windowRect);
+            }
+        }
+        else
+        {
+            if (parent.focusedObj is null)
+            {
+                parent.popupShown = false;
+            }
+        }
     }
 }

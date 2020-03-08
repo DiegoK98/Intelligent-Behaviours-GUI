@@ -1,8 +1,17 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System;
 
 public class PopupWindow : EditorWindow
 {
+    enum typeOfPopup
+    {
+        Delete,
+        NameRepeat
+    }
+
+    static typeOfPopup PopupType;
+
     static string typeOfElem;
 
     static GUIStyle DeleteStyle;
@@ -10,12 +19,15 @@ public class PopupWindow : EditorWindow
 
     static NodeEditor senderEditor;
     static int locIndex;
+    static string repeatedName;
 
     static int width = 250;
-    static int height = 150;
+    static int height = 100;
 
-    public static void Init(NodeEditor sender, int index, string type)
+    public static void InitDelete(NodeEditor sender, int index, string type)
     {
+        PopupType = typeOfPopup.Delete;
+
         senderEditor = sender;
 
         locIndex = index;
@@ -26,12 +38,45 @@ public class PopupWindow : EditorWindow
         window.ShowPopup();
     }
 
+    public static void InitNameRepeated(NodeEditor sender, string name, Rect rect)
+    {
+        PopupType = typeOfPopup.NameRepeat;
+
+        repeatedName = name;
+
+        PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+        window.position = new Rect(sender.position.x + rect.center.x - width / 2, sender.position.y + rect.center.y + height / 2, width, height);
+        window.ShowPopup();
+    }
+
     public static void ClosePopup(PopupWindow popup)
     {
         popup.Close();
     }
 
     void OnGUI()
+    {
+        if (PopupType == typeOfPopup.Delete)
+        {
+            ShowDeletePopup();
+        }
+        else if (PopupType == typeOfPopup.NameRepeat)
+        {
+            ShowNamePopup();
+        }
+
+        if (Event.current.isKey && Event.current.type == EventType.KeyUp)
+        {
+            switch (Event.current.keyCode)
+            {
+                case KeyCode.Escape:
+                    this.Close();
+                    break;
+            }
+        }
+    }
+
+    private void ShowDeletePopup()
     {
         DeleteStyle = new GUIStyle(GUI.skin.button);
         DeleteStyle.normal.background = MakeBackground(Color.red);
@@ -52,7 +97,7 @@ public class PopupWindow : EditorWindow
             }
         }
 
-        GUILayout.Space(70);
+        GUILayout.Space(30);
 
         if (GUILayout.Button("Delete", DeleteStyle))
         {
@@ -63,15 +108,23 @@ public class PopupWindow : EditorWindow
         {
             this.Close();
         }
+    }
 
-        if (Event.current.isKey && Event.current.type == EventType.KeyUp)
+    private void ShowNamePopup()
+    {
+        CancelStyle = new GUIStyle(GUI.skin.button);
+        CancelStyle.normal.background = MakeBackground(Color.gray);
+
+        GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+        labelStyle.normal.textColor = Color.red;
+
+        EditorGUILayout.LabelField("This element's name " + repeatedName + " is repeated in another element", labelStyle, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+
+        GUILayout.Space(30);
+
+        if (GUILayout.Button("Cancel", CancelStyle))
         {
-            switch (Event.current.keyCode)
-            {
-                case KeyCode.Escape:
-                    this.Close();
-                    break;
-            }
+            this.Close();
         }
     }
 

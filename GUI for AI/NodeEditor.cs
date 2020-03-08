@@ -10,15 +10,17 @@ public class NodeEditor : EditorWindow
     private BaseNode selectednode;
     private BaseNode toCreateNode;
 
-    private GUIElement focusedObj;
+    public GUIElement focusedObj;
 
     private bool makeTransitionMode = false;
     private bool makeBehaviourMode = false;
 
-    private List<ClickableElement> Elements = new List<ClickableElement>();
+    public List<ClickableElement> Elements = new List<ClickableElement>();
 
     public ClickableElement currentElem;
     private readonly int MAX_N_STATES = 100;
+
+    public bool popupShown;
 
     [MenuItem("Window/Node Editor")]
     static void ShowEditor()
@@ -401,27 +403,27 @@ public class NodeEditor : EditorWindow
                         if (focusedObj is BaseNode)
                         {
                             if(currentElem is FSM)
-                                PopupWindow.Init(this, ((FSM)currentElem).states.IndexOf((StateNode)focusedObj), "Node");
+                                PopupWindow.InitDelete(this, ((FSM)currentElem).states.IndexOf((StateNode)focusedObj), "Node");
                             else
-                                PopupWindow.Init(this, ((BehaviourTree)currentElem).states.IndexOf((BehaviourNode)focusedObj), "Node");
+                                PopupWindow.InitDelete(this, ((BehaviourTree)currentElem).states.IndexOf((BehaviourNode)focusedObj), "Node");
 
                             e.Use();
                         }
                         if (focusedObj is Transition)
                         {
-                            PopupWindow.Init(this, ((FSM)currentElem).transitions.IndexOf((Transition)focusedObj), "Transition");
+                            PopupWindow.InitDelete(this, ((FSM)currentElem).transitions.IndexOf((Transition)focusedObj), "Transition");
 
                             e.Use();
                         }
                         if (focusedObj is FSM)
                         {
-                            PopupWindow.Init(this, Elements.IndexOf((FSM)focusedObj), "FSM");
+                            PopupWindow.InitDelete(this, Elements.IndexOf((FSM)focusedObj), "FSM");
 
                             e.Use();
                         }
                         if (focusedObj is BehaviourTree)
                         {
-                            PopupWindow.Init(this, Elements.IndexOf((BehaviourTree)focusedObj), "Behaviour Tree");
+                            PopupWindow.InitDelete(this, Elements.IndexOf((BehaviourTree)focusedObj), "Behaviour Tree");
 
                             e.Use();
                         }
@@ -533,21 +535,21 @@ public class NodeEditor : EditorWindow
     void DrawNodeWindow(int id)
     {
         if (currentElem is FSM)
-            ((FSM)currentElem).states[id].DrawWindow();
+            ((FSM)currentElem).states[id].DrawWindow(this);
         if (currentElem is BehaviourTree)
-            ((BehaviourTree)currentElem).states[id].DrawWindow();
+            ((BehaviourTree)currentElem).states[id].DrawWindow(this);
         GUI.DragWindow();
     }
 
     void DrawElementWindow(int id)
     {
-        Elements[id].DrawWindow();
+        Elements[id].DrawWindow(this);
         GUI.DragWindow();
     }
 
     void DrawTransitionBox(int id)
     {
-        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox();
+        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox(this);
         GUI.DragWindow();
     }
 
@@ -739,7 +741,7 @@ public class NodeEditor : EditorWindow
 
                     if (clickedOnWindow)
                     {
-                        PopupWindow.Init(this, selectIndex, "Node");
+                        PopupWindow.InitDelete(this, selectIndex, "Node");
                     }
                 }
 
@@ -757,7 +759,7 @@ public class NodeEditor : EditorWindow
 
                     if (clickedOnWindow)
                     {
-                        PopupWindow.Init(this, selectIndex, "Node");
+                        PopupWindow.InitDelete(this, selectIndex, "Node");
                     }
                 }
                 break;
@@ -779,7 +781,7 @@ public class NodeEditor : EditorWindow
 
                     if (clickedOnTransition)
                     {
-                        PopupWindow.Init(this, selectIndex, "Transition");
+                        PopupWindow.InitDelete(this, selectIndex, "Transition");
                     }
                 }
                 break;

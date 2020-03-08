@@ -19,9 +19,26 @@ public class Transition : GUIElement
         toNode = to;
     }
 
-    public void DrawBox()
+    public void DrawBox(NodeEditor parent)
     {
         transitionName = EditorGUILayout.TextField("Name: ", transitionName);
+
+        if (!parent.popupShown)
+        {
+            //En vez de is null deberia checkeear si ha cambiado
+            if (parent.focusedObj is null && CheckNameExisting(parent, transitionName))
+            {
+                parent.popupShown = true;
+                PopupWindow.InitNameRepeated(parent, transitionName, textBox);
+            }
+        }
+        else
+        {
+            if (parent.focusedObj is null)
+            {
+                parent.popupShown = false;
+            }
+        }
     }
 
     public override bool Equals(object other)
