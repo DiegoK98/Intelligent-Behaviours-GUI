@@ -17,11 +17,13 @@ public class StateNode : BaseNode
 
     public List<Transition> nodeTransitions;
 
+    static int uniqueNameID = 0;
+
     public StateNode(int typeNumber) : base()
     {
         nodeTransitions = new List<Transition>();
 
-        nodeName = "New State";
+        nodeName = "New State " + uniqueNameID++;
 
         type = (stateType)typeNumber;
     }

@@ -15,21 +15,12 @@ public class BehaviourNode : BaseNode
 
     public behaviourType type;
 
+    static int uniqueNameID = 0;
+
     public BehaviourNode(int typeNumber) : base()
     {
         type = (behaviourType)typeNumber;
 
-        switch (typeNumber)
-        {
-            case 0:
-                nodeName = "New Sequence";
-                break;
-            case 1:
-                nodeName = "New Selector";
-                break;
-            case 2:
-                nodeName = "New Leaf";
-                break;
-        }
+        nodeName = "New " + type + " Node " + uniqueNameID++;
     }
 }

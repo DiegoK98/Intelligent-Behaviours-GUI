@@ -11,9 +11,11 @@ public class FSM : ClickableElement
     public List<StateNode> states = new List<StateNode>();
     public List<Transition> transitions;
 
-    public FSM(string name, StateNode node)
+    static int uniqueNameID = 0;
+
+    public FSM(StateNode node)
     {
-        elementName = name;
+        elementName = "New FSM " + uniqueNameID++;
         identificator = UniqueID();
 
         type = elementType.FSM;

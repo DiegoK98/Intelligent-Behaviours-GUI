@@ -276,7 +276,7 @@ public class NodeEditor : EditorWindow
             {
                 if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
                 {
-                    Transition transition = new Transition("New Transition", selectednode, ((FSM)currentElem).states[selectIndex]);
+                    Transition transition = new Transition("New Transition " + ((FSM)currentElem).transitions.Count, selectednode, ((FSM)currentElem).states[selectIndex]);
 
                     ((FSM)currentElem).AddTransition(transition);
 
@@ -561,13 +561,13 @@ public class NodeEditor : EditorWindow
                 StateNode entryNode = new StateNode(1);
                 entryNode.windowRect = new Rect(50, 50, 200, 100);
 
-                ClickableElement newFSM = new FSM("New FSM", entryNode);
+                ClickableElement newFSM = new FSM(entryNode);
                 newFSM.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
                 Elements.Add(newFSM);
                 break;
             case "BT":
-                ClickableElement newBT = new BehaviourTree("New BT");
+                ClickableElement newBT = new BehaviourTree();
                 newBT.windowRect = new Rect(mousePos.x, mousePos.y, 200, 100);
 
                 Elements.Add(newBT);

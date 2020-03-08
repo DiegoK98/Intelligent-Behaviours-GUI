@@ -10,9 +10,11 @@ public class BehaviourTree : ClickableElement
     public List<BehaviourNode> states = new List<BehaviourNode>();
     public List<Transition> transitions;
 
-    public BehaviourTree(string name)
+    static int uniqueNameID = 0;
+
+    public BehaviourTree()
     {
-        elementName = name;
+        elementName = "New BT " + uniqueNameID++;
         identificator = UniqueID();
 
         type = elementType.BT;
