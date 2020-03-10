@@ -16,6 +16,8 @@ public class ClickableElement : GUIElement
     public string elementName = "";
     public elementType type;
 
+    public ClickableElement parent;
+
     public void DrawWindow(NodeEditor parent)
     {
         elementName = EditorGUILayout.TextField(type + " name", elementName);

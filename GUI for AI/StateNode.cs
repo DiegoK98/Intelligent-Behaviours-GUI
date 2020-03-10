@@ -13,6 +13,8 @@ public class StateNode : BaseNode
         Unconnected
     }
 
+    public ClickableElement elem;
+
     public stateType type;
 
     public List<Transition> nodeTransitions;
@@ -24,6 +26,17 @@ public class StateNode : BaseNode
         nodeTransitions = new List<Transition>();
 
         nodeName = "New State " + uniqueNameID++;
+
+        type = (stateType)typeNumber;
+    }
+
+    public StateNode(int typeNumber, ClickableElement subElem) : base()
+    {
+        nodeTransitions = new List<Transition>();
+
+        elem = subElem;
+
+        nodeName = elem.elementName;
 
         type = (stateType)typeNumber;
     }
