@@ -612,8 +612,10 @@ public class NodeEditor : EditorWindow
                     bool clickedOnSequence = false;
                     int nodeIndex = -1;
 
-                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type < BehaviourNode.behaviourType.Leaf).Count; i++)
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
+                        if (((BehaviourTree)currentElem).states[i].type == BehaviourNode.behaviourType.Leaf)
+                            continue;
                         if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
                         {
                             nodeIndex = i;
@@ -670,8 +672,10 @@ public class NodeEditor : EditorWindow
                     bool clickedOnSequence = false;
                     int nodeIndex = -1;
 
-                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type < BehaviourNode.behaviourType.Leaf).Count; i++)
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
+                        if (((BehaviourTree)currentElem).states[i].type == BehaviourNode.behaviourType.Leaf)
+                            continue;
                         if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
                         {
                             nodeIndex = i;
@@ -720,8 +724,10 @@ public class NodeEditor : EditorWindow
                     bool clickedOnSequence = false;
                     int nodeIndex = -1;
 
-                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type != BehaviourNode.behaviourType.Leaf).Count; i++)
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
+                        if (((BehaviourTree)currentElem).states[i].type == BehaviourNode.behaviourType.Leaf)
+                            continue;
                         if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
                         {
                             nodeIndex = i;
@@ -753,8 +759,10 @@ public class NodeEditor : EditorWindow
                     bool clickedOnSelector = false;
                     int nodeIndex = -1;
 
-                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type != BehaviourNode.behaviourType.Leaf).Count; i++)
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
+                        if (((BehaviourTree)currentElem).states[i].type == BehaviourNode.behaviourType.Leaf)
+                            continue;
                         if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
                         {
                             nodeIndex = i;
@@ -786,8 +794,10 @@ public class NodeEditor : EditorWindow
                     bool clickedOnSequence = false;
                     int nodeIndex = -1;
 
-                    for (int i = 0; i < ((BehaviourTree)currentElem).states.FindAll(n => n.type != BehaviourNode.behaviourType.Leaf).Count; i++)
+                    for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
                     {
+                        if (((BehaviourTree)currentElem).states[i].type == BehaviourNode.behaviourType.Leaf)
+                            continue;
                         if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
                         {
                             nodeIndex = i;
