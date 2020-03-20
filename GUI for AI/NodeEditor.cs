@@ -336,12 +336,7 @@ public class NodeEditor : EditorWindow
             Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
             Rect nodeRect = new Rect(selectednode.windowRect);
 
-            if (currentElem is FSM)
-                nodeRect.x = selectednode.windowRect.x + nodeRect.width / 2;
-            if (currentElem is BehaviourTree)
-                nodeRect.y = selectednode.windowRect.y + nodeRect.height / 2;
-
-            DrawNodeCurve(nodeRect, mouseRect, true, currentElem is BehaviourTree);
+            DrawNodeCurve(nodeRect, mouseRect, true);
 
             Repaint();
         }
@@ -1004,12 +999,40 @@ public class NodeEditor : EditorWindow
         }
     }
 
-    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isBT = false)
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused)
     {
+        float ang = Vector2.SignedAngle((end.position - start.position), Vector2.right);
+        Vector3 direction = Vector3.up;
+
+        if (ang > -45 && ang <= 45)
+        {
+            start.x += start.width / 2;
+            end.x -= end.width / 2;
+            direction = Vector3.right;
+        }
+        else if (ang > 45 && ang <= 135)
+        {
+            start.y -= start.height / 2;
+            end.y += end.height / 2;
+            direction = Vector3.down;
+        }
+        else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
+        {
+            start.x -= start.width / 2;
+            end.x += end.width / 2;
+            direction = Vector3.left;
+        }
+        else if (ang > -135 && ang <= -45)
+        {
+            start.y += start.height / 2;
+            end.y -= end.height / 2;
+            direction = Vector3.up;
+        }
+
         Vector3 startPos = new Vector3(start.x + start.width / 2, start.y + start.height / 2, 0);
         Vector3 endPos = new Vector3(end.x + end.width / 2, end.y + end.height / 2, 0);
-        Vector3 startTan = isBT ? startPos + Vector3.up * 50 : startPos + Vector3.right * 50;
-        Vector3 endTan = isBT ? endPos + Vector3.down * 50 : endPos + Vector3.left * 50;
+        Vector3 startTan = startPos + direction * 50;
+        Vector3 endTan = endPos - direction * 50;
         Color shadowCol = new Color(0, 0, 0, 0.06f);
         int focusFactor = 3;
 

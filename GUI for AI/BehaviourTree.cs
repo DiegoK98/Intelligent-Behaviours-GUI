@@ -39,12 +39,9 @@ public class BehaviourTree : ClickableElement
         foreach (Transition elem in transitions)
         {
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
-            fromNodeRect.y = elem.fromNode.windowRect.y + fromNodeRect.height / 2;
-
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
-            toNodeRect.y = elem.toNode.windowRect.y - toNodeRect.height / 2;
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused, true);
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
         }
     }
 

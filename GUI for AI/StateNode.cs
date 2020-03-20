@@ -48,10 +48,7 @@ public class StateNode : BaseNode
             if (Equals(elem.fromNode))
             {
                 Rect fromNodeRect = new Rect(windowRect);
-                fromNodeRect.x = windowRect.x + fromNodeRect.width / 2;
-
                 Rect toNodeRect = new Rect(elem.toNode.windowRect);
-                toNodeRect.x = elem.toNode.windowRect.x - toNodeRect.width / 2;
 
                 NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
             }
