@@ -13,6 +13,11 @@ public class FSM : ClickableElement
 
     static int uniqueNameID = 0;
 
+    public bool hasEntryState
+    {
+        get { return EntryState != null; }
+    }
+
     public FSM(StateNode node)
     {
         elementName = "New FSM " + uniqueNameID++;

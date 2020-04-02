@@ -347,6 +347,11 @@ public class NodeEditor : EditorWindow
             {
                 n.DrawCurves();
             }
+
+            if (!((FSM)currentElem).hasEntryState)
+            {
+                //Prompt an error on a corner
+            }
         }
 
         if (currentElem is BehaviourTree)
@@ -700,7 +705,7 @@ public class NodeEditor : EditorWindow
                 if (currentElem is FSM)
                 {
                     var type = 1;
-                    if (((FSM)currentElem).states.Exists(n => n.type == StateNode.stateType.Entry))
+                    if (((FSM)currentElem).hasEntryState)
                     {
                         type = 2;
                     }
@@ -959,7 +964,7 @@ public class NodeEditor : EditorWindow
 
                     ((FSM)currentElem).DeleteNode(selNode);
 
-                    if (((FSM)currentElem).isEntryState(selNode))
+                    if (((FSM)currentElem).states.Count == 0)
                     {
                         Elements.Remove(currentElem);
                         currentElem = currentElem.parent;
@@ -1001,6 +1006,7 @@ public class NodeEditor : EditorWindow
 
     public static void DrawNodeCurve(Rect start, Rect end, bool isFocused)
     {
+        //Check which sides to put the curve on
         float ang = Vector2.SignedAngle((end.position - start.position), Vector2.right);
         Vector3 direction = Vector3.up;
 
@@ -1029,10 +1035,30 @@ public class NodeEditor : EditorWindow
             direction = Vector3.up;
         }
 
+        //Draw curve
+
+        //Curve parameters
         Vector3 startPos = new Vector3(start.x + start.width / 2, start.y + start.height / 2, 0);
         Vector3 endPos = new Vector3(end.x + end.width / 2, end.y + end.height / 2, 0);
         Vector3 startTan = startPos + direction * 50;
         Vector3 endTan = endPos - direction * 50;
+
+        //Arrow parameters
+        Vector3 pos1 = endPos - direction * 10;
+        Vector3 pos2 = endPos - direction * 10;
+
+        if (direction == Vector3.up || direction == Vector3.down)
+        {
+            pos1.x += 6;
+            pos2.x -= 6;
+        }
+        else
+        {
+            pos1.y += 6;
+            pos2.y -= 6;
+        }
+
+        //Color
         Color shadowCol = new Color(0, 0, 0, 0.06f);
         int focusFactor = 3;
 
@@ -1045,8 +1071,16 @@ public class NodeEditor : EditorWindow
         for (int i = 0; i < focusFactor; i++)
         {
             Handles.DrawBezier(startPos, endPos, startTan, endTan, shadowCol, null, (i + 1) * 5);
+
+            //Draw arrow
+            Handles.DrawBezier(pos1, endPos, pos1, endPos, shadowCol, null, (i + 1) * 5);
+            Handles.DrawBezier(pos2, endPos, pos2, endPos, shadowCol, null, (i + 1) * 5);
         }
 
         Handles.DrawBezier(startPos, endPos, startTan, endTan, Color.black, null, 1);
+
+        //Draw arrow
+        Handles.DrawBezier(pos1, endPos, pos1, endPos, Color.black, null, 1);
+        Handles.DrawBezier(pos2, endPos, pos2, endPos, Color.black, null, 1);
     }
 }

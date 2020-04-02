@@ -7,7 +7,8 @@ public class PopupWindow : EditorWindow
     enum typeOfPopup
     {
         Delete,
-        NameRepeat
+        NameRepeat,
+        //NoEntry
     }
 
     static typeOfPopup PopupType;
@@ -26,9 +27,9 @@ public class PopupWindow : EditorWindow
 
     public static void InitDelete(NodeEditor sender, int index, string type)
     {
-        PopupType = typeOfPopup.Delete;
-
         senderEditor = sender;
+
+        PopupType = typeOfPopup.Delete;
 
         locIndex = index;
         typeOfElem = type;
@@ -40,6 +41,8 @@ public class PopupWindow : EditorWindow
 
     public static void InitNameRepeated(NodeEditor sender, string name, Rect rect)
     {
+        senderEditor = sender;
+
         PopupType = typeOfPopup.NameRepeat;
 
         repeatedName = name;
@@ -48,6 +51,17 @@ public class PopupWindow : EditorWindow
         window.position = new Rect(sender.position.x + rect.center.x - width / 2, sender.position.y + rect.center.y + height / 2, width, height);
         window.ShowPopup();
     }
+
+    //public static void InitNoEntryState(NodeEditor sender)
+    //{
+    //    senderEditor = sender;
+
+    //    PopupType = typeOfPopup.NoEntry;
+
+    //    PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+    //    window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
+    //    window.ShowPopup();
+    //}
 
     public static void ClosePopup(PopupWindow popup)
     {
