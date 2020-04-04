@@ -10,6 +10,8 @@ public class BaseNode : GUIElement
     public readonly long identificator;
 
     public Rect windowRect;
+    public static int width = 150;
+    public static int height = 70;
 
     public BaseNode()
     {
@@ -30,7 +32,10 @@ public class BaseNode : GUIElement
 
     public void DrawWindow(NodeEditor parent)
     {
-        nodeName = EditorGUILayout.TextField("State Name", nodeName);
+        GUIStyle style = new GUIStyle();
+        style.alignment = TextAnchor.UpperCenter;
+        style.fontSize = 15;
+        nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true));
 
         if (!parent.popupShown)
         {

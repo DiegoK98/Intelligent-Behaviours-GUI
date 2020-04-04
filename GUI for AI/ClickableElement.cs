@@ -12,6 +12,8 @@ public class ClickableElement : GUIElement
     }
 
     public Rect windowRect;
+    public static int width = 150;
+    public static int height = 70;
 
     public string elementName = "";
     public elementType type;
@@ -20,7 +22,10 @@ public class ClickableElement : GUIElement
 
     public void DrawWindow(NodeEditor parent)
     {
-        elementName = EditorGUILayout.TextField(type + " name", elementName);
+        GUIStyle style = new GUIStyle();
+        style.alignment = TextAnchor.UpperCenter;
+        style.fontSize = 15;
+        elementName = EditorGUILayout.TextArea(elementName, style, GUILayout.ExpandWidth(true));
 
         if (!parent.popupShown)
         {

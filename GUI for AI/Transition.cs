@@ -11,6 +11,9 @@ public class Transition : GUIElement
 
     public Rect textBox;
 
+    public static int width = 150;
+    public static int height = 35;
+
     public Transition(string name, BaseNode from, BaseNode to)
     {
         transitionName = name;
@@ -21,7 +24,10 @@ public class Transition : GUIElement
 
     public void DrawBox(NodeEditor parent)
     {
-        transitionName = EditorGUILayout.TextField("Name: ", transitionName);
+        GUIStyle style = new GUIStyle();
+        style.alignment = TextAnchor.UpperCenter;
+        style.fontSize = 15;
+        transitionName = EditorGUILayout.TextArea(transitionName, style, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 
         if (!parent.popupShown)
         {

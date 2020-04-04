@@ -19,11 +19,12 @@ public class BehaviourNode : BaseNode
 
     static int uniqueNameID = 0;
 
-    public BehaviourNode(int typeNumber) : base()
+    public BehaviourNode(int typeNumber, float posx, float posy) : base()
     {
         type = (behaviourType)typeNumber;
-
         nodeName = "New " + type + " Node " + uniqueNameID++;
+
+        windowRect = new Rect(posx, posy, width, height);
     }
 
     public BehaviourNode(int typeNumber, ClickableElement subElem) : base()

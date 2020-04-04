@@ -12,14 +12,16 @@ public class BehaviourTree : ClickableElement
 
     static int uniqueNameID = 0;
 
-    public BehaviourTree()
+    public BehaviourTree(ClickableElement parent, float posx, float posy)
     {
-        elementName = "New BT " + uniqueNameID++;
-        identificator = UniqueID();
+        this.parent = parent;
 
         type = elementType.BT;
-
+        elementName = "New BT " + uniqueNameID++;
+        identificator = UniqueID();
         transitions = new List<Transition>();
+
+        windowRect = new Rect(posx, posy, width, height);
     }
 
     public override bool Equals(object other)

@@ -21,24 +21,23 @@ public class StateNode : BaseNode
 
     static int uniqueNameID = 0;
 
-    public StateNode(int typeNumber) : base()
+    public StateNode(int typeNumber, float posx, float posy) : base()
     {
         nodeTransitions = new List<Transition>();
-
         nodeName = "New State " + uniqueNameID++;
-
         type = (stateType)typeNumber;
+
+        windowRect = new Rect(posx, posy, width, height);
     }
 
-    public StateNode(int typeNumber, ClickableElement subElem) : base()
+    public StateNode(int typeNumber, float posx, float posy, ClickableElement subElem) : base()
     {
         nodeTransitions = new List<Transition>();
-
         elem = subElem;
-
         nodeName = elem.elementName;
-
         type = (stateType)typeNumber;
+
+        windowRect = new Rect(posx, posy, width, height);
     }
 
     public void DrawCurves()

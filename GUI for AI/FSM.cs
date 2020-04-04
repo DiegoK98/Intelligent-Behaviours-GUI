@@ -15,19 +15,23 @@ public class FSM : ClickableElement
 
     public bool hasEntryState
     {
-        get { return EntryState != null; }
+        get
+        {
+            return EntryState != null && states.Contains(EntryState);
+        }
     }
 
-    public FSM(StateNode node)
+    public FSM(StateNode node, ClickableElement parent, float posx, float posy)
     {
+        this.parent = parent;
+
         elementName = "New FSM " + uniqueNameID++;
         identificator = UniqueID();
-
+        transitions = new List<Transition>();
         type = elementType.FSM;
+        windowRect = new Rect(posx, posy, width, height);
 
         AddEntryState(node);
-
-        transitions = new List<Transition>();
     }
 
     public override bool Equals(object other)
@@ -44,6 +48,7 @@ public class FSM : ClickableElement
 
     public void AddEntryState(StateNode node)
     {
+        node.type = StateNode.stateType.Entry;
         states.Add(node);
         EntryState = node;
     }
@@ -99,6 +104,9 @@ public class FSM : ClickableElement
             {
                 elem.type = StateNode.stateType.Unconnected;
             }
+
+            if (!states.Contains(baseNode))
+                return;
         }
         else if (baseNode.type == StateNode.stateType.Unconnected)
         {
