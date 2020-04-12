@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System;
 
 public class NodeEditor : EditorWindow
 {
@@ -24,6 +25,8 @@ public class NodeEditor : EditorWindow
 
     public bool popupShown;
 
+    private float widthVariant;
+
     [MenuItem("Window/Node Editor")]
     static void ShowEditor()
     {
@@ -37,6 +40,7 @@ public class NodeEditor : EditorWindow
 
         mousePos = e.mousePosition;
 
+        ShowTopBar();
         if (e.button == 1 && !makeTransitionMode && !makeBehaviourMode)
         {
             if (e.type == EventType.MouseDown)
@@ -352,7 +356,7 @@ public class NodeEditor : EditorWindow
 
             if (!((FSM)currentElem).hasEntryState)
             {
-                if(!errors.ContainsKey(Enums.EnumToString(Enums.Errors.NoEntryState)))
+                if (!errors.ContainsKey(Enums.EnumToString(Enums.Errors.NoEntryState)))
                     errors.Add(Enums.EnumToString(Enums.Errors.NoEntryState), (int)Enums.Errors.NoEntryState);
             }
         }
@@ -474,6 +478,36 @@ public class NodeEditor : EditorWindow
                 }
             }
         }
+    }
+
+    private void ShowTopBar()
+    {
+        GUIStyle style = GUI.skin.button;
+        style.hover.textColor = Color.grey;
+        style.alignment = TextAnchor.MiddleLeft;
+
+        if (currentElem != null)
+        {
+            widthVariant = 0;
+            ShowButtonRecursive(style, currentElem, "Node Editor");
+        }
+    }
+
+    private void ShowButtonRecursive(GUIStyle style, ClickableElement elem, string name)
+    {
+        if (elem.parent != null)
+        {
+            ShowButtonRecursive(style, elem.parent, name);
+            name = elem.parent.elementName;
+        }
+        var buttonWidth = 25 + name.ToCharArray().Length * 6;
+        GUI.Label(new Rect(widthVariant, 0, 15, 20), ">", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperLeft });
+        widthVariant += 12;
+        if (GUI.Button(new Rect(widthVariant, 0, buttonWidth, 20), name, style))
+        {
+            currentElem = elem.parent;
+        }
+        widthVariant += buttonWidth;
     }
 
     private void OnDestroy()
