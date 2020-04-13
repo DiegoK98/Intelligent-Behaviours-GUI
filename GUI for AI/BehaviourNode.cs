@@ -10,7 +10,13 @@ public class BehaviourNode : BaseNode
     {
         Sequence,
         Selector,
-        Leaf
+        Leaf,
+        LoopN,
+        LoopUntilFail,
+        Inverter,
+        DelayT,
+        Succeeder,
+        Conditional
     }
 
     public ClickableElement elem;
