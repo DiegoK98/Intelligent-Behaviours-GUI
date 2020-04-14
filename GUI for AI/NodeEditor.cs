@@ -339,9 +339,12 @@ public class NodeEditor : EditorWindow
             {
                 if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
                 {
-                    Transition transition = new Transition("New Transition " + ((FSM)currentElem).transitions.Count, selectednode, ((FSM)currentElem).states[selectIndex]);
+                    if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
+                    {
+                        Transition transition = new Transition("New Transition " + ((FSM)currentElem).transitions.Count, selectednode, ((FSM)currentElem).states[selectIndex]);
 
-                    ((FSM)currentElem).AddTransition(transition);
+                        ((FSM)currentElem).AddTransition(transition);
+                    }
 
                     makeTransitionMode = false;
                     selectednode = null;
@@ -413,7 +416,7 @@ public class NodeEditor : EditorWindow
                 GUIStyle style = new GUIStyle();
                 style.alignment = TextAnchor.MiddleCenter;
                 style.fontSize = 10;
-                style.normal.background = GetBackground(Elements[i].windowRect.size, "Elements", (int)Elements[i].type, Elements[i].isFocused);
+                style.normal.background = GetBackground("Elements", Elements[i]);
 
                 Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, "FSM", style);
             }
@@ -425,7 +428,7 @@ public class NodeEditor : EditorWindow
                 GUIStyle style = new GUIStyle();
                 style.alignment = TextAnchor.MiddleCenter;
                 style.fontSize = 10;
-                style.normal.background = GetBackground(((FSM)currentElem).states[i].windowRect.size, "FSM", (int)((FSM)currentElem).states[i].type, ((FSM)currentElem).states[i].isFocused);
+                style.normal.background = GetBackground("FSM", ((FSM)currentElem).states[i]);
 
                 ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, "Node", style);
             }
@@ -441,7 +444,7 @@ public class NodeEditor : EditorWindow
                 GUIStyle style = new GUIStyle();
                 style.alignment = TextAnchor.MiddleCenter;
                 style.fontSize = 10;
-                style.normal.background = GetBackground(elem.textBox.size, "Transition", 0, ((FSM)currentElem).transitions[i].isFocused);
+                style.normal.background = GetBackground("Transition", elem);
 
                 elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", style);
             }
@@ -453,7 +456,7 @@ public class NodeEditor : EditorWindow
                 GUIStyle style = new GUIStyle();
                 style.alignment = TextAnchor.MiddleCenter;
                 style.fontSize = 10;
-                style.normal.background = GetBackground(((BehaviourTree)currentElem).states[i].windowRect.size, "BT", (int)((BehaviourTree)currentElem).states[i].type, ((BehaviourTree)currentElem).states[i].isFocused);
+                style.normal.background = GetBackground("BT", ((BehaviourTree)currentElem).states[i]);
 
                 ((BehaviourTree)currentElem).states[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).states[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).states[i].type.ToString(), style);
             }
@@ -559,56 +562,99 @@ public class NodeEditor : EditorWindow
     }
 
     //Get a sprite from the resources
-    private Texture2D GetBackground(Vector2 size, string typeOfItem, int type, bool isFocused)
+    private Texture2D GetBackground(string typeOfItem, GUIElement elem)
     {
-        Color col;
-        Texture2D result;
+        var isFocused = elem.isFocused;
+        Color col = Color.white;
+        Texture2D result = null;
+        int type;
 
         switch (typeOfItem)
         {
             case "Elements":
+                type = (int)((ClickableElement)elem).type;
                 switch (type)
                 {
                     case 0:
-                        col = Color.blue;
-                        //result = Resources.Load<Texture2D>("FSM_Rect");
+                        result = Resources.Load<Texture2D>("FSM_Rect");
+                        //col = Color.blue;
                         break;
                     case 1:
-                        col = Color.cyan;
+                        result = Resources.Load<Texture2D>("BT_Rect");
+                        //col = Color.cyan;
                         break;
                     default:
-                        col = Color.white;
+                        //col = Color.white;
                         break;
                 }
                 break;
             case "FSM":
-                switch (type)
+                type = (int)((StateNode)elem).type;
+                if (((StateNode)elem).elem == null) //Es un nodo normal
                 {
-                    case 0:
-                        col = Color.grey;
-                        break;
-                    case 1:
-                        col = Color.green;
-                        break;
-                    case 2:
-                        col = Color.red;
-                        break;
-                    default:
-                        col = Color.white;
-                        break;
+                    switch (type)
+                    {
+                        case 0:
+                            result = Resources.Load<Texture2D>("Def_Node_Rect");
+                            //col = Color.grey;
+                            break;
+                        case 1:
+                            result = Resources.Load<Texture2D>("Entry_Rect");
+                            //col = Color.green;
+                            break;
+                        case 2:
+                            result = Resources.Load<Texture2D>("Unconnected_Node_Rect");
+                            //col = Color.red;
+                            break;
+                        default:
+                            //col = Color.white;
+                            break;
+                    }
+                }
+                else //Es un subelemento
+                {
+                    switch (type)
+                    {
+                        case 0:
+                            result = Resources.Load<Texture2D>("Def_Sub_Rect");
+                            //col = Color.grey;
+                            break;
+                        case 1:
+                            result = Resources.Load<Texture2D>("Entry_Sub_Rect");
+                            //col = Color.green;
+                            break;
+                        case 2:
+                            result = Resources.Load<Texture2D>("Unconnected_Sub_Rect");
+                            //col = Color.red;
+                            break;
+                        default:
+                            //col = Color.white;
+                            break;
+                    }
                 }
                 break;
             case "BT":
+                type = (int)((BehaviourNode)elem).type;
+
                 switch (type)
                 {
                     case 0:
-                        col = Color.yellow;
+                        result = Resources.Load<Texture2D>("Sequence_Rect");
+                        //col = Color.yellow;
                         break;
                     case 1:
-                        col = new Color(1, 0.5f, 0, 1); //orange
+                        result = Resources.Load<Texture2D>("Selector_Rect");
+                        //col = new Color(1, 0.5f, 0, 1); //orange
                         break;
                     case 2:
-                        col = new Color(0, 0.75f, 0, 1); //dark green
+                        if (((BehaviourNode)elem).elem == null) //Es un nodo normal
+                        {
+                            result = Resources.Load<Texture2D>("Leaf_Rect");
+                        } else //Es un subelemento
+                        {
+                            result = Resources.Load<Texture2D>("Leaf_Sub_Rect");
+                        }
+                        //col = new Color(0, 0.75f, 0, 1); //dark green
                         break;
                     case 3:
                     case 4:
@@ -616,18 +662,20 @@ public class NodeEditor : EditorWindow
                     case 6:
                     case 7:
                     case 8:
-                        col = Color.grey;
+                        result = Resources.Load<Texture2D>("Decorator_Rect"); //Hacer un rombo gris
+                                                                             //col = Color.grey;
                         break;
                     default:
-                        col = Color.white;
+                        //col = Color.white;
                         break;
                 }
                 break;
             case "Transition":
-                col = Color.yellow;
+                result = Resources.Load<Texture2D>("Transition_Rect");
+                //col = Color.yellow;
                 break;
             default:
-                col = Color.clear;
+                //col = Color.clear;
                 break;
         }
 
@@ -639,10 +687,12 @@ public class NodeEditor : EditorWindow
         {
             pix[i] = col;
         }
-
-        result = new Texture2D(2, 2);
-        result.SetPixels(pix);
-        result.Apply();
+        if (result == null)
+        {
+            result = new Texture2D(2, 2);
+            result.SetPixels(pix);
+            result.Apply();
+        }
 
         return result;
     }

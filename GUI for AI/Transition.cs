@@ -25,9 +25,9 @@ public class Transition : GUIElement
     public void DrawBox(NodeEditor parent)
     {
         GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.UpperCenter;
+        style.alignment = TextAnchor.LowerCenter;
         style.fontSize = 15;
-        transitionName = EditorGUILayout.TextArea(transitionName, style, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+        transitionName = EditorGUILayout.TextArea(transitionName, style, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25));
 
         if (!parent.popupShown)
         {

@@ -35,11 +35,11 @@ public class BaseNode : GUIElement
     public void DrawWindow(NodeEditor parent)
     {
         GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.UpperCenter;
+        style.alignment = TextAnchor.LowerCenter;
         style.fontSize = 15;
 
         GUIStyle style2 = new GUIStyle();
-        style2.alignment = TextAnchor.UpperCenter;
+        style2.alignment = TextAnchor.LowerCenter;
         style2.fontSize = 15;
 
         if (this is BehaviourNode)
@@ -49,16 +49,16 @@ public class BaseNode : GUIElement
                 case BehaviourNode.behaviourType.Selector:
                 case BehaviourNode.behaviourType.Sequence:
                 case BehaviourNode.behaviourType.Leaf:
-                    nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true));
+                    nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
                     break;
                 case BehaviourNode.behaviourType.LoopN:
                 case BehaviourNode.behaviourType.DelayT:
-                    NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), style2, GUILayout.ExpandWidth(true)));
+                    NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), style2, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                     break;
             }
         } else
         {
-            nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true));
+            nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
         }
 
         if (!parent.popupShown)

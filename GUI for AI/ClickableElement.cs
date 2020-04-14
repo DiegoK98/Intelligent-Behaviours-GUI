@@ -23,9 +23,9 @@ public class ClickableElement : GUIElement
     public void DrawWindow(NodeEditor parent)
     {
         GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.UpperCenter;
+        style.alignment = TextAnchor.LowerCenter;
         style.fontSize = 15;
-        elementName = EditorGUILayout.TextArea(elementName, style, GUILayout.ExpandWidth(true));
+        elementName = EditorGUILayout.TextArea(elementName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
 
         if (!parent.popupShown)
         {
