@@ -522,11 +522,18 @@ public class NodeEditor : EditorWindow
         style.hover.textColor = Color.grey;
         style.alignment = TextAnchor.MiddleLeft;
 
+        // Top Bar
+        widthVariant = 0;
+        var name = "Node Editor";
+
         if (currentElem != null)
         {
-            widthVariant = 0;
             ShowButtonRecursive(style, currentElem, "Node Editor");
+            name = currentElem.elementName;
         }
+
+        var labelWidth = 25 + name.ToCharArray().Length * 6;
+        GUI.Label(new Rect(widthVariant, 0, labelWidth, 20), name, new GUIStyle(GUI.skin.label));
     }
 
     private void ShowButtonRecursive(GUIStyle style, ClickableElement elem, string name)
@@ -537,13 +544,13 @@ public class NodeEditor : EditorWindow
             name = elem.parent.elementName;
         }
         var buttonWidth = 25 + name.ToCharArray().Length * 6;
-        GUI.Label(new Rect(widthVariant, 0, 15, 20), ">", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperLeft });
-        widthVariant += 12;
         if (GUI.Button(new Rect(widthVariant, 0, buttonWidth, 20), name, style))
         {
             currentElem = elem.parent;
         }
         widthVariant += buttonWidth;
+        GUI.Label(new Rect(widthVariant, 0, 15, 20), ">", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperLeft });
+        widthVariant += 12;
     }
 
     private void OnDestroy()

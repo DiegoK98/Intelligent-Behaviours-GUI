@@ -56,6 +56,9 @@ public class BaseNode : GUIElement
                     NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), style2, GUILayout.ExpandWidth(true)));
                     break;
             }
+        } else
+        {
+            nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true));
         }
 
         if (!parent.popupShown)
