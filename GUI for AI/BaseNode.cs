@@ -56,26 +56,16 @@ public class BaseNode : GUIElement
                     NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), style2, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                     break;
             }
-        } else
+        }
+        else
         {
             nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
         }
 
-        if (!parent.popupShown)
+        //En vez de is null deberia checkeear si ha cambiado
+        if (parent.focusedObj is null)
         {
-            //En vez de is null deberia checkeear si ha cambiado
-            if (parent.focusedObj is null && CheckNameExisting(parent, nodeName))
-            {
-                parent.popupShown = true;
-                PopupWindow.InitNameRepeated(parent, nodeName, windowRect);
-            }
-        }
-        else
-        {
-            if (parent.focusedObj is null)
-            {
-                parent.popupShown = false;
-            }
+            CheckNameExisting(parent, nodeName);
         }
     }
 }

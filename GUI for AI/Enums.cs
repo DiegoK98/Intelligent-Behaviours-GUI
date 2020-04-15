@@ -18,7 +18,7 @@ public class Enums
             case Errors.NoEntryState:
                 return "ERROR: You can't have a FSM without an Entry State";
             case Errors.RepeatedName:
-                return "ERROR: You can't have two elements wuth the same name";
+                return "ERROR: You can't have two elements with the same name";
             default:
                 return "ERROR: Unexpected error :(";
         }

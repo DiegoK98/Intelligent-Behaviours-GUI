@@ -27,21 +27,10 @@ public class ClickableElement : GUIElement
         style.fontSize = 15;
         elementName = EditorGUILayout.TextArea(elementName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
 
-        if (!parent.popupShown)
+        //En vez de is null deberia checkeear si ha cambiado
+        if (parent.focusedObj is null)
         {
-            //En vez de is null deberia checkeear si ha cambiado
-            if (parent.focusedObj is null && CheckNameExisting(parent, elementName))
-            {
-                parent.popupShown = true;
-                PopupWindow.InitNameRepeated(parent, elementName, windowRect);
-            }
-        }
-        else
-        {
-            if (parent.focusedObj is null)
-            {
-                parent.popupShown = false;
-            }
+            CheckNameExisting(parent, elementName);
         }
     }
 }

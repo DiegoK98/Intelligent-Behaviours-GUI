@@ -62,6 +62,11 @@ public class BehaviourTree : ClickableElement
         }
     }
 
+    public void DeleteTransition(Transition deletedTrans)
+    {
+        transitions.Remove(deletedTrans);
+    }
+
     public int SonsCount(int i)
     {
         int res = 0;

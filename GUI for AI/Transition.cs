@@ -29,21 +29,10 @@ public class Transition : GUIElement
         style.fontSize = 15;
         transitionName = EditorGUILayout.TextArea(transitionName, style, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25));
 
-        if (!parent.popupShown)
+        //En vez de is null deberia checkeear si ha cambiado
+        if (parent.focusedObj is null)
         {
-            //En vez de is null deberia checkeear si ha cambiado
-            if (parent.focusedObj is null && CheckNameExisting(parent, transitionName))
-            {
-                parent.popupShown = true;
-                PopupWindow.InitNameRepeated(parent, transitionName, textBox);
-            }
-        }
-        else
-        {
-            if (parent.focusedObj is null)
-            {
-                parent.popupShown = false;
-            }
+            CheckNameExisting(parent, transitionName);
         }
     }
 

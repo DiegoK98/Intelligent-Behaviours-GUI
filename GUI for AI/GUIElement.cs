@@ -21,7 +21,7 @@ public class GUIElement : ScriptableObject
         return number;
     }
 
-    protected bool CheckNameExisting(NodeEditor parent, string name)
+    protected void CheckNameExisting(NodeEditor parent, string name)
     {
         int totalCount = 0;
 
@@ -37,6 +37,13 @@ public class GUIElement : ScriptableObject
             totalCount += ((BehaviourTree)parent.currentElem).states.FindAll(e => e.nodeName == name).Count;
         }
 
-        return totalCount > 1;
+        if (totalCount > 1)
+        {
+            parent.AddError(Enums.Errors.RepeatedName);
+        }
+        else
+        {
+            parent.RemoveError(Enums.Errors.RepeatedName);
+        }
     }
 }

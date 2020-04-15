@@ -395,8 +395,11 @@ public class NodeEditor : EditorWindow
 
             if (!((FSM)currentElem).hasEntryState)
             {
-                if (!errors.ContainsKey(Enums.EnumToString(Enums.Errors.NoEntryState)))
-                    errors.Add(Enums.EnumToString(Enums.Errors.NoEntryState), (int)Enums.Errors.NoEntryState);
+                AddError(Enums.Errors.NoEntryState);
+            }
+            else
+            {
+                RemoveError(Enums.Errors.NoEntryState);
             }
         }
 
@@ -566,7 +569,7 @@ public class NodeEditor : EditorWindow
     {
         var isFocused = elem.isFocused;
         Color col = Color.white;
-        Texture2D result = null;
+        Texture2D originalTexture = null;
         int type;
 
         switch (typeOfItem)
@@ -576,15 +579,15 @@ public class NodeEditor : EditorWindow
                 switch (type)
                 {
                     case 0:
-                        result = Resources.Load<Texture2D>("FSM_Rect");
-                        //col = Color.blue;
+                        originalTexture = Resources.Load<Texture2D>("FSM_Rect");
+                        col = Color.blue;
                         break;
                     case 1:
-                        result = Resources.Load<Texture2D>("BT_Rect");
-                        //col = Color.cyan;
+                        originalTexture = Resources.Load<Texture2D>("BT_Rect");
+                        col = Color.cyan;
                         break;
                     default:
-                        //col = Color.white;
+                        col = Color.white;
                         break;
                 }
                 break;
@@ -595,19 +598,19 @@ public class NodeEditor : EditorWindow
                     switch (type)
                     {
                         case 0:
-                            result = Resources.Load<Texture2D>("Def_Node_Rect");
-                            //col = Color.grey;
+                            originalTexture = Resources.Load<Texture2D>("Def_Node_Rect");
+                            col = Color.grey;
                             break;
                         case 1:
-                            result = Resources.Load<Texture2D>("Entry_Rect");
-                            //col = Color.green;
+                            originalTexture = Resources.Load<Texture2D>("Entry_Rect");
+                            col = Color.green;
                             break;
                         case 2:
-                            result = Resources.Load<Texture2D>("Unconnected_Node_Rect");
-                            //col = Color.red;
+                            originalTexture = Resources.Load<Texture2D>("Unconnected_Node_Rect");
+                            col = Color.red;
                             break;
                         default:
-                            //col = Color.white;
+                            col = Color.white;
                             break;
                     }
                 }
@@ -616,19 +619,19 @@ public class NodeEditor : EditorWindow
                     switch (type)
                     {
                         case 0:
-                            result = Resources.Load<Texture2D>("Def_Sub_Rect");
-                            //col = Color.grey;
+                            originalTexture = Resources.Load<Texture2D>("Def_Sub_Rect");
+                            col = Color.grey;
                             break;
                         case 1:
-                            result = Resources.Load<Texture2D>("Entry_Sub_Rect");
-                            //col = Color.green;
+                            originalTexture = Resources.Load<Texture2D>("Entry_Sub_Rect");
+                            col = Color.green;
                             break;
                         case 2:
-                            result = Resources.Load<Texture2D>("Unconnected_Sub_Rect");
-                            //col = Color.red;
+                            originalTexture = Resources.Load<Texture2D>("Unconnected_Sub_Rect");
+                            col = Color.red;
                             break;
                         default:
-                            //col = Color.white;
+                            col = Color.white;
                             break;
                     }
                 }
@@ -639,22 +642,23 @@ public class NodeEditor : EditorWindow
                 switch (type)
                 {
                     case 0:
-                        result = Resources.Load<Texture2D>("Sequence_Rect");
-                        //col = Color.yellow;
+                        originalTexture = Resources.Load<Texture2D>("Sequence_Rect");
+                        col = Color.yellow;
                         break;
                     case 1:
-                        result = Resources.Load<Texture2D>("Selector_Rect");
-                        //col = new Color(1, 0.5f, 0, 1); //orange
+                        originalTexture = Resources.Load<Texture2D>("Selector_Rect");
+                        col = new Color(1, 0.5f, 0, 1); //orange
                         break;
                     case 2:
                         if (((BehaviourNode)elem).elem == null) //Es un nodo normal
                         {
-                            result = Resources.Load<Texture2D>("Leaf_Rect");
-                        } else //Es un subelemento
-                        {
-                            result = Resources.Load<Texture2D>("Leaf_Sub_Rect");
+                            originalTexture = Resources.Load<Texture2D>("Leaf_Rect");
                         }
-                        //col = new Color(0, 0.75f, 0, 1); //dark green
+                        else //Es un subelemento
+                        {
+                            originalTexture = Resources.Load<Texture2D>("Leaf_Sub_Rect");
+                        }
+                        col = new Color(0, 0.75f, 0, 1); //dark green
                         break;
                     case 3:
                     case 4:
@@ -662,39 +666,56 @@ public class NodeEditor : EditorWindow
                     case 6:
                     case 7:
                     case 8:
-                        result = Resources.Load<Texture2D>("Decorator_Rect"); //Hacer un rombo gris
-                                                                             //col = Color.grey;
+                        originalTexture = Resources.Load<Texture2D>("Decorator_Rect"); //Hacer un rombo gris
+                                                                              //col = Color.grey;
                         break;
                     default:
-                        //col = Color.white;
+                        col = Color.white;
                         break;
                 }
                 break;
             case "Transition":
-                result = Resources.Load<Texture2D>("Transition_Rect");
-                //col = Color.yellow;
+                originalTexture = Resources.Load<Texture2D>("Transition_Rect");
+                col = Color.yellow;
                 break;
             default:
-                //col = Color.clear;
+                col = Color.clear;
                 break;
         }
 
-        if (!isFocused)
-            col.a = 0.5f;
+        // Copy the texture, so we don't override its original colors permanently
+        Texture2D resultTexture = originalTexture is null ? null : new Texture2D(originalTexture.width, originalTexture.height);
 
-        Color[] pix = new Color[2 * 2];
-        for (int i = 0; i < pix.Length; ++i)
+        // If no texture has been found, use a simple colored Rect
+        if (originalTexture == null)
         {
-            pix[i] = col;
-        }
-        if (result == null)
+            Color[] pix = new Color[2 * 2];
+            for (int i = 0; i < pix.Length; ++i)
+            {
+                pix[i] = col;
+            }
+
+            resultTexture = new Texture2D(2, 2);
+            resultTexture.SetPixels(pix);
+            resultTexture.Apply();
+        } else
         {
-            result = new Texture2D(2, 2);
-            result.SetPixels(pix);
-            result.Apply();
+            Color32[] pixels = originalTexture.GetPixels32();
+
+            if (!isFocused)
+            {
+                //Make it look semitransparent when not selected
+                col.a = 0.5f;
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    pixels[i].a = (byte)(pixels[i].a * 127 / 255);
+                }
+            }
+            resultTexture.SetPixels32(pixels);
+            resultTexture.Apply();
         }
 
-        return result;
+        return resultTexture;
     }
 
     void DrawNodeWindow(int id)
@@ -773,7 +794,7 @@ public class NodeEditor : EditorWindow
                 ConvertToEntry();
                 break;
             case "disconnectNode":
-                Debug.LogError("Fucntion not found");
+                DisconnectNode();
                 break;
         }
     }
@@ -921,7 +942,14 @@ public class NodeEditor : EditorWindow
 
             StateNode node = new StateNode(type, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
 
-            ((FSM)currentElem).states.Add(node);
+            if (!((FSM)currentElem).hasEntryState)
+            {
+                ((FSM)currentElem).AddEntryState(node);
+            }
+            else
+            {
+                ((FSM)currentElem).states.Add(node);
+            }
         }
         else if (currentElem is BehaviourTree)
         {
@@ -1280,6 +1308,35 @@ public class NodeEditor : EditorWindow
         }
     }
 
+    private void DisconnectNode()
+    {
+        bool clickedOnWindow = false;
+        int selectIndex = -1;
+
+        if (currentElem is BehaviourTree)
+        {
+            for (int i = 0; i < ((BehaviourTree)currentElem).states.Count; i++)
+            {
+                if (((BehaviourTree)currentElem).states[i].windowRect.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnWindow = true;
+                    break;
+                }
+            }
+
+            if (clickedOnWindow)
+            {
+                BehaviourNode selNode = ((BehaviourTree)currentElem).states[selectIndex];
+
+                foreach (Transition tr in ((BehaviourTree)currentElem).transitions.FindAll(t => t.toNode.Equals(selNode)))
+                {
+                    ((BehaviourTree)currentElem).DeleteTransition(tr);
+                }
+            }
+        }
+    }
+
     private void ShowErrorByPriority()
     {
         GUIStyle style = new GUIStyle();
@@ -1302,5 +1359,17 @@ public class NodeEditor : EditorWindow
             maxPriorityError += " (and " + (errors.Count - 1) + " more errors)";
 
         EditorGUILayout.LabelField(maxPriorityError, style);
+    }
+
+    public void AddError(Enums.Errors error)
+    {
+        if (!errors.ContainsKey(Enums.EnumToString(error)))
+            errors.Add(Enums.EnumToString(error), (int)error);
+    }
+
+    public void RemoveError(Enums.Errors error)
+    {
+        if (errors.ContainsKey(Enums.EnumToString(error)))
+            errors.Remove(Enums.EnumToString(error));
     }
 }
