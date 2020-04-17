@@ -12,14 +12,21 @@ public class ClickableElement : GUIElement
     }
 
     public Rect windowRect;
+
     public static int width = 150;
+
     public static int height = 70;
 
     public string elementName = "";
+
     public elementType type;
 
     public ClickableElement parent;
 
+    /// <summary>
+    /// Draws all the elements inside the Element window
+    /// </summary>
+    /// <param name="parent"></param>
     public void DrawWindow(NodeEditor parent)
     {
         GUIStyle style = new GUIStyle();

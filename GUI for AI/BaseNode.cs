@@ -7,19 +7,30 @@ using System;
 public class BaseNode : GUIElement
 {
     public string nodeName = "";
+
     public readonly long identificator;
 
     public Rect windowRect;
+
     public static int width = 150;
+
     public static int height = 70;
 
     public int NProperty = 0;
 
+    /// <summary>
+    /// The BaseNode
+    /// </summary>
     public BaseNode()
     {
         identificator = UniqueID();
     }
 
+    /// <summary>
+    /// The Equals
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public override bool Equals(object other)
     {
         if (!base.Equals((BaseNode)other))
@@ -32,6 +43,10 @@ public class BaseNode : GUIElement
         return true;
     }
 
+    /// <summary>
+    /// Draws all the elements inside the Node window
+    /// </summary>
+    /// <param name="parent"></param>
     public void DrawWindow(NodeEditor parent)
     {
         GUIStyle style = new GUIStyle();

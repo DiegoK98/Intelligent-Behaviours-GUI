@@ -21,6 +21,12 @@ public class StateNode : BaseNode
 
     static int uniqueNameID = 0;
 
+    /// <summary>
+    /// The StateNode
+    /// </summary>
+    /// <param name="typeNumber"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
     public StateNode(int typeNumber, float posx, float posy) : base()
     {
         nodeTransitions = new List<Transition>();
@@ -30,6 +36,13 @@ public class StateNode : BaseNode
         windowRect = new Rect(posx, posy, width, height);
     }
 
+    /// <summary>
+    /// The StateNode with a clickable element inside of it
+    /// </summary>
+    /// <param name="typeNumber"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
+    /// <param name="subElem"></param>
     public StateNode(int typeNumber, float posx, float posy, ClickableElement subElem) : base()
     {
         nodeTransitions = new List<Transition>();
@@ -40,25 +53,15 @@ public class StateNode : BaseNode
         windowRect = new Rect(posx, posy, width, height);
     }
 
-    public void DrawCurves()
-    {
-        foreach (Transition elem in nodeTransitions)
-        {
-            if (Equals(elem.fromNode))
-            {
-                Rect fromNodeRect = new Rect(windowRect);
-                Rect toNodeRect = new Rect(elem.toNode.windowRect);
-
-                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
-            }
-        }
-    }
-
-    public void NodeDeleted(StateNode node)
+    /// <summary>
+    /// Removes the references to the transitions that were connected to the deleted node
+    /// </summary>
+    /// <param name="deletedNode"></param>
+    public void NodeDeleted(StateNode deletedNode)
     {
         for (int i = 0; i < nodeTransitions.Count; i++)
         {
-            if (node.Equals(nodeTransitions[i].toNode) || node.Equals(nodeTransitions[i].fromNode))
+            if (deletedNode.Equals(nodeTransitions[i].toNode) || deletedNode.Equals(nodeTransitions[i].fromNode))
             {
                 nodeTransitions.Remove(nodeTransitions[i]);
             }

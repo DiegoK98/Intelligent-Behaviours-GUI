@@ -6,9 +6,11 @@ using UnityEngine;
 public class FSM : ClickableElement
 {
     private StateNode EntryState;
+
     public readonly long identificator;
 
     public List<StateNode> states = new List<StateNode>();
+
     public List<Transition> transitions;
 
     static int uniqueNameID = 0;
@@ -21,6 +23,13 @@ public class FSM : ClickableElement
         }
     }
 
+    /// <summary>
+    /// The FSM
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="parent"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
     public FSM(StateNode node, ClickableElement parent, float posx, float posy)
     {
         this.parent = parent;
@@ -34,6 +43,11 @@ public class FSM : ClickableElement
         AddEntryState(node);
     }
 
+    /// <summary>
+    /// The Equals
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public override bool Equals(object other)
     {
         if (!base.Equals(other))
@@ -46,6 +60,10 @@ public class FSM : ClickableElement
         return true;
     }
 
+    /// <summary>
+    /// Add a Node as an EntryState
+    /// </summary>
+    /// <param name="node"></param>
     public void AddEntryState(StateNode node)
     {
         node.type = StateNode.stateType.Entry;
@@ -53,20 +71,52 @@ public class FSM : ClickableElement
         EntryState = node;
     }
 
+    /// <summary>
+    /// Convert a Node to Entry State
+    /// </summary>
+    /// <param name="node"></param>
     public void SetAsEntry(StateNode node)
     {
+        //Previous Entry Node set to Unconnected
         EntryState.type = StateNode.stateType.Unconnected;
+
         node.type = StateNode.stateType.Entry;
         EntryState = node;
 
         CheckConnected();
     }
 
+    /// <summary>
+    /// Check if a given Node is the EntryState
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
     public bool isEntryState(StateNode node)
     {
         return node.Equals(EntryState);
     }
 
+    /// <summary>
+    /// Draws all transitions curves for the FSM
+    /// </summary>
+    public void DrawCurves()
+    {
+        foreach (Transition elem in transitions)
+        {
+            //if (Equals(elem.fromNode))
+            //{
+                Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
+                Rect toNodeRect = new Rect(elem.toNode.windowRect);
+
+                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
+            //}
+        }
+    }
+
+    /// <summary>
+    /// Delete a given Node and its transitions
+    /// </summary>
+    /// <param name="node"></param>
     public void DeleteNode(StateNode node)
     {
         states.Remove(node);
@@ -76,12 +126,17 @@ public class FSM : ClickableElement
             DeleteTransition(node.nodeTransitions[i]);
         }
 
+        // Notify all nodes that this node has been deleted, so they can delete the necessary transition references
         foreach (StateNode n in states)
         {
             n.NodeDeleted(node);
         }
     }
 
+    /// <summary>
+    /// Delete a given Transition
+    /// </summary>
+    /// <param name="deletedTrans"></param>
     public void DeleteTransition(Transition deletedTrans)
     {
         transitions.Remove(deletedTrans);
@@ -94,6 +149,10 @@ public class FSM : ClickableElement
         CheckConnected();
     }
 
+    /// <summary>
+    /// Recalculate every node's state of connection to the Entry State
+    /// </summary>
+    /// <param name="baseNode"></param>
     public void CheckConnected(StateNode baseNode = null)
     {
         if (baseNode == null)
@@ -123,6 +182,10 @@ public class FSM : ClickableElement
         }
     }
 
+    /// <summary>
+    /// Add a transition to the FSM
+    /// </summary>
+    /// <param name="newTransition"></param>
     public void AddTransition(Transition newTransition)
     {
         transitions.Add(newTransition);

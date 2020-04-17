@@ -6,14 +6,23 @@ using UnityEditor;
 public class Transition : GUIElement
 {
     public string transitionName = "";
+
     public BaseNode fromNode;
+    
     public BaseNode toNode;
 
     public Rect textBox;
 
     public static int width = 150;
+    
     public static int height = 35;
 
+    /// <summary>
+    /// The Transition
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
     public Transition(string name, BaseNode from, BaseNode to)
     {
         transitionName = name;
@@ -22,6 +31,10 @@ public class Transition : GUIElement
         toNode = to;
     }
 
+    /// <summary>
+    /// Draws all the elements inside the Transition box
+    /// </summary>
+    /// <param name="parent"></param>
     public void DrawBox(NodeEditor parent)
     {
         GUIStyle style = new GUIStyle();
@@ -36,6 +49,11 @@ public class Transition : GUIElement
         }
     }
 
+    /// <summary>
+    /// The Equals
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public override bool Equals(object other)
     {
         if (!base.Equals((Transition)other))

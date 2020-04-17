@@ -25,6 +25,12 @@ public class BehaviourNode : BaseNode
 
     static int uniqueNameID = 0;
 
+    /// <summary>
+    /// The BehaviourNode
+    /// </summary>
+    /// <param name="typeNumber"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
     public BehaviourNode(int typeNumber, float posx, float posy) : base()
     {
         type = (behaviourType)typeNumber;
@@ -33,6 +39,11 @@ public class BehaviourNode : BaseNode
         windowRect = new Rect(posx, posy, width, height);
     }
 
+    /// <summary>
+    /// The BehaviourNode with a clickable element in it
+    /// </summary>
+    /// <param name="typeNumber"></param>
+    /// <param name="subElem"></param>
     public BehaviourNode(int typeNumber, ClickableElement subElem) : base()
     {
         type = (behaviourType)typeNumber;

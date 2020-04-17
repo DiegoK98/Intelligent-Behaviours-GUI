@@ -7,7 +7,7 @@ public class PopupWindow : EditorWindow
     enum typeOfPopup
     {
         Delete,
-        NameRepeat,
+        //NameRepeat,
         //NoEntry
     }
 
@@ -16,22 +16,32 @@ public class PopupWindow : EditorWindow
     static string typeOfElem;
 
     static GUIStyle DeleteStyle;
+
     static GUIStyle CancelStyle;
 
     static NodeEditor senderEditor;
-    static int locIndex;
+
+    static GUIElement elem;
+
     static string repeatedName;
 
     static int width = 250;
+
     static int height = 100;
 
-    public static void InitDelete(NodeEditor sender, int index, string type)
+    /// <summary>
+    /// Initializer for the popup when deleting an element
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="focusElem"></param>
+    /// <param name="type"></param>
+    public static void InitDelete(NodeEditor sender, GUIElement focusElem, string type)
     {
         senderEditor = sender;
 
         PopupType = typeOfPopup.Delete;
 
-        locIndex = index;
+        elem = focusElem;
         typeOfElem = type;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
@@ -39,18 +49,18 @@ public class PopupWindow : EditorWindow
         window.ShowPopup();
     }
 
-    public static void InitNameRepeated(NodeEditor sender, string name, Rect rect)
-    {
-        senderEditor = sender;
+    //public static void InitNameRepeated(NodeEditor sender, string name, Rect rect)
+    //{
+    //    senderEditor = sender;
 
-        PopupType = typeOfPopup.NameRepeat;
+    //    PopupType = typeOfPopup.NameRepeat;
 
-        repeatedName = name;
+    //    repeatedName = name;
 
-        PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
-        window.position = new Rect(sender.position.x + rect.center.x - width / 2, sender.position.y + rect.center.y + height / 2, width, height);
-        window.ShowPopup();
-    }
+    //    PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+    //    window.position = new Rect(sender.position.x + rect.center.x - width / 2, sender.position.y + rect.center.y + height / 2, width, height);
+    //    window.ShowPopup();
+    //}
 
     //public static void InitNoEntryState(NodeEditor sender)
     //{
@@ -63,20 +73,23 @@ public class PopupWindow : EditorWindow
     //    window.ShowPopup();
     //}
 
+    /// <summary>
+    /// Closes the popup if open
+    /// </summary>
+    /// <param name="popup"></param>
     public static void ClosePopup(PopupWindow popup)
     {
         popup.Close();
     }
 
+    /// <summary>
+    /// The OnGUI
+    /// </summary>
     void OnGUI()
     {
         if (PopupType == typeOfPopup.Delete)
         {
             ShowDeletePopup();
-        }
-        else if (PopupType == typeOfPopup.NameRepeat)
-        {
-            ShowNamePopup();
         }
 
         if (Event.current.isKey && Event.current.type == EventType.KeyUp)
@@ -90,6 +103,9 @@ public class PopupWindow : EditorWindow
         }
     }
 
+    /// <summary>
+    /// Shows the popup asking if you're sure you wanna delete an element
+    /// </summary>
     private void ShowDeletePopup()
     {
         DeleteStyle = new GUIStyle(GUI.skin.button);
@@ -101,7 +117,7 @@ public class PopupWindow : EditorWindow
         EditorGUILayout.LabelField("Do you want to delete this " + typeOfElem + "?", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
         if (senderEditor.currentElem is BehaviourTree)
         {
-            int numberOfSons = ((BehaviourTree)senderEditor.currentElem).SonsCount(locIndex);
+            int numberOfSons = ((BehaviourTree)senderEditor.currentElem).ChildrenCount(elem);
             if (numberOfSons > 0)
             {
                 GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
@@ -115,7 +131,7 @@ public class PopupWindow : EditorWindow
 
         if (GUILayout.Button("Delete", DeleteStyle))
         {
-            senderEditor.Delete(typeOfElem, locIndex);
+            senderEditor.Delete(typeOfElem, elem);
             this.Close();
         }
         if (GUILayout.Button("Cancel", CancelStyle))
@@ -124,23 +140,23 @@ public class PopupWindow : EditorWindow
         }
     }
 
-    private void ShowNamePopup()
-    {
-        CancelStyle = new GUIStyle(GUI.skin.button);
-        CancelStyle.normal.background = MakeBackground(Color.gray);
+    //private void ShowNamePopup()
+    //{
+    //    CancelStyle = new GUIStyle(GUI.skin.button);
+    //    CancelStyle.normal.background = MakeBackground(Color.gray);
 
-        GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-        labelStyle.normal.textColor = Color.red;
+    //    GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+    //    labelStyle.normal.textColor = Color.red;
 
-        EditorGUILayout.LabelField("This element's name " + repeatedName + " is repeated in another element", labelStyle, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+    //    EditorGUILayout.LabelField("This element's name " + repeatedName + " is repeated in another element", labelStyle, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
 
-        GUILayout.Space(30);
+    //    GUILayout.Space(30);
 
-        if (GUILayout.Button("Cancel", CancelStyle))
-        {
-            this.Close();
-        }
-    }
+    //    if (GUILayout.Button("Cancel", CancelStyle))
+    //    {
+    //        this.Close();
+    //    }
+    //}
 
     //Habrá que cambiarlo
     private Texture2D MakeBackground(Color col)
@@ -158,6 +174,9 @@ public class PopupWindow : EditorWindow
         return result;
     }
 
+    /// <summary>
+    /// The OnLostFocus
+    /// </summary>
     private void OnLostFocus()
     {
         this.Close();

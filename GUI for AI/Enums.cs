@@ -11,6 +11,11 @@ public class Enums
         RepeatedName = 2
     }
 
+    /// <summary>
+    /// Transforms the error given into a pre-defined message
+    /// </summary>
+    /// <param name="error"></param>
+    /// <returns></returns>
     public static string EnumToString(Errors error)
     {
         switch (error)

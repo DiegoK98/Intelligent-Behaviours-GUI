@@ -7,6 +7,10 @@ public class GUIElement : ScriptableObject
 {
     public bool isFocused = false;
 
+    /// <summary>
+    /// The UniqueID
+    /// </summary>
+    /// <returns></returns>
     public long UniqueID()
     {
         long i = 1;
@@ -21,6 +25,11 @@ public class GUIElement : ScriptableObject
         return number;
     }
 
+    /// <summary>
+    /// Checks if a given name exists in any of the elements from the given NodeEditor
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="name"></param>
     protected void CheckNameExisting(NodeEditor parent, string name)
     {
         int totalCount = 0;
@@ -34,7 +43,7 @@ public class GUIElement : ScriptableObject
         }
         else if (parent.currentElem is BehaviourTree)
         {
-            totalCount += ((BehaviourTree)parent.currentElem).states.FindAll(e => e.nodeName == name).Count;
+            totalCount += ((BehaviourTree)parent.currentElem).nodes.FindAll(e => e.nodeName == name).Count;
         }
 
         if (totalCount > 1)

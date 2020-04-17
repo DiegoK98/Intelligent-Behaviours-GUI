@@ -7,11 +7,18 @@ public class BehaviourTree : ClickableElement
 {
     public readonly long identificator;
 
-    public List<BehaviourNode> states = new List<BehaviourNode>();
-    public List<Transition> transitions;
+    public List<BehaviourNode> nodes = new List<BehaviourNode>();
+
+    public List<Transition> connections;
 
     static int uniqueNameID = 0;
 
+    /// <summary>
+    /// The BehaviourTree
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
     public BehaviourTree(ClickableElement parent, float posx, float posy)
     {
         this.parent = parent;
@@ -19,11 +26,16 @@ public class BehaviourTree : ClickableElement
         type = elementType.BT;
         elementName = "New BT " + uniqueNameID++;
         identificator = UniqueID();
-        transitions = new List<Transition>();
+        connections = new List<Transition>();
 
         windowRect = new Rect(posx, posy, width, height);
     }
 
+    /// <summary>
+    /// The Equals
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public override bool Equals(object other)
     {
         if (!base.Equals(other))
@@ -36,9 +48,12 @@ public class BehaviourTree : ClickableElement
         return true;
     }
 
+    /// <summary>
+    /// Draws all transitions curves for the Behaviour Tree
+    /// </summary>
     public void DrawCurves()
     {
-        foreach (Transition elem in transitions)
+        foreach (Transition elem in connections)
         {
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
@@ -47,35 +62,65 @@ public class BehaviourTree : ClickableElement
         }
     }
 
+    /// <summary>
+    /// Deletes the node and its children, including the transitions connected to all of them
+    /// </summary>
+    /// <param name="node"></param>
     public void DeleteNode(BehaviourNode node)
     {
-        states.Remove(node);
+        nodes.Remove(node);
 
-        foreach (Transition transition in transitions.FindAll(t => node.Equals(t.fromNode)))
+        foreach (Transition transition in connections.FindAll(t => node.Equals(t.fromNode)))
         {
-            transitions.Remove(transition);
+            connections.Remove(transition);
             DeleteNode((BehaviourNode)transition.toNode);
         }
-        foreach (Transition transition in transitions.FindAll(t => node.Equals(t.toNode)))
+        foreach (Transition transition in connections.FindAll(t => node.Equals(t.toNode)))
         {
-            transitions.Remove(transition);
+            connections.Remove(transition);
         }
     }
 
-    public void DeleteTransition(Transition deletedTrans)
+    /// <summary>
+    /// Deletes the connection
+    /// </summary>
+    /// <param name="deletedTrans"></param>
+    public void DeleteConnection(Transition deletedTrans)
     {
-        transitions.Remove(deletedTrans);
+        connections.Remove(deletedTrans);
     }
 
-    public int SonsCount(int i)
+    /// <summary>
+    /// Returns how many sons a node has
+    /// </summary>
+    /// <param name="i"></param>
+    /// <returns></returns>
+    public int ChildrenCount(GUIElement elem)
     {
         int res = 0;
 
-        foreach (Transition transition in transitions.FindAll(t => states[i].Equals(t.fromNode)))
+        foreach (Transition transition in connections.FindAll(t => elem.Equals(t.fromNode)))
         {
-            res += SonsCount(states.IndexOf((BehaviourNode)transition.toNode)) + 1;
+            res += ChildrenCount((BehaviourNode)transition.toNode) + 1;
         }
 
         return res;
+    }
+
+    public bool ConnectedCheck(GUIElement start, GUIElement end)
+    {
+        bool connected = false;
+
+        foreach (Transition transition in connections.FindAll(t => start.Equals(t.fromNode)))
+        {
+            if (end.Equals((BehaviourNode)transition.toNode))
+            {
+                connected = true;
+                break;
+            }
+            connected = ConnectedCheck((BehaviourNode)transition.toNode, end);
+        }
+
+        return connected;
     }
 }

@@ -7,10 +7,14 @@ using UnityEngine;
 
 public class NodeEditorUtilities
 {
-    /// <summary>C#'s Script Icon [The one MonoBhevaiour Scripts have].</summary>
+    /// <summary>
+    /// C#'s Script Icon [The one MonoBhevaiour Scripts have].
+    /// </summary>
     private static Texture2D scriptIcon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
 
-    /// <summary>Creates a new C# Node.</summary>
+    /// <summary>
+    /// Creates a new C# Node.
+    /// </summary>
     public static void CreateNode(string name)
     {
         string[] guids = AssetDatabase.FindAssets("xNode_NodeTemplate.cs");
@@ -26,7 +30,9 @@ public class NodeEditorUtilities
         );
     }
 
-    /// <summary>Creates a new C# for a FSM.</summary>
+    /// <summary>
+    /// Creates a new C# for a FSM.
+    /// </summary>
     public static void CreateFSM(string name)
     {
         string[] guids = AssetDatabase.FindAssets("xNode_NodeGraphTemplate.cs");
@@ -63,7 +69,9 @@ public class NodeEditorUtilities
         }
     }
 
-    /// <summary>Creates Script from Template's path.</summary>
+    /// <summary>
+    /// Creates Script from Template's path.
+    /// </summary>
     internal static UnityEngine.Object CreateScript(string pathName, string templatePath)
     {
         string className = Path.GetFileNameWithoutExtension(pathName).Replace(" ", string.Empty);
