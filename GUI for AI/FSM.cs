@@ -44,6 +44,15 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
+    /// Gets the type of the element properly written
+    /// </summary>
+    /// <returns></returns>
+    public override string GetTypeString()
+    {
+        return "FSM";
+    }
+
+    /// <summary>
     /// The Equals
     /// </summary>
     /// <param name="other"></param>

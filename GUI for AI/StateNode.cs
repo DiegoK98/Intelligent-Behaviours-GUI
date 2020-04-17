@@ -54,6 +54,18 @@ public class StateNode : BaseNode
     }
 
     /// <summary>
+    /// Gets the type of the element properly written
+    /// </summary>
+    /// <returns></returns>
+    public override string GetTypeString()
+    {
+        if (elem is null)
+            return "Node";
+        else
+            return elem.GetTypeString();
+    }
+
+    /// <summary>
     /// Removes the references to the transitions that were connected to the deleted node
     /// </summary>
     /// <param name="deletedNode"></param>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class ClickableElement : GUIElement
+public abstract class ClickableElement : GUIElement
 {
     public enum elementType
     {

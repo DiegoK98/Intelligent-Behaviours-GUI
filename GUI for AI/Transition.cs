@@ -8,13 +8,13 @@ public class Transition : GUIElement
     public string transitionName = "";
 
     public BaseNode fromNode;
-    
+
     public BaseNode toNode;
 
     public Rect textBox;
 
     public static int width = 150;
-    
+
     public static int height = 35;
 
     /// <summary>
@@ -29,6 +29,15 @@ public class Transition : GUIElement
 
         fromNode = from;
         toNode = to;
+    }
+
+    /// <summary>
+    /// Gets the type of the element properly written
+    /// </summary>
+    /// <returns></returns>
+    public override string GetTypeString()
+    {
+        return "Transition";
     }
 
     /// <summary>

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-public class BaseNode : GUIElement
+public abstract class BaseNode : GUIElement
 {
     public string nodeName = "";
 

@@ -374,9 +374,9 @@ public class NodeEditor : EditorWindow
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = 10
                 };
-                style.normal.background = GetBackground("Elements", Elements[i]);
+                style.normal.background = GetBackground(Elements[i]);
 
-                Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, "FSM", style);
+                Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, Elements[i].GetTypeString(), style);
             }
         }
 
@@ -389,9 +389,9 @@ public class NodeEditor : EditorWindow
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = 10
                 };
-                style.normal.background = GetBackground("FSM", ((FSM)currentElem).states[i]);
+                style.normal.background = GetBackground(((FSM)currentElem).states[i]);
 
-                ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, "Node", style);
+                ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].GetTypeString(), style);
             }
 
             for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
@@ -407,7 +407,7 @@ public class NodeEditor : EditorWindow
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = 10
                 };
-                style.normal.background = GetBackground("Transition", elem);
+                style.normal.background = GetBackground(elem);
 
                 elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", style);
             }
@@ -422,9 +422,9 @@ public class NodeEditor : EditorWindow
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = 10
                 };
-                style.normal.background = GetBackground("BT", ((BehaviourTree)currentElem).nodes[i]);
+                style.normal.background = GetBackground(((BehaviourTree)currentElem).nodes[i]);
 
-                ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).nodes[i].type.ToString(), style);
+                ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).nodes[i].GetTypeString(), style);
             }
         }
 
@@ -572,35 +572,33 @@ public class NodeEditor : EditorWindow
     /// <param name="typeOfItem"></param>
     /// <param name="elem"></param>
     /// <returns></returns>
-    private Texture2D GetBackground(string typeOfItem, GUIElement elem)
+    private Texture2D GetBackground(GUIElement elem)
     {
         var isFocused = elem.isFocused;
         Color col = Color.white;
         Texture2D originalTexture = null;
         int type;
 
-        switch (typeOfItem)
+        switch (elem.GetType().ToString())
         {
-            case "Elements":
-                type = (int)((ClickableElement)elem).type;
-                switch (type)
-                {
-                    case 0:
-                        originalTexture = Resources.Load<Texture2D>("FSM_Rect");
-                        col = Color.blue;
-                        break;
-                    case 1:
-                        originalTexture = Resources.Load<Texture2D>("BT_Rect");
-                        col = Color.cyan;
-                        break;
-                    default:
-                        col = Color.white;
-                        break;
-                }
+            // FSM
+            case nameof(FSM):
+                originalTexture = Resources.Load<Texture2D>("FSM_Rect");
+                col = Color.blue;
                 break;
-            case "FSM":
+
+            // BT
+            case nameof(BehaviourTree):
+                originalTexture = Resources.Load<Texture2D>("BT_Rect");
+                col = Color.cyan;
+                break;
+
+            // FSM Node
+            case nameof(StateNode):
                 type = (int)((StateNode)elem).type;
-                if (((StateNode)elem).elem == null) //Es un nodo normal
+
+                // Nodo normal
+                if (((StateNode)elem).elem == null)
                 {
                     switch (type)
                     {
@@ -621,7 +619,8 @@ public class NodeEditor : EditorWindow
                             break;
                     }
                 }
-                else //Es un subelemento
+                // Nodo con sub-elemento
+                else
                 {
                     switch (type)
                     {
@@ -643,7 +642,9 @@ public class NodeEditor : EditorWindow
                     }
                 }
                 break;
-            case "BT":
+
+            // BehaviourTree Node
+            case nameof(BehaviourNode):
                 type = (int)((BehaviourNode)elem).type;
 
                 switch (type)
@@ -681,7 +682,9 @@ public class NodeEditor : EditorWindow
                         break;
                 }
                 break;
-            case "Transition":
+
+            // FSM Transition
+            case nameof(Transition):
                 originalTexture = Resources.Load<Texture2D>("Transition_Rect");
                 col = Color.yellow;
                 break;

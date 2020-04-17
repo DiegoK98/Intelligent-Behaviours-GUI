@@ -32,6 +32,15 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
+    /// Gets the type of the element properly written
+    /// </summary>
+    /// <returns></returns>
+    public override string GetTypeString()
+    {
+        return "Behaviour Tree";
+    }
+
+    /// <summary>
     /// The Equals
     /// </summary>
     /// <param name="other"></param>

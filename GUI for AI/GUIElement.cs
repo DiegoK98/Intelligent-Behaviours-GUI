@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GUIElement : ScriptableObject
+public abstract class GUIElement : ScriptableObject
 {
     public bool isFocused = false;
 
@@ -55,4 +55,6 @@ public class GUIElement : ScriptableObject
             parent.RemoveError(Enums.Errors.RepeatedName);
         }
     }
+
+    public abstract string GetTypeString();
 }

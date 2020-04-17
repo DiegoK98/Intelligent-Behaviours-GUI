@@ -26,6 +26,18 @@ public class BehaviourNode : BaseNode
     static int uniqueNameID = 0;
 
     /// <summary>
+    /// Gets the type of the element properly written
+    /// </summary>
+    /// <returns></returns>
+    public override string GetTypeString()
+    {
+        if (elem is null)
+            return type.ToString();
+        else
+            return elem.GetTypeString();
+    }
+
+    /// <summary>
     /// The BehaviourNode
     /// </summary>
     /// <param name="typeNumber"></param>
