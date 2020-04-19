@@ -23,8 +23,12 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     private void CreateBehaviourTree()
     {
+        // Nodes
+
         #NODES#
+        // Child adding
         #CHILDS#
+        // SetRoot
         #SETROOT#
     }
 

@@ -208,15 +208,15 @@ public class NodeEditorUtilities
         string className = CleanName(elem.elementName);
         string result = string.Empty;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes)
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.Where(n => n.type != BehaviourNode.behaviourType.Leaf))
         {
             string nodeName = CleanName(node.nodeName);
+            result += "\n" + tab + tab;
             foreach (BehaviourNode toNode in ((BehaviourTree)elem).connections.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode))
             {
                 string toNodeName = CleanName(toNode.nodeName);
                 result += nodeName + ".AddChild(" + toNodeName + ");\n" + tab + tab;
             }
-            result += "\n" + tab + tab;
         }
 
         return result;
@@ -255,7 +255,7 @@ public class NodeEditorUtilities
                     result += "\n" + tab + "private void " + nodeName + actionsEnding + "()\n"
                       + tab + "{\n"
                       + tab + tab + "\n"
-                      + tab + "}";
+                      + tab + "}\n" + tab;
                 }
                 break;
             case nameof(BehaviourTree):
@@ -265,13 +265,13 @@ public class NodeEditorUtilities
                     result += "\n" + tab + "private void " + nodeName + actionsEnding + "()\n"
                       + tab + "{\n"
                       + tab + tab + "\n"
-                      + tab + "}";
+                      + tab + "}\n" + tab;
 
                     result += "\n" + tab + "private ReturnValues " + nodeName + conditionsEnding + "()\n"
                       + tab + "{\n"
                       + tab + tab + "//Write here the code for the success check for " + nodeName + "\n"
                       + tab + tab + "return ReturnValues.Failed;\n"
-                      + tab + "}";
+                      + tab + "}\n" + tab;
                 }
                 break;
         }

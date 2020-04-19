@@ -62,7 +62,10 @@ public class NodeEditor : EditorWindow
             Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
             Rect nodeRect = new Rect(selectednode.windowRect);
 
-            DrawNodeCurve(nodeRect, mouseRect, true);
+            if (makeConnectionMode)
+                DrawNodeCurve(mouseRect, nodeRect, true);
+            else
+                DrawNodeCurve(nodeRect, mouseRect, true);
 
             Repaint();
         }
@@ -859,9 +862,9 @@ public class NodeEditor : EditorWindow
     /// </summary>
     /// <param name="type"></param>
     /// <param name="selectIndex"></param>
-    public void Delete(string type, GUIElement elem)
+    public void Delete(GUIElement elem)
     {
-        switch (type)
+        switch (elem.GetType().ToString())
         {
             case nameof(StateNode):
                 StateNode stateNode = (StateNode)elem;

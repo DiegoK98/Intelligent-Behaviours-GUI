@@ -118,18 +118,16 @@ public class BehaviourTree : ClickableElement
 
     public bool ConnectedCheck(GUIElement start, GUIElement end)
     {
-        bool connected = false;
-
         foreach (TransitionsGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
         {
             if (end.Equals((BehaviourNode)transition.toNode))
             {
-                connected = true;
-                break;
+                return true;
             }
-            connected = ConnectedCheck((BehaviourNode)transition.toNode, end);
+            if (ConnectedCheck((BehaviourNode)transition.toNode, end))
+                return true;
         }
 
-        return connected;
+        return false;
     }
 }

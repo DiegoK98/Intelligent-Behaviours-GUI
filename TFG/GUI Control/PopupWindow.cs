@@ -131,7 +131,7 @@ public class PopupWindow : EditorWindow
 
         if (GUILayout.Button("Delete", DeleteStyle))
         {
-            senderEditor.Delete(typeOfElem, elem);
+            senderEditor.Delete(elem);
             this.Close();
         }
         if (GUILayout.Button("Cancel", CancelStyle))
