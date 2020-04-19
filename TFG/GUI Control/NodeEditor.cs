@@ -345,7 +345,7 @@ public class NodeEditor : EditorWindow
                         makeTransitionMode = false;
                         break;
                     }
-                    if (focusedObj != null)
+                    if (focusedObj != null && GUIUtility.keyboardControl == 0)
                     {
                         PopupWindow.InitDelete(this, focusedObj, focusedObj.GetTypeString());
                         e.Use();
@@ -360,10 +360,13 @@ public class NodeEditor : EditorWindow
                     currentElem = currentElem?.parent;
                     e.Use();
                     break;
-                case KeyCode.KeypadPlus:
-                    foreach (ClickableElement elem in Elements)
+                case KeyCode.S:
+                    if (GUIUtility.keyboardControl == 0)
                     {
-                        NodeEditorUtilities.CreateElem(elem);
+                        foreach (ClickableElement elem in Elements)
+                        {
+                            NodeEditorUtilities.CreateElem(elem);
+                        }
                     }
                     break;
             }

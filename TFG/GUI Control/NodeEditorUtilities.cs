@@ -227,16 +227,12 @@ public class NodeEditorUtilities
         string className = CleanName(elem.elementName);
         string result = string.Empty;
         string machineName = className + "_BT";
-        string nodeName = "";
 
         foreach (BehaviourNode node in ((BehaviourTree)elem).nodes)
         {
-            if (!node.isRootNode)
-                continue;
-            nodeName = CleanName(node.nodeName);
-            break;
+            if (node.isRootNode)
+                result += machineName + ".SetRootNode(" + CleanName(node.nodeName) + ");";
         }
-        result += machineName + ".SetRootNode(" + nodeName + ");";
 
         return result;
     }
