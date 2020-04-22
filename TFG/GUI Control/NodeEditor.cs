@@ -165,7 +165,6 @@ public class NodeEditor : EditorWindow
                                     menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Succeeder"));
                                     menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Conditional"));
                                     menu.AddDisabledItem(new GUIContent("Add FSM"));
-                                    menu.AddDisabledItem(new GUIContent("Add BT"));
                                 }
                                 else
                                 {
@@ -180,7 +179,6 @@ public class NodeEditor : EditorWindow
                                     menu.AddItem(new GUIContent("Decorator Nodes/Add Succeeder"), false, ContextCallback, new string[] { "succeeder", selectIndex.ToString() });
                                     menu.AddItem(new GUIContent("Decorator Nodes/Add Conditional"), false, ContextCallback, new string[] { "conditional", selectIndex.ToString() });
                                     menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
                                 }
 
                                 menu.AddSeparator("");
@@ -361,7 +359,7 @@ public class NodeEditor : EditorWindow
                     e.Use();
                     break;
                 case KeyCode.S:
-                    if (GUIUtility.keyboardControl == 0)
+                    if (GUIUtility.keyboardControl == 0 && errors.Count == 0)
                     {
                         foreach (ClickableElement elem in Elements)
                         {
@@ -383,14 +381,13 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < Elements.Count; i++)
             {
-                GUIStyle style = new GUIStyle()
+                Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, Elements[i].GetTypeString(), new GUIStyle(Styles.SubTitleText)
                 {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 10
-                };
-                style.normal.background = GetBackground(Elements[i]);
-
-                Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, Elements[i].GetTypeString(), style);
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(Elements[i])
+                    }
+                });
             }
         }
 
@@ -398,14 +395,13 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
             {
-                GUIStyle style = new GUIStyle()
+                ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].GetTypeString(), new GUIStyle(Styles.SubTitleText)
                 {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 10
-                };
-                style.normal.background = GetBackground(((FSM)currentElem).states[i]);
-
-                ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].GetTypeString(), style);
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(((FSM)currentElem).states[i])
+                    }
+                });
             }
 
             for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
@@ -416,14 +412,13 @@ public class NodeEditor : EditorWindow
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
                 Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionsGUI.width, TransitionsGUI.height);
 
-                GUIStyle style = new GUIStyle()
+                elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
                 {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 10
-                };
-                style.normal.background = GetBackground(elem);
-
-                elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", style);
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(elem)
+                    }
+                });
             }
         }
 
@@ -431,18 +426,54 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < ((BehaviourTree)currentElem).nodes.Count; i++)
             {
-                GUIStyle style = new GUIStyle()
+                ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).nodes[i].GetTypeString(), new GUIStyle(Styles.SubTitleText)
                 {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 10
-                };
-                style.normal.background = GetBackground(((BehaviourTree)currentElem).nodes[i]);
-
-                ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).nodes[i].GetTypeString(), style);
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(((BehaviourTree)currentElem).nodes[i])
+                    }
+                });
             }
         }
 
         EndWindows();
+
+        //En vez de is null deberia checkear si ha cambiado
+        if (focusedObj is null)
+        {
+            bool repeatedNames = false;
+
+            foreach (ClickableElement elem in Elements)
+            {
+                if (elem is FSM)
+                {
+                    foreach (BaseNode node in ((FSM)elem).states)
+                    {
+                        if (elem.CheckNameExisting(node.nodeName, 1))
+                            repeatedNames = true;
+                    }
+
+                    foreach (TransitionsGUI transition in ((FSM)elem).transitions)
+                    {
+                        if (elem.CheckNameExisting(transition.transitionName, 1))
+                            repeatedNames = true;
+                    }
+                }
+                else if (elem is BehaviourTree)
+                {
+                    foreach (BaseNode node in ((BehaviourTree)elem).nodes)
+                    {
+                        if (elem.CheckNameExisting(node.nodeName, 1))
+                            repeatedNames = true;
+                    }
+                }
+            }
+
+            if (repeatedNames)
+                AddError(Enums.Errors.RepeatedName);
+            else
+                RemoveError(Enums.Errors.RepeatedName);
+        }
 
         #endregion
     }
@@ -530,23 +561,19 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void ShowTopBar()
     {
-        GUIStyle style = GUI.skin.button;
-        style.hover.textColor = Color.grey;
-        style.alignment = TextAnchor.MiddleLeft;
-
         // Top Bar
         widthVariant = 0;
         var name = "Node Editor";
 
         if (currentElem != null)
         {
-            ShowButtonRecursive(style, currentElem, "Node Editor");
+            ShowButtonRecursive(Styles.TopBarButton, currentElem, "Node Editor");
             if (currentElem != null)
                 name = currentElem.elementName;
         }
 
         var labelWidth = 25 + name.ToCharArray().Length * 6;
-        GUI.Label(new Rect(widthVariant, 0, labelWidth, 20), name, new GUIStyle(GUI.skin.label));
+        GUI.Label(new Rect(widthVariant, 0, labelWidth, 20), name);
     }
 
     /// <summary>
@@ -568,7 +595,10 @@ public class NodeEditor : EditorWindow
             currentElem = elem.parent;
         }
         widthVariant += buttonWidth;
-        GUI.Label(new Rect(widthVariant, 0, 15, 20), ">", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperLeft });
+        GUI.Label(new Rect(widthVariant, 0, 15, 20), ">", new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.UpperLeft
+        });
         widthVariant += 12;
     }
 
@@ -765,9 +795,18 @@ public class NodeEditor : EditorWindow
     void DrawNodeWindow(int id)
     {
         if (currentElem is FSM)
+        {
             ((FSM)currentElem).states[id].DrawWindow(this);
+            if (((FSM)currentElem).states[id].elem != null)
+                ((FSM)currentElem).states[id].elem.elementName = ((FSM)currentElem).states[id].nodeName;
+        }
         if (currentElem is BehaviourTree)
+        {
             ((BehaviourTree)currentElem).nodes[id].DrawWindow(this);
+            if (((BehaviourTree)currentElem).nodes[id].elem != null)
+                ((BehaviourTree)currentElem).nodes[id].elem.elementName = ((BehaviourTree)currentElem).nodes[id].nodeName;
+        }
+
         GUI.DragWindow();
     }
 
@@ -777,7 +816,7 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawElementWindow(int id)
     {
-        Elements[id].DrawWindow(this);
+        Elements[id].DrawWindow();
         GUI.DragWindow();
     }
 
@@ -1228,10 +1267,6 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void ShowErrorByPriority()
     {
-        GUIStyle style = new GUIStyle();
-        style.normal.textColor = Color.red;
-        style.contentOffset = new Vector2(0, position.height - 20);
-
         var maxPriorityError = "";
         var currentPriority = 0;
 
@@ -1247,7 +1282,10 @@ public class NodeEditor : EditorWindow
         if (errors.Count > 1)
             maxPriorityError += " (and " + (errors.Count - 1) + " more errors)";
 
-        EditorGUILayout.LabelField(maxPriorityError, style);
+        EditorGUILayout.LabelField(maxPriorityError, new GUIStyle(Styles.ErrorPrompt)
+        {
+            contentOffset = new Vector2(0, position.height - 20)
+        });
     }
 
     /// <summary>

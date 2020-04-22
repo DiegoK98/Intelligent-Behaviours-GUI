@@ -46,16 +46,7 @@ public class TransitionsGUI : GUIElement
     /// <param name="parent"></param>
     public void DrawBox(NodeEditor parent)
     {
-        GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.LowerCenter;
-        style.fontSize = 15;
-        transitionName = EditorGUILayout.TextArea(transitionName, style, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25));
-
-        //En vez de is null deberia checkeear si ha cambiado
-        if (parent.focusedObj is null)
-        {
-            CheckNameExisting(parent, transitionName);
-        }
+        transitionName = EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25));
     }
 
     /// <summary>

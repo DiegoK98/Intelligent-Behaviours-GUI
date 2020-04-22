@@ -49,14 +49,6 @@ public abstract class BaseNode : GUIElement
     /// <param name="parent"></param>
     public void DrawWindow(NodeEditor parent)
     {
-        GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.LowerCenter;
-        style.fontSize = 15;
-
-        GUIStyle style2 = new GUIStyle();
-        style2.alignment = TextAnchor.LowerCenter;
-        style2.fontSize = 15;
-
         if (this is BehaviourNode)
         {
             switch (((BehaviourNode)this).type)
@@ -64,23 +56,17 @@ public abstract class BaseNode : GUIElement
                 case BehaviourNode.behaviourType.Selector:
                 case BehaviourNode.behaviourType.Sequence:
                 case BehaviourNode.behaviourType.Leaf:
-                    nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+                    nodeName = EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
                     break;
                 case BehaviourNode.behaviourType.LoopN:
                 case BehaviourNode.behaviourType.DelayT:
-                    NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), style2, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+                    NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                     break;
             }
         }
         else
         {
-            nodeName = EditorGUILayout.TextArea(nodeName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
-        }
-
-        //En vez de is null deberia checkeear si ha cambiado
-        if (parent.focusedObj is null)
-        {
-            CheckNameExisting(parent, nodeName);
+            nodeName = EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
         }
     }
 }

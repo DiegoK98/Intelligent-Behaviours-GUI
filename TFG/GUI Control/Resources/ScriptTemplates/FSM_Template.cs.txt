@@ -7,8 +7,8 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     #region variables
 
-    private StateMachineEngine #SCRIPTNAME#_FSM;
-
+    private StateMachineEngine #SCRIPTNAME##ENDING#;
+    #SUBELEM1#
     //Place your variables here
 
     #endregion variables
@@ -16,26 +16,15 @@ public class #SCRIPTNAME# : MonoBehaviour {
     // Start is called before the first frame update
     private void Start()
     {
-        #SCRIPTNAME#_FSM = new StateMachineEngine(false);
-
-        CreateStateMachine();
+        #SUBELEM2#CreateStateMachine();
     }
-
-    private void CreateStateMachine()
-    {
-        // Perceptions
-        // Modify or change these for whatever fits your needs
-        // You can also create your own Perceptions, see how in the guide
-        #PERCEPIONS#
-        // States
-        #STATES#
-        // Transitions#TRANSITIONS#
-    }
+    #SUBELEMCREATE#
+    #FSMCREATE#
 
     // Update is called once per frame
     private void Update()
     {
-        #SCRIPTNAME#_FSM.Update();
+        #SCRIPTNAME##ENDING#.Update();#SUBELEM3#
     }
 
     // Create your desired actions to be taken in each state

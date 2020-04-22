@@ -27,17 +27,54 @@ public abstract class ClickableElement : GUIElement
     /// Draws all the elements inside the Element window
     /// </summary>
     /// <param name="parent"></param>
-    public void DrawWindow(NodeEditor parent)
+    public void DrawWindow()
     {
-        GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.LowerCenter;
-        style.fontSize = 15;
-        elementName = EditorGUILayout.TextArea(elementName, style, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+        elementName = EditorGUILayout.TextArea(elementName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+    }
 
-        //En vez de is null deberia checkeear si ha cambiado
-        if (parent.focusedObj is null)
+    /// <summary>
+    /// Checks if a given name exists in this element
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public bool CheckNameExisting(string name, int threshold)
+    {
+        int repeatedNames = 0;
+
+        if (this is FSM)
         {
-            CheckNameExisting(parent, elementName);
+            foreach (StateNode node in ((FSM)this).states)
+            {
+
+                if (node.nodeName == name)
+                {
+                    repeatedNames++;
+                }
+                if (node.elem != null)
+                {
+                    if (node.elem.CheckNameExisting(name, 0))
+                        repeatedNames++;
+                }
+            }
+            foreach (TransitionsGUI transition in ((FSM)this).transitions)
+            {
+                if (transition.transitionName == name)
+                {
+                    repeatedNames++;
+                }
+            }
         }
+        else if (this is BehaviourTree)
+        {
+            foreach (BehaviourNode node in ((BehaviourTree)this).nodes)
+            {
+                if (node.nodeName == name)
+                {
+                    repeatedNames++;
+                }
+            }
+        }
+
+        return repeatedNames > threshold;
     }
 }

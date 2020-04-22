@@ -7,8 +7,8 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     #region variables
 
-    private BehaviourTreeEngine #SCRIPTNAME#_BT;
-
+    private BehaviourTreeEngine #SCRIPTNAME##ENDING#;
+    #SUBELEM1#
     //Place your variables here
 
     #endregion variables
@@ -16,26 +16,15 @@ public class #SCRIPTNAME# : MonoBehaviour {
     // Start is called before the first frame update
     private void Start()
     {
-        #SCRIPTNAME#_BT = new BehaviourTreeEngine(false);
-
-        CreateBehaviourTree();
+        #SUBELEM2#CreateBehaviourTree();
     }
-
-    private void CreateBehaviourTree()
-    {
-        // Nodes
-
-        #NODES#
-        // Child adding
-        #CHILDS#
-        // SetRoot
-        #SETROOT#
-    }
+    #SUBELEMCREATE#
+    #BTCREATE#
 
     // Update is called once per frame
     private void Update()
     {
-        #SCRIPTNAME#_BT.Update();
+        #SCRIPTNAME##ENDING#.Update();#SUBELEM3#
     }
     
     // Create your desired actions to be taken in each state

@@ -112,13 +112,10 @@ public class FSM : ClickableElement
     {
         foreach (TransitionsGUI elem in transitions)
         {
-            //if (Equals(elem.fromNode))
-            //{
-                Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
-                Rect toNodeRect = new Rect(elem.toNode.windowRect);
+            Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
+            Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-                NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
-            //}
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
         }
     }
 

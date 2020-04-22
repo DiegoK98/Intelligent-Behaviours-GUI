@@ -15,10 +15,6 @@ public class PopupWindow : EditorWindow
 
     static string typeOfElem;
 
-    static GUIStyle DeleteStyle;
-
-    static GUIStyle CancelStyle;
-
     static NodeEditor senderEditor;
 
     static GUIElement elem;
@@ -108,33 +104,24 @@ public class PopupWindow : EditorWindow
     /// </summary>
     private void ShowDeletePopup()
     {
-        DeleteStyle = new GUIStyle(GUI.skin.button);
-        DeleteStyle.normal.background = MakeBackground(Color.red);
-
-        CancelStyle = new GUIStyle(GUI.skin.button);
-        CancelStyle.normal.background = MakeBackground(Color.gray);
-
         EditorGUILayout.LabelField("Do you want to delete this " + typeOfElem + "?", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
         if (senderEditor.currentElem is BehaviourTree)
         {
             int numberOfSons = ((BehaviourTree)senderEditor.currentElem).ChildrenCount(elem);
             if (numberOfSons > 0)
             {
-                GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-                labelStyle.normal.textColor = Color.red;
-
-                EditorGUILayout.LabelField(numberOfSons + " child nodes will be deleted as well", labelStyle, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+                EditorGUILayout.LabelField(numberOfSons + " child nodes will be deleted as well", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
             }
         }
 
         GUILayout.Space(30);
 
-        if (GUILayout.Button("Delete", DeleteStyle))
+        if (GUILayout.Button("Delete", Styles.DeleteStyle))
         {
             senderEditor.Delete(elem);
             this.Close();
         }
-        if (GUILayout.Button("Cancel", CancelStyle))
+        if (GUILayout.Button("Cancel", Styles.CancelStyle))
         {
             this.Close();
         }
@@ -157,22 +144,6 @@ public class PopupWindow : EditorWindow
     //        this.Close();
     //    }
     //}
-
-    //Habrá que cambiarlo
-    private Texture2D MakeBackground(Color col)
-    {
-        Color[] pix = new Color[2 * 2];
-        for (int i = 0; i < pix.Length; ++i)
-        {
-            pix[i] = col;
-        }
-
-        Texture2D result = new Texture2D(2, 2);
-        result.SetPixels(pix);
-        result.Apply();
-
-        return result;
-    }
 
     /// <summary>
     /// The OnLostFocus
