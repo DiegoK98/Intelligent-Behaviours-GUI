@@ -52,6 +52,7 @@ public class NodeEditor : EditorWindow
         mousePos = e.mousePosition;
 
         ShowTopBar();
+        ShowOptions();
         ShowErrorByPriority();
 
         // Draw the curves for everything
@@ -165,6 +166,7 @@ public class NodeEditor : EditorWindow
                                     menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Succeeder"));
                                     menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Conditional"));
                                     menu.AddDisabledItem(new GUIContent("Add FSM"));
+                                    menu.AddDisabledItem(new GUIContent("Add BT"));
                                 }
                                 else
                                 {
@@ -179,6 +181,7 @@ public class NodeEditor : EditorWindow
                                     menu.AddItem(new GUIContent("Decorator Nodes/Add Succeeder"), false, ContextCallback, new string[] { "succeeder", selectIndex.ToString() });
                                     menu.AddItem(new GUIContent("Decorator Nodes/Add Conditional"), false, ContextCallback, new string[] { "conditional", selectIndex.ToString() });
                                     menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
+                                    menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
                                 }
 
                                 menu.AddSeparator("");
@@ -358,15 +361,6 @@ public class NodeEditor : EditorWindow
                     currentElem = currentElem?.parent;
                     e.Use();
                     break;
-                case KeyCode.S:
-                    if (GUIUtility.keyboardControl == 0 && errors.Count == 0)
-                    {
-                        foreach (ClickableElement elem in Elements)
-                        {
-                            NodeEditorUtilities.CreateElem(elem);
-                        }
-                    }
-                    break;
             }
         }
 
@@ -426,7 +420,11 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < ((BehaviourTree)currentElem).nodes.Count; i++)
             {
-                ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, ((BehaviourTree)currentElem).nodes[i].GetTypeString(), new GUIStyle(Styles.SubTitleText)
+                string displayName = "";
+                if (((BehaviourTree)currentElem).nodes[i].type > BehaviourNode.behaviourType.Selector)
+                    displayName = ((BehaviourTree)currentElem).nodes[i].GetTypeString();
+
+                ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, displayName, new GUIStyle(Styles.SubTitleText)
                 {
                     normal = new GUIStyleState()
                     {
@@ -574,6 +572,24 @@ public class NodeEditor : EditorWindow
 
         var labelWidth = 25 + name.ToCharArray().Length * 6;
         GUI.Label(new Rect(widthVariant, 0, labelWidth, 20), name);
+    }
+
+    /// <summary>
+    /// Draws the Options button
+    /// </summary>
+    private void ShowOptions()
+    {
+        if (GUI.Button(new Rect(position.width - 60, 0, 50, 20), "...", Styles.OptionsButton))
+        {
+            // Set menu items
+            GenericMenu menu = new GenericMenu();
+
+            menu.AddDisabledItem(new GUIContent("Save XML"));
+            menu.AddDisabledItem(new GUIContent("Load XML"));
+            menu.AddItem(new GUIContent("Export Code"), false, ExportCode);
+
+            menu.ShowAsContext();
+        }
     }
 
     /// <summary>
@@ -896,6 +912,24 @@ public class NodeEditor : EditorWindow
             case "connectNode":
                 ConnectNode(index);
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Exporta el código si no hay errores
+    /// </summary>
+    void ExportCode()
+    {
+        if (GUIUtility.keyboardControl == 0 && errors.Count == 0)
+        {
+            foreach (ClickableElement elem in Elements)
+            {
+                NodeEditorUtilities.GenerateElemCode(elem);
+            }
+        }
+        else
+        {
+            PopupWindow.InitExport(this);
         }
     }
 

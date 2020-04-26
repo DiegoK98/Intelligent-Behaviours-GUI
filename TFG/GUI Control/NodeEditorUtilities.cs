@@ -17,11 +17,13 @@ public class NodeEditorUtilities
     static string actionsEnding = "Action";
     static string conditionsEnding = "SuccessCheck";
     static string classEnding = "_class";
+    static string subFSMEnding = "_SubFSM";
+    static string subBtEnding = "_SubBT";
 
     /// <summary>
     /// Creates a new C# for a FSM.
     /// </summary>
-    public static void CreateElem(ClickableElement elem, bool isSub = false)
+    public static void GenerateElemCode(ClickableElement elem)
     {
         string templatePath = "none";
 
@@ -41,34 +43,22 @@ public class NodeEditorUtilities
             return;
         }
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-        CreateFromTemplate(
-            CleanName(elem.elementName) + ".cs",
-            path,
-            elem,
-            isSub
-        );
+
+        CreateAsset(CleanName(elem.elementName) + ".cs", path, elem);
     }
 
-    private static void CreateFromTemplate(string initialName, string templatePath, ClickableElement elem, bool isSub)
+    private static void CreateAsset(string initialName, string templatePath, ClickableElement elem)
     {
-        //ProjectWindowUtil.StartNameEditingIfProjectWindowExists(
-        //    0,
-        //    ScriptableObject.CreateInstance<DoCreateCodeFile>(),
-        //    initialName,
-        //    scriptIcon,
-        //    templatePath
-        //);
-
         if (!AssetDatabase.IsValidFolder("Assets/AI Scripts"))
             AssetDatabase.CreateFolder("Assets", "AI Scripts");
-        Object o = CreateScript("Assets/AI Scripts/" + initialName, templatePath, elem, isSub);
+        Object o = CreateScript("Assets/AI Scripts/" + initialName, templatePath, elem);
         ProjectWindowUtil.ShowCreatedAsset(o);
     }
 
     /// <summary>
     /// Creates Script from Template's path.
     /// </summary>
-    private static UnityEngine.Object CreateScript(string pathName, string templatePath, ClickableElement elem, bool isSub)
+    private static UnityEngine.Object CreateScript(string pathName, string templatePath, ClickableElement elem)
     {
         string templateText = string.Empty;
 
@@ -83,36 +73,20 @@ public class NodeEditorUtilities
 
             // Replace the tags with the corresponding parts
             string className = Path.GetFileNameWithoutExtension(pathName);
-            string engineEnding = "";
             List<ClickableElement> subElems = new List<ClickableElement>();
 
-            switch (elem.GetType().ToString())
-            {
-                case nameof(FSM):
-                    if (isSub)
-                        engineEnding = "_SubFSM";
-                    else
-                        engineEnding = "_FSM";
-                    break;
-                case nameof(BehaviourTree):
-                    if (isSub)
-                        engineEnding = "_SubBT";
-                    else
-                        engineEnding = "_BT";
-                    break;
-            }
-
             templateText = templateText.Replace("#SCRIPTNAME#", className);
-            templateText = templateText.Replace("#ENDING#", engineEnding);
 
             switch (elem.GetType().ToString())
             {
                 case nameof(FSM):
+                    templateText = templateText.Replace("#ENDING#", "_FSM");
                     templateText = templateText.Replace("#FSMCREATE#", GetFSMCreate(elem, "_FSM", false, ref subElems));
                     templateText = GetAllSubElemsRecursive(templateText, ref subElems);
                     templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
                     break;
                 case nameof(BehaviourTree):
+                    templateText = templateText.Replace("#ENDING#", "_BT");
                     templateText = templateText.Replace("#BTCREATE#", GetBTCreate(elem, "_BT", false, ref subElems));
                     templateText = GetAllSubElemsRecursive(templateText, ref subElems);
                     templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
@@ -160,9 +134,9 @@ public class NodeEditorUtilities
         foreach (ClickableElement sub in subElems)
         {
             if (sub is FSM)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetFSMCreate(sub, "_SubFSM", true, ref subElemsCopy));
+                templateText = templateText.Replace("#SUBELEMCREATE#", GetFSMCreate(sub, subFSMEnding, true, ref subElemsCopy));
             if (sub is BehaviourTree)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetBTCreate(sub, "_SubBT", true, ref subElemsCopy));
+                templateText = templateText.Replace("#SUBELEMCREATE#", GetBTCreate(sub, subBtEnding, true, ref subElemsCopy));
         }
         if (subElemsCopy.Count > 0)
         {
@@ -180,7 +154,7 @@ public class NodeEditorUtilities
 
         foreach (ClickableElement sub in subElems)
         {
-            string engineEnding = sub is FSM ? "_SubFSM" : sub is BehaviourTree ? "_SubBT" : "";
+            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBtEnding : "";
             string type = sub is FSM ? "StateMachineEngine" : sub is BehaviourTree ? "BehaviourTreeEngine" : "";
             string elemName = CleanName(sub.elementName);
             result += "private " + type + " " + elemName + engineEnding + ";\n" + tab;
@@ -196,7 +170,7 @@ public class NodeEditorUtilities
 
         for (int i = subElems.Count - 1; i >= 0; i--)
         {
-            string engineEnding = subElems[i] is FSM ? "_SubFSM" : subElems[i] is BehaviourTree ? "_SubBT" : "";
+            string engineEnding = subElems[i] is FSM ? subFSMEnding : subElems[i] is BehaviourTree ? subBtEnding : "";
             string elemName = CleanName(subElems[i].elementName) + engineEnding;
             result += "Create" + elemName + "();\n" + tab + tab;
         }
@@ -267,7 +241,7 @@ public class NodeEditorUtilities
 
         foreach (ClickableElement sub in subElems)
         {
-            string engineEnding = sub is FSM ? "_SubFSM" : sub is BehaviourTree ? "_SubBT" : "";
+            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBtEnding : "";
             string elemName = CleanName(sub.elementName);
             result += "\n" + tab + tab + elemName + engineEnding + ".Update();";
         }
@@ -302,12 +276,12 @@ public class NodeEditorUtilities
             string nodeName = CleanName(node.nodeName);
             if (node.elem is FSM)
             {
-                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + "_SubFSM" + ");\n" + tab + tab; // SubFSM ending hardocded on purpose
+                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subFSMEnding + ");\n" + tab + tab;
                 subElems.Add(node.elem);
             }
             else if (node.elem is BehaviourTree)
             {
-                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + "_SubBT" + ");\n" + tab + tab; // SubBT ending hardocded on purpose
+                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subBtEnding + ");\n" + tab + tab;
                 subElems.Add(node.elem);
 
             }
@@ -345,7 +319,7 @@ public class NodeEditorUtilities
             }
         }
 
-        if(elem.parent is BehaviourTree)
+        if (elem.parent is BehaviourTree)
             result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + machineName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, ReturnValues.Succeed);";
 
         return result;
@@ -376,7 +350,12 @@ public class NodeEditorUtilities
                 case BehaviourNode.behaviourType.Leaf:
                     if (node.elem is FSM)
                     {
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + "_SubFSM" + ");\n" + tab + tab;
+                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subFSMEnding + ");\n" + tab + tab;
+                        subElems.Add(node.elem);
+                    }
+                    else if (node.elem is BehaviourTree)
+                    {
+                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subBtEnding + ");\n" + tab + tab;
                         subElems.Add(node.elem);
                     }
                     else

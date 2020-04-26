@@ -24,6 +24,17 @@ public static class Styles
         }
     };
 
+    public static GUIStyle OptionsButton = new GUIStyle()
+    {
+        hover = new GUIStyleState()
+        {
+            textColor = Color.grey
+        },
+        alignment = TextAnchor.UpperRight,
+        fontSize = 15,
+        fontStyle = FontStyle.Bold
+    };
+
     public static GUIStyle TopBarButton = new GUIStyle(GUI.skin.button)
     {
         hover = new GUIStyleState()

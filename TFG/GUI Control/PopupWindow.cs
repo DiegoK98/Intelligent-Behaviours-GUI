@@ -7,8 +7,7 @@ public class PopupWindow : EditorWindow
     enum typeOfPopup
     {
         Delete,
-        //NameRepeat,
-        //NoEntry
+        Export
     }
 
     static typeOfPopup PopupType;
@@ -39,6 +38,23 @@ public class PopupWindow : EditorWindow
 
         elem = focusElem;
         typeOfElem = type;
+
+        PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+        window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
+        window.ShowPopup();
+    }
+
+    /// <summary>
+    /// Initializer for the popup when deleting an element
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="focusElem"></param>
+    /// <param name="type"></param>
+    public static void InitExport(NodeEditor sender)
+    {
+        senderEditor = sender;
+
+        PopupType = typeOfPopup.Export;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
         window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
@@ -83,9 +99,14 @@ public class PopupWindow : EditorWindow
     /// </summary>
     void OnGUI()
     {
-        if (PopupType == typeOfPopup.Delete)
+        switch (PopupType)
         {
-            ShowDeletePopup();
+            case typeOfPopup.Delete:
+                ShowDeletePopup();
+                break;
+            case typeOfPopup.Export:
+                ShowExportPopup();
+                break;
         }
 
         if (Event.current.isKey && Event.current.type == EventType.KeyUp)
@@ -122,6 +143,18 @@ public class PopupWindow : EditorWindow
             this.Close();
         }
         if (GUILayout.Button("Cancel", Styles.CancelStyle))
+        {
+            this.Close();
+        }
+    }
+
+    private void ShowExportPopup()
+    {
+        EditorGUILayout.LabelField("Fix all the errors", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+
+        GUILayout.Space(30);
+
+        if (GUILayout.Button("Ok", Styles.CancelStyle))
         {
             this.Close();
         }
