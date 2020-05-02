@@ -249,9 +249,9 @@ public class NodeEditor : EditorWindow
                     ((FSM)currentElem).states[selectIndex].isFocused = true;
                     focusedObj = ((FSM)currentElem).states[selectIndex];
 
-                    if (Event.current.clickCount == 2 && ((StateNode)focusedObj).elem != null)
+                    if (Event.current.clickCount == 2 && ((StateNode)focusedObj).subElem != null)
                     {
-                        currentElem = ((StateNode)focusedObj).elem;
+                        currentElem = ((StateNode)focusedObj).subElem;
                         e.Use();
                     }
                 }
@@ -260,9 +260,9 @@ public class NodeEditor : EditorWindow
                     ((BehaviourTree)currentElem).nodes[selectIndex].isFocused = true;
                     focusedObj = ((BehaviourTree)currentElem).nodes[selectIndex];
 
-                    if (Event.current.clickCount == 2 && ((BehaviourNode)focusedObj).elem != null)
+                    if (Event.current.clickCount == 2 && ((BehaviourNode)focusedObj).subElem != null)
                     {
-                        currentElem = ((BehaviourNode)focusedObj).elem;
+                        currentElem = ((BehaviourNode)focusedObj).subElem;
                         e.Use();
                     }
                 }
@@ -279,7 +279,7 @@ public class NodeEditor : EditorWindow
                     {
                         if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
                         {
-                            TransitionsGUI transition = new TransitionsGUI("New Transition " + ((FSM)currentElem).transitions.Count, selectednode, ((FSM)currentElem).states[selectIndex]);
+                            TransitionGUI transition = new TransitionGUI("New Transition " + ((FSM)currentElem).transitions.Count, selectednode, ((FSM)currentElem).states[selectIndex]);
 
                             ((FSM)currentElem).AddTransition(transition);
                         }
@@ -304,7 +304,7 @@ public class NodeEditor : EditorWindow
                         toCreateNode.windowRect.position = new Vector2(mousePos.x, mousePos.y);
                         ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)toCreateNode);
 
-                        TransitionsGUI transition = new TransitionsGUI("", selectednode, toCreateNode);
+                        TransitionGUI transition = new TransitionGUI("", selectednode, toCreateNode);
 
                         ((BehaviourTree)currentElem).connections.Add(transition);
 
@@ -318,7 +318,7 @@ public class NodeEditor : EditorWindow
                     {
                         if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck(selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == BehaviourNode.behaviourType.Leaf))
                         {
-                            TransitionsGUI transition = new TransitionsGUI("", ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
+                            TransitionGUI transition = new TransitionGUI("", ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
                             ((BehaviourTree)currentElem).connections.Add(transition);
 
                             ((BehaviourTree)currentElem).nodes[selectIndex].isRootNode = false;
@@ -400,11 +400,11 @@ public class NodeEditor : EditorWindow
 
             for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
             {
-                TransitionsGUI elem = ((FSM)currentElem).transitions[i];
+                TransitionGUI elem = ((FSM)currentElem).transitions[i];
 
                 Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
-                Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionsGUI.width, TransitionsGUI.height);
+                Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionGUI.width, TransitionGUI.height);
 
                 elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
                 {
@@ -451,7 +451,7 @@ public class NodeEditor : EditorWindow
                             repeatedNames = true;
                     }
 
-                    foreach (TransitionsGUI transition in ((FSM)elem).transitions)
+                    foreach (TransitionGUI transition in ((FSM)elem).transitions)
                     {
                         if (elem.CheckNameExisting(transition.transitionName, 1))
                             repeatedNames = true;
@@ -584,8 +584,8 @@ public class NodeEditor : EditorWindow
             // Set menu items
             GenericMenu menu = new GenericMenu();
 
-            menu.AddDisabledItem(new GUIContent("Save XML"));
-            menu.AddDisabledItem(new GUIContent("Load XML"));
+            menu.AddItem(new GUIContent("Save file"), false, SaveElem);
+            menu.AddItem(new GUIContent("Load file"), false, LoadElem);
             menu.AddItem(new GUIContent("Export Code"), false, ExportCode);
 
             menu.ShowAsContext();
@@ -658,7 +658,7 @@ public class NodeEditor : EditorWindow
                 type = (int)((StateNode)elem).type;
 
                 // Nodo normal
-                if (((StateNode)elem).elem == null)
+                if (((StateNode)elem).subElem == null)
                 {
                     switch (type)
                     {
@@ -718,7 +718,7 @@ public class NodeEditor : EditorWindow
                         col = new Color(1, 0.5f, 0, 1); //orange
                         break;
                     case 2:
-                        if (((BehaviourNode)elem).elem == null) //Es un nodo normal
+                        if (((BehaviourNode)elem).subElem == null) //Es un nodo normal
                         {
                             originalTexture = Resources.Load<Texture2D>("Leaf_Rect");
                         }
@@ -744,7 +744,7 @@ public class NodeEditor : EditorWindow
                 break;
 
             // FSM Transition
-            case nameof(TransitionsGUI):
+            case nameof(TransitionGUI):
                 originalTexture = Resources.Load<Texture2D>("Transition_Rect");
                 col = Color.yellow;
                 break;
@@ -813,14 +813,14 @@ public class NodeEditor : EditorWindow
         if (currentElem is FSM)
         {
             ((FSM)currentElem).states[id].DrawWindow(this);
-            if (((FSM)currentElem).states[id].elem != null)
-                ((FSM)currentElem).states[id].elem.elementName = ((FSM)currentElem).states[id].nodeName;
+            if (((FSM)currentElem).states[id].subElem != null)
+                ((FSM)currentElem).states[id].subElem.elementName = ((FSM)currentElem).states[id].nodeName;
         }
         if (currentElem is BehaviourTree)
         {
             ((BehaviourTree)currentElem).nodes[id].DrawWindow(this);
-            if (((BehaviourTree)currentElem).nodes[id].elem != null)
-                ((BehaviourTree)currentElem).nodes[id].elem.elementName = ((BehaviourTree)currentElem).nodes[id].nodeName;
+            if (((BehaviourTree)currentElem).nodes[id].subElem != null)
+                ((BehaviourTree)currentElem).nodes[id].subElem.elementName = ((BehaviourTree)currentElem).nodes[id].nodeName;
         }
 
         GUI.DragWindow();
@@ -859,19 +859,19 @@ public class NodeEditor : EditorWindow
         switch (order)
         {
             case "FSM":
-                CreateFSM(index);
+                CreateFSM(index, mousePos.x, mousePos.y);
                 break;
             case "BT":
-                CreateBT(index);
+                CreateBT(index, mousePos.x, mousePos.y);
                 break;
             case "Node":
-                CreateNode();
+                CreateNode(mousePos.x, mousePos.y);
                 break;
             case "Sequence":
-                CreateSequence(index);
+                CreateSequence(index, mousePos.x, mousePos.y);
                 break;
             case "Selector":
-                CreateSelector(index);
+                CreateSelector(index, mousePos.x, mousePos.y);
                 break;
             case "leafNode":
                 CreateLeafNode(2, index);
@@ -916,7 +916,7 @@ public class NodeEditor : EditorWindow
     }
 
     /// <summary>
-    /// Exporta el código si no hay errores
+    /// Exporta el código de un elemento si no hay errores
     /// </summary>
     void ExportCode()
     {
@@ -924,13 +924,44 @@ public class NodeEditor : EditorWindow
         {
             foreach (ClickableElement elem in Elements)
             {
-                NodeEditorUtilities.GenerateElemCode(elem);
+                NodeEditorUtilities.GenerateElemScript(elem);
             }
         }
         else
         {
             PopupWindow.InitExport(this);
         }
+    }
+
+    /// <summary>
+    /// Guarda el elemento
+    /// </summary>
+    void SaveElem()
+    {
+        foreach (ClickableElement elem in Elements)
+        {
+            NodeEditorUtilities.GenerateElemXML(elem);
+        }
+    }
+
+    /// <summary>
+    /// Carga el elemento
+    /// </summary>
+    void LoadElem()
+    {
+        XMLElement loadedXML = NodeEditorUtilities.LoadSavedData();
+
+        currentElem = null;
+
+        switch (loadedXML.elemType)
+        {
+            case nameof(FSM):
+            case nameof(BehaviourTree):
+                PasteElem(loadedXML.windowPosX, loadedXML.windowPosY, loadedXML);
+                break;
+        }
+
+        currentElem = null;
     }
 
     /// <summary>
@@ -955,8 +986,8 @@ public class NodeEditor : EditorWindow
 
                 focusedObj = null;
                 break;
-            case nameof(TransitionsGUI):
-                TransitionsGUI transition = (TransitionsGUI)elem;
+            case nameof(TransitionGUI):
+                TransitionGUI transition = (TransitionGUI)elem;
                 ((FSM)currentElem).DeleteTransition(transition);
 
                 focusedObj = null;
@@ -1064,14 +1095,166 @@ public class NodeEditor : EditorWindow
         Handles.DrawBezier(pos2, endPos, pos2, endPos, Color.black, null, 1);
     }
 
+    private void PasteElem(float posX, float posY, XMLElement elem)
+    {
+        ClickableElement newElem;
+
+        switch (elem.elemType)
+        {
+            case nameof(FSM):
+                newElem = new FSM(null, currentElem, posX, posY);
+                break;
+            case nameof(BehaviourTree):
+                newElem = new BehaviourTree(currentElem, posX, posY);
+                break;
+            default:
+                newElem = null;
+                break;
+        }
+
+        if (newElem != null)
+        {
+            newElem.identificator = elem.Id;
+            newElem.elementName = elem.name;
+
+            if (currentElem is null)
+            {
+                Elements.Add(newElem);
+            }
+
+            if (currentElem is FSM)
+            {
+                StateNode node = new StateNode(2, newElem.windowRect.position.x, newElem.windowRect.position.y, newElem);
+                node.identificator = elem.Id;
+
+                if (elem.secondType.Equals(StateNode.stateType.Entry.ToString()))
+                {
+                    ((FSM)currentElem).AddEntryState(node);
+                }
+                else
+                {
+                    ((FSM)currentElem).states.Add(node);
+                }
+            }
+
+            if (currentElem is BehaviourTree)
+            {
+                BehaviourNode node = new BehaviourNode(2, newElem)
+                {
+                    windowRect = newElem.windowRect
+                };
+
+                ((BehaviourTree)currentElem).nodes.Add(node);
+
+                TransitionGUI transition = new TransitionGUI("", selectednode, node);
+
+                ((BehaviourTree)currentElem).connections.Add(transition);
+
+                selectednode = node;
+            }
+
+            foreach (XMLElement state in elem.nodes)
+            {
+                currentElem = newElem;
+
+                switch (state.elemType)
+                {
+                    case nameof(FSM):
+                    case nameof(BehaviourTree):
+                        PasteElem(state.windowPosX, state.windowPosY, state);
+                        break;
+                    case nameof(StateNode):
+                        StateNode node = new StateNode(2, state.windowPosX, state.windowPosY);
+                        node.identificator = state.Id;
+                        node.name = state.name;
+
+                        if (state.secondType.Equals(StateNode.stateType.Entry.ToString()))
+                        {
+                            ((FSM)currentElem).AddEntryState(node);
+                        }
+                        else
+                        {
+                            ((FSM)currentElem).states.Add(node);
+                        }
+                        break;
+                    case nameof(BehaviourNode):
+                        PasteTreeNode(state, true, (BehaviourTree)currentElem);
+                        break;
+                    default:
+                        Debug.LogError("Wrong content in saved data");
+                        break;
+                }
+            }
+
+            foreach (string transString in elem.transitions)
+            {
+                string[] str = transString.Split('#');
+
+                BaseNode node1 = ((FSM)newElem).states.Where(n => n.identificator == Int32.Parse(str[1])).FirstOrDefault();
+                BaseNode node2 = ((FSM)newElem).states.Where(n => n.identificator == Int32.Parse(str[2])).FirstOrDefault();
+
+                TransitionGUI transition = new TransitionGUI(str[0], node1, node2);
+
+                ((FSM)newElem).AddTransition(transition);
+            }
+        }
+        else
+        {
+            Debug.LogError("Wrong content in saved data");
+        }
+    }
+
+    private void PasteTreeNode(XMLElement state, bool isRoot, BehaviourTree currentTree)
+    {
+        switch (state.elemType)
+        {
+            case nameof(FSM):
+            case nameof(BehaviourTree):
+                PasteElem(state.windowPosX, state.windowPosY, state);
+                break;
+            case nameof(BehaviourNode):
+                BehaviourNode nodeBT = new BehaviourNode((int)Enum.Parse(typeof(BehaviourNode.behaviourType), state.secondType), state.windowPosX, state.windowPosY)
+                {
+                    nodeName = state.name,
+                    NProperty = state.NProperty
+                };
+
+                currentTree.nodes.Add(nodeBT);
+
+                if (!isRoot)
+                {
+                    TransitionGUI transition = new TransitionGUI("", selectednode, nodeBT);
+
+                    currentTree.connections.Add(transition);
+                }
+                else
+                {
+                    nodeBT.isRootNode = true;
+                }
+
+                foreach (XMLElement childState in state.nodes)
+                {
+                    selectednode = nodeBT;
+
+                    PasteTreeNode(childState, false, currentTree);
+                }
+                break;
+            default:
+                Debug.LogError("Wrong content in saved data");
+                break;
+        }
+    }
+
     /// <summary>
     /// Creates a FSM
     /// </summary>
-    private void CreateFSM(int nodeIndex)
+    private void CreateFSM(int nodeIndex, float posX, float posY)
     {
+        ClickableElement newFSM;
+
         StateNode entryNode = new StateNode(1, 50, 50);
 
-        ClickableElement newFSM = new FSM(entryNode, currentElem, mousePos.x, mousePos.y);
+        newFSM = new FSM(entryNode, currentElem, posX, posY);
 
         if (currentElem is null)
         {
@@ -1108,9 +1291,14 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Creates a BehaviourTree
     /// </summary>
-    private void CreateBT(int nodeIndex)
+    private void CreateBT(int nodeIndex, float posX, float posY)
     {
-        ClickableElement newBT = new BehaviourTree(currentElem, mousePos.x, mousePos.y);
+        ClickableElement newBT = new BehaviourTree(currentElem, posX, posY);
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            newBT.elementName = name;
+        }
 
         if (currentElem is null)
         {
@@ -1119,13 +1307,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
-            var type = 1;
-            if (((FSM)currentElem).states.Exists(n => n.type == StateNode.stateType.Entry))
-            {
-                type = 2;
-            }
-
-            StateNode node = new StateNode(type, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
+            StateNode node = new StateNode(2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
 
             if (!((FSM)currentElem).hasEntryState)
             {
@@ -1153,9 +1335,9 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Creates a Node
     /// </summary>
-    private void CreateNode()
+    private void CreateNode(float posX, float posY)
     {
-        StateNode node = new StateNode(2, mousePos.x, mousePos.y);
+        StateNode node = new StateNode(2, posX, posY);
 
         if (!((FSM)currentElem).hasEntryState)
         {
@@ -1170,9 +1352,9 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Creates a Sequence Node
     /// </summary>
-    private void CreateSequence(int nodeIndex)
+    private void CreateSequence(int nodeIndex, float posX = 50, float posY = 50)
     {
-        BehaviourNode node = new BehaviourNode(0, mousePos.x, mousePos.y);
+        BehaviourNode node = new BehaviourNode(0, posX, posY);
 
         if (nodeIndex > -1)
         {
@@ -1190,9 +1372,9 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Creates a Selector Node
     /// </summary>
-    private void CreateSelector(int nodeIndex)
+    private void CreateSelector(int nodeIndex, float posX = 50, float posY = 50)
     {
-        BehaviourNode node = new BehaviourNode(1, mousePos.x, mousePos.y);
+        BehaviourNode node = new BehaviourNode(1, posX, posY);
 
         if (nodeIndex > -1)
         {
@@ -1211,9 +1393,9 @@ public class NodeEditor : EditorWindow
     /// Creates a Leaf Node
     /// </summary>
     /// <param name="type"></param>
-    private void CreateLeafNode(int type, int nodeIndex)
+    private void CreateLeafNode(int type, int nodeIndex, float posX = 50, float posY = 50)
     {
-        BehaviourNode node = new BehaviourNode(type, mousePos.x, mousePos.y);
+        BehaviourNode node = new BehaviourNode(type, posX, posY);
 
         selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -1278,7 +1460,7 @@ public class NodeEditor : EditorWindow
     {
         BehaviourNode selNode = ((BehaviourTree)currentElem).nodes[selectIndex];
 
-        foreach (TransitionsGUI tr in ((BehaviourTree)currentElem).connections.FindAll(t => t.toNode.Equals(selNode)))
+        foreach (TransitionGUI tr in ((BehaviourTree)currentElem).connections.FindAll(t => t.toNode.Equals(selNode)))
         {
             ((BehaviourTree)currentElem).DeleteConnection(tr);
         }

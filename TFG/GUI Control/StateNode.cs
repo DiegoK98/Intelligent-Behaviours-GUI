@@ -13,11 +13,11 @@ public class StateNode : BaseNode
         Unconnected
     }
 
-    public ClickableElement elem;
+    public ClickableElement subElem;
 
     public stateType type;
 
-    public List<TransitionsGUI> nodeTransitions;
+    public List<TransitionGUI> nodeTransitions;
 
     static int uniqueNameID = 0;
 
@@ -29,7 +29,7 @@ public class StateNode : BaseNode
     /// <param name="posy"></param>
     public StateNode(int typeNumber, float posx, float posy) : base()
     {
-        nodeTransitions = new List<TransitionsGUI>();
+        nodeTransitions = new List<TransitionGUI>();
         nodeName = "New State " + uniqueNameID++;
         type = (stateType)typeNumber;
 
@@ -45,9 +45,9 @@ public class StateNode : BaseNode
     /// <param name="subElem"></param>
     public StateNode(int typeNumber, float posx, float posy, ClickableElement subElem) : base()
     {
-        nodeTransitions = new List<TransitionsGUI>();
-        elem = subElem;
-        nodeName = elem.elementName;
+        nodeTransitions = new List<TransitionGUI>();
+        this.subElem = subElem;
+        nodeName = this.subElem.elementName;
         type = (stateType)typeNumber;
 
         windowRect = new Rect(posx, posy, width, height);
@@ -59,10 +59,10 @@ public class StateNode : BaseNode
     /// <returns></returns>
     public override string GetTypeString()
     {
-        if (elem is null)
+        if (subElem is null)
             return "Node";
         else
-            return elem.GetTypeString();
+            return subElem.GetTypeString();
     }
 
     /// <summary>

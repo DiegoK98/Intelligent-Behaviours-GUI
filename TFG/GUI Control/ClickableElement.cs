@@ -50,13 +50,13 @@ public abstract class ClickableElement : GUIElement
                 {
                     repeatedNames++;
                 }
-                if (node.elem != null)
+                if (node.subElem != null)
                 {
-                    if (node.elem.CheckNameExisting(name, 0))
+                    if (node.subElem.CheckNameExisting(name, 0))
                         repeatedNames++;
                 }
             }
-            foreach (TransitionsGUI transition in ((FSM)this).transitions)
+            foreach (TransitionGUI transition in ((FSM)this).transitions)
             {
                 if (transition.transitionName == name)
                 {

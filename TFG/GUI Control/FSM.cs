@@ -7,11 +7,9 @@ public class FSM : ClickableElement
 {
     private StateNode EntryState;
 
-    public readonly long identificator;
-
     public List<StateNode> states = new List<StateNode>();
 
-    public List<TransitionsGUI> transitions;
+    public List<TransitionGUI> transitions;
 
     static int uniqueNameID = 0;
 
@@ -36,11 +34,12 @@ public class FSM : ClickableElement
 
         elementName = "New FSM " + uniqueNameID++;
         identificator = UniqueID();
-        transitions = new List<TransitionsGUI>();
+        transitions = new List<TransitionGUI>();
         type = elementType.FSM;
         windowRect = new Rect(posx, posy, width, height);
 
-        AddEntryState(node);
+        if (node != null)
+            AddEntryState(node);
     }
 
     /// <summary>
@@ -110,7 +109,7 @@ public class FSM : ClickableElement
     /// </summary>
     public void DrawCurves()
     {
-        foreach (TransitionsGUI elem in transitions)
+        foreach (TransitionGUI elem in transitions)
         {
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
@@ -143,7 +142,7 @@ public class FSM : ClickableElement
     /// Delete a given Transition
     /// </summary>
     /// <param name="deletedTrans"></param>
-    public void DeleteTransition(TransitionsGUI deletedTrans)
+    public void DeleteTransition(TransitionGUI deletedTrans)
     {
         transitions.Remove(deletedTrans);
 
@@ -182,7 +181,7 @@ public class FSM : ClickableElement
             return;
         }
 
-        foreach (TransitionsGUI elem in baseNode.nodeTransitions.FindAll(o => o.fromNode.Equals(baseNode)))
+        foreach (TransitionGUI elem in baseNode.nodeTransitions.FindAll(o => o.fromNode.Equals(baseNode)))
         {
             CheckConnected((StateNode)elem.toNode);
         }
@@ -192,7 +191,7 @@ public class FSM : ClickableElement
     /// Add a transition to the FSM
     /// </summary>
     /// <param name="newTransition"></param>
-    public void AddTransition(TransitionsGUI newTransition)
+    public void AddTransition(TransitionGUI newTransition)
     {
         transitions.Add(newTransition);
 

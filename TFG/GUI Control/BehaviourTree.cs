@@ -5,11 +5,11 @@ using UnityEngine;
 
 public class BehaviourTree : ClickableElement
 {
-    public readonly long identificator;
+    public long identificator;
 
     public List<BehaviourNode> nodes = new List<BehaviourNode>();
 
-    public List<TransitionsGUI> connections;
+    public List<TransitionGUI> connections;
 
     static int uniqueNameID = 0;
 
@@ -26,7 +26,7 @@ public class BehaviourTree : ClickableElement
         type = elementType.BT;
         elementName = "New BT " + uniqueNameID++;
         identificator = UniqueID();
-        connections = new List<TransitionsGUI>();
+        connections = new List<TransitionGUI>();
 
         windowRect = new Rect(posx, posy, width, height);
     }
@@ -62,7 +62,7 @@ public class BehaviourTree : ClickableElement
     /// </summary>
     public void DrawCurves()
     {
-        foreach (TransitionsGUI elem in connections)
+        foreach (TransitionGUI elem in connections)
         {
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
@@ -79,12 +79,12 @@ public class BehaviourTree : ClickableElement
     {
         nodes.Remove(node);
 
-        foreach (TransitionsGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
         {
             connections.Remove(transition);
             DeleteNode((BehaviourNode)transition.toNode);
         }
-        foreach (TransitionsGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
+        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
         {
             connections.Remove(transition);
         }
@@ -94,7 +94,7 @@ public class BehaviourTree : ClickableElement
     /// Deletes the connection
     /// </summary>
     /// <param name="deletedTrans"></param>
-    public void DeleteConnection(TransitionsGUI deletedTrans)
+    public void DeleteConnection(TransitionGUI deletedTrans)
     {
         connections.Remove(deletedTrans);
     }
@@ -108,7 +108,7 @@ public class BehaviourTree : ClickableElement
     {
         int res = 0;
 
-        foreach (TransitionsGUI transition in connections.FindAll(t => elem.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in connections.FindAll(t => elem.Equals(t.fromNode)))
         {
             res += ChildrenCount((BehaviourNode)transition.toNode) + 1;
         }
@@ -118,7 +118,7 @@ public class BehaviourTree : ClickableElement
 
     public bool ConnectedCheck(GUIElement start, GUIElement end)
     {
-        foreach (TransitionsGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
         {
             if (end.Equals((BehaviourNode)transition.toNode))
             {

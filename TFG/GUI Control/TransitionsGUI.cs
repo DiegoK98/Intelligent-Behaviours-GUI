@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class TransitionsGUI : GUIElement
+public class TransitionGUI : GUIElement
 {
     public string transitionName = "";
 
@@ -23,7 +23,7 @@ public class TransitionsGUI : GUIElement
     /// <param name="name"></param>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    public TransitionsGUI(string name, BaseNode from, BaseNode to)
+    public TransitionGUI(string name, BaseNode from, BaseNode to)
     {
         transitionName = name;
 
@@ -56,11 +56,11 @@ public class TransitionsGUI : GUIElement
     /// <returns></returns>
     public override bool Equals(object other)
     {
-        if (!base.Equals((TransitionsGUI)other))
+        if (!base.Equals((TransitionGUI)other))
             return false;
-        if (this.transitionName != ((TransitionsGUI)other).transitionName)
+        if (this.transitionName != ((TransitionGUI)other).transitionName)
             return false;
-        if (!fromNode.Equals(((TransitionsGUI)other).fromNode) || !toNode.Equals(((TransitionsGUI)other).toNode))
+        if (!fromNode.Equals(((TransitionGUI)other).fromNode) || !toNode.Equals(((TransitionGUI)other).toNode))
             return false;
 
         return true;

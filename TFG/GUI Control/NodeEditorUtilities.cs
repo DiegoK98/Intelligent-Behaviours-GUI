@@ -1,8 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,9 +21,9 @@ public class NodeEditorUtilities
     static string subBtEnding = "_SubBT";
 
     /// <summary>
-    /// Creates a new C# for a FSM.
+    /// Generates a new C# script for an element.
     /// </summary>
-    public static void GenerateElemCode(ClickableElement elem)
+    public static void GenerateElemScript(ClickableElement elem)
     {
         string templatePath = "none";
 
@@ -44,21 +44,41 @@ public class NodeEditorUtilities
         }
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
 
-        CreateAsset(CleanName(elem.elementName) + ".cs", path, elem);
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder("Assets/Intelligent Behaviours Scripts"))
+            AssetDatabase.CreateFolder("Assets", "Intelligent Behaviours Scripts");
+        Object o = CreateScript("Assets/Intelligent Behaviours  Scripts/" + CleanName(elem.elementName) + ".cs", path, elem);
+        ProjectWindowUtil.ShowCreatedAsset(o);
     }
 
-    private static void CreateAsset(string initialName, string templatePath, ClickableElement elem)
+    /// <summary>
+    /// Generates a new XML file for an element.
+    /// </summary>
+    public static void GenerateElemXML(ClickableElement elem)
     {
-        if (!AssetDatabase.IsValidFolder("Assets/AI Scripts"))
-            AssetDatabase.CreateFolder("Assets", "AI Scripts");
-        Object o = CreateScript("Assets/AI Scripts/" + initialName, templatePath, elem);
+        string folderName = "Intelligent Behaviours Saves";
+
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder("Assets/" + folderName))
+            AssetDatabase.CreateFolder("Assets", folderName);
+
+        string path = EditorUtility.SaveFilePanel("Select a folder for the save file", "Assets/" + folderName, CleanName(elem.elementName) + "_savedData.xml", "XML");
+
+        Object o = CreateXML(path, elem);
         ProjectWindowUtil.ShowCreatedAsset(o);
+    }
+
+    public static XMLElement LoadSavedData()
+    {
+        string path = EditorUtility.OpenFilePanel("Open a save file", "Assets/Intelligent Behaviours Saves", "XML");
+
+        return LoadXML(path);
     }
 
     /// <summary>
     /// Creates Script from Template's path.
     /// </summary>
-    private static UnityEngine.Object CreateScript(string pathName, string templatePath, ClickableElement elem)
+    private static Object CreateScript(string pathName, string templatePath, ClickableElement elem)
     {
         string templateText = string.Empty;
 
@@ -116,6 +136,140 @@ public class NodeEditorUtilities
             Debug.LogError(string.Format("The template file was not found: {0}", templatePath));
             return null;
         }
+    }
+
+    /// <summary>
+    /// Creates XML object and serializes it to a file.
+    /// </summary>
+    private static Object CreateXML(string pathName, ClickableElement elem)
+    {
+        var data = CreateXMLElement(elem, elem.elementName, elem.windowRect.position.x, elem.windowRect.position.y);
+
+        // Serialize to XML
+        using (var stream = new FileStream(pathName, FileMode.Create))
+        {
+            XmlSerializer serial = new XmlSerializer(typeof(XMLElement));
+            serial.Serialize(stream, data);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Loads an XML file and converts it to XMLElement
+    /// </summary>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
+    private static XMLElement LoadXML(string fileName) //Filename is the whole path
+    {
+        XmlSerializer serial = new XmlSerializer(typeof(XMLElement));
+
+        serial.UnknownNode += new XmlNodeEventHandler(UnknownNode);
+        serial.UnknownAttribute += new XmlAttributeEventHandler(UnknownAttribute);
+
+        FileStream fs = new FileStream(fileName, FileMode.Open);
+
+        return (XMLElement)serial.Deserialize(fs);
+    }
+
+    private static XMLElement CreateXMLElement(GUIElement elem, string elementName, float xPos, float yPos, long parentId = 0, BehaviourTree parentTree = null)
+    {
+        GUIElement originalElem = elem;
+
+        switch (elem.GetType().ToString())
+        {
+            case nameof(StateNode):
+                if (((StateNode)elem).subElem != null)
+                    elem = ((StateNode)elem).subElem;
+                break;
+            case nameof(BehaviourNode):
+                if (((BehaviourNode)elem).subElem != null)
+                    elem = ((BehaviourNode)elem).subElem;
+                break;
+        }
+        var result = new XMLElement
+        {
+            name = CleanName(elementName),
+            elemType = elem.GetType().ToString(),
+            windowPosX = xPos,
+            windowPosY = yPos,
+            nodes = new List<XMLElement>(),
+            transitions = new List<string>()
+        };
+
+        switch (result.elemType)
+        {
+            case nameof(FSM):
+                result.Id = originalElem.identificator;
+
+                foreach (StateNode node in ((FSM)elem).states)
+                {
+                    XMLElement elemNode;
+
+                    if (node.subElem == null)
+                        elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, ((FSM)elem).identificator);
+                    else
+                        elemNode = CreateXMLElement(node, node.subElem.elementName, node.subElem.windowRect.position.x, node.subElem.windowRect.position.y, ((FSM)elem).identificator);
+
+                    elemNode.secondType = node.type.ToString();
+
+                    result.nodes.Add(elemNode);
+                }
+
+                foreach (TransitionGUI transition in ((FSM)elem).transitions)
+                {
+                    string concatTransition = transition.transitionName;
+
+                    concatTransition += "#" + transition.fromNode.identificator + "#" + transition.toNode.identificator;
+
+                    result.transitions.Add(concatTransition);
+                }
+                break;
+            case nameof(BehaviourTree):
+                result.Id = originalElem.identificator;
+
+                foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRootNode))
+                {
+                    XMLElement elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, ((BehaviourTree)elem).identificator, (BehaviourTree)elem);
+                    elemNode.secondType = node.type.ToString();
+
+                    result.nodes.Add(elemNode);
+                }
+                break;
+            case nameof(StateNode):
+                result.Id = originalElem.identificator;
+
+                break;
+            case nameof(BehaviourNode):
+                result.Id = originalElem.identificator;
+                result.NProperty = ((BehaviourNode)elem).NProperty;
+
+                foreach (BehaviourNode node in parentTree.connections.FindAll(o => o.fromNode.Equals(elem)).Select(o => o.toNode))
+                {
+                    XMLElement elemNode;
+                    if (node.subElem == null)
+                        elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, parentId, parentTree);
+                    else
+                        elemNode = CreateXMLElement(node, node.subElem.elementName, node.subElem.windowRect.position.x, node.subElem.windowRect.position.y, parentId, parentTree);
+                    elemNode.secondType = node.type.ToString();
+                    result.nodes.Add(elemNode);
+                }
+                break;
+        }
+
+        return result;
+    }
+
+    private static void UnknownNode(object sender, XmlNodeEventArgs e)
+    {
+        Debug.LogError("[XMLSerializer] Unknown Node:" + e.Name + "\t" + e.Text);
+    }
+
+    private static void UnknownAttribute(object sender, XmlAttributeEventArgs e)
+    {
+        System.Xml.XmlAttribute attr = e.Attr;
+        Debug.LogError("[XMLSerializer] Unknown attribute " +
+        attr.Name + "='" + attr.Value + "'");
     }
 
     //This name cleaning shit should be done in the GUI and not here
@@ -256,7 +410,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (TransitionsGUI transition in ((FSM)elem).transitions)
+        foreach (TransitionGUI transition in ((FSM)elem).transitions)
         {
             string transitionName = CleanName(transition.transitionName);
             result += "Perception " + transitionName + "Perception = " + machineName + ".CreatePerception<PushPerception>();\n" + tab + tab;
@@ -274,15 +428,15 @@ public class NodeEditorUtilities
         foreach (StateNode node in ((FSM)elem).states)
         {
             string nodeName = CleanName(node.nodeName);
-            if (node.elem is FSM)
+            if (node.subElem is FSM)
             {
                 result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subFSMEnding + ");\n" + tab + tab;
-                subElems.Add(node.elem);
+                subElems.Add(node.subElem);
             }
-            else if (node.elem is BehaviourTree)
+            else if (node.subElem is BehaviourTree)
             {
                 result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subBtEnding + ");\n" + tab + tab;
-                subElems.Add(node.elem);
+                subElems.Add(node.subElem);
 
             }
             else if (node.type == StateNode.stateType.Entry)
@@ -304,12 +458,12 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (TransitionsGUI transition in ((FSM)elem).transitions)
+        foreach (TransitionGUI transition in ((FSM)elem).transitions)
         {
             string transitionName = CleanName(transition.transitionName);
             string fromNodeName = CleanName(transition.fromNode.nodeName);
             string toNodeName = CleanName(transition.toNode.nodeName);
-            if (((StateNode)transition.fromNode).elem != null)
+            if (((StateNode)transition.fromNode).subElem != null)
             {
                 result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "Perception, " + toNodeName + ");";
             }
@@ -348,15 +502,15 @@ public class NodeEditorUtilities
                     result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", false);\n" + tab + tab;
                     break;
                 case BehaviourNode.behaviourType.Leaf:
-                    if (node.elem is FSM)
+                    if (node.subElem is FSM)
                     {
                         result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subFSMEnding + ");\n" + tab + tab;
-                        subElems.Add(node.elem);
+                        subElems.Add(node.subElem);
                     }
-                    else if (node.elem is BehaviourTree)
+                    else if (node.subElem is BehaviourTree)
                     {
                         result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subBtEnding + ");\n" + tab + tab;
-                        subElems.Add(node.elem);
+                        subElems.Add(node.subElem);
                     }
                     else
                     {
@@ -369,9 +523,9 @@ public class NodeEditorUtilities
         foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => n.type > BehaviourNode.behaviourType.Leaf))
         {
             string nodeName = CleanName(node.nodeName);
-            TransitionsGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
+            TransitionGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
             string subNodeName = CleanName(decoratorConnection.toNode.nodeName);
-            TransitionsGUI decoratorConnectionsub;
+            TransitionGUI decoratorConnectionsub;
 
             switch (((BehaviourNode)decoratorConnection.toNode).type)
             {
@@ -445,11 +599,11 @@ public class NodeEditorUtilities
             foreach (BehaviourNode toNode in ((BehaviourTree)elem).connections.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode))
             {
                 string toNodeName = CleanName(toNode.nodeName);
-                TransitionsGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
+                TransitionGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
                 if (decoratorConnection != null)
                 {
                     string subNodeName = CleanName(decoratorConnection.toNode.nodeName);
-                    TransitionsGUI decoratorConnectionsub;
+                    TransitionGUI decoratorConnectionsub;
 
                     switch (((BehaviourNode)decoratorConnection.toNode).type)
                     {
@@ -536,9 +690,9 @@ public class NodeEditorUtilities
             case nameof(FSM):
                 foreach (StateNode node in ((FSM)elem).states)
                 {
-                    if (node.elem != null)
+                    if (node.subElem != null)
                     {
-                        result += GetMethods(node.elem);
+                        result += GetMethods(node.subElem);
                     }
                     else
                     {
@@ -555,9 +709,9 @@ public class NodeEditorUtilities
             case nameof(BehaviourTree):
                 foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => n.type == BehaviourNode.behaviourType.Leaf))
                 {
-                    if (node.elem != null)
+                    if (node.subElem != null)
                     {
-                        result += GetMethods(node.elem);
+                        result += GetMethods(node.subElem);
                     }
                     else
                     {

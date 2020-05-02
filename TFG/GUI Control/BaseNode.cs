@@ -8,8 +8,6 @@ public abstract class BaseNode : GUIElement
 {
     public string nodeName = "";
 
-    public readonly long identificator;
-
     public Rect windowRect;
 
     public static int width = 150;
@@ -60,7 +58,7 @@ public abstract class BaseNode : GUIElement
                     break;
                 case BehaviourNode.behaviourType.LoopN:
                 case BehaviourNode.behaviourType.DelayT:
-                    NProperty = int.Parse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+                    int.TryParse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out NProperty);
                     break;
             }
         }

@@ -7,6 +7,8 @@ public abstract class GUIElement : ScriptableObject
 {
     public bool isFocused = false;
 
+    public long identificator;
+
     /// <summary>
     /// The UniqueID
     /// </summary>

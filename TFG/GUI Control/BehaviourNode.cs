@@ -19,7 +19,7 @@ public class BehaviourNode : BaseNode
         Conditional
     }
 
-    public ClickableElement elem;
+    public ClickableElement subElem;
 
     public behaviourType type;
 
@@ -33,10 +33,10 @@ public class BehaviourNode : BaseNode
     /// <returns></returns>
     public override string GetTypeString()
     {
-        if (elem is null)
+        if (subElem is null)
             return type.ToString();
         else
-            return elem.GetTypeString();
+            return subElem.GetTypeString();
     }
 
     /// <summary>
@@ -62,8 +62,8 @@ public class BehaviourNode : BaseNode
     {
         type = (behaviourType)typeNumber;
 
-        elem = subElem;
+        this.subElem = subElem;
 
-        nodeName = elem.elementName;
+        nodeName = this.subElem.elementName;
     }
 }
