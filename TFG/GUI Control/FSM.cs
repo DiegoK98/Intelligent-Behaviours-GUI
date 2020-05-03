@@ -111,10 +111,17 @@ public class FSM : ClickableElement
     {
         foreach (TransitionGUI elem in transitions)
         {
+            bool hasCouple = false;
+
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
+            if(transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
+            {
+                hasCouple = true;
+            }
+
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused, hasCouple);
         }
     }
 

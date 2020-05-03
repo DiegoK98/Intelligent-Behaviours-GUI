@@ -33,6 +33,9 @@ public class NodeEditor : EditorWindow
 
     private float widthVariant;
 
+
+    private static float coupleTransitionsOffset = 20;
+
     /// <summary>
     /// The ShowEditor
     /// </summary>
@@ -400,11 +403,39 @@ public class NodeEditor : EditorWindow
 
             for (int i = 0; i < ((FSM)currentElem).transitions.Count; i++)
             {
+                Vector2 offset = Vector2.zero;
                 TransitionGUI elem = ((FSM)currentElem).transitions[i];
+
+                if (((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
+                {
+                    float ang = Vector2.SignedAngle((elem.toNode.windowRect.position - elem.fromNode.windowRect.position), Vector2.right);
+
+                    if (ang > -45 && ang <= 45)
+                    {
+                        offset.y = coupleTransitionsOffset;
+                        offset.x = coupleTransitionsOffset;
+                    }
+                    else if (ang > 45 && ang <= 135)
+                    {
+                        offset.x = coupleTransitionsOffset;
+                        offset.y = -coupleTransitionsOffset;
+                    }
+                    else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
+                    {
+                        offset.y = -coupleTransitionsOffset;
+                        offset.x = -coupleTransitionsOffset;
+                    }
+                    else if (ang > -135 && ang <= -45)
+                    {
+                        offset.x = -coupleTransitionsOffset;
+                        offset.y = coupleTransitionsOffset;
+                    }
+                }
 
                 Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
                 Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionGUI.width, TransitionGUI.height);
+                textBox.position += offset;
 
                 elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
                 {
@@ -1015,7 +1046,7 @@ public class NodeEditor : EditorWindow
     /// <param name="start"></param>
     /// <param name="end"></param>
     /// <param name="isFocused"></param>
-    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused)
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool hasCouple = false)
     {
         // Check which sides to put the curve on
         float ang = Vector2.SignedAngle((end.position - start.position), Vector2.right);
@@ -1026,24 +1057,48 @@ public class NodeEditor : EditorWindow
             start.x += start.width / 2;
             end.x -= end.width / 2;
             direction = Vector3.right;
+
+            if (hasCouple)
+            {
+                start.y += coupleTransitionsOffset;
+                end.y += coupleTransitionsOffset;
+            }
         }
         else if (ang > 45 && ang <= 135)
         {
             start.y -= start.height / 2;
             end.y += end.height / 2;
             direction = Vector3.down;
+
+            if (hasCouple)
+            {
+                start.x += coupleTransitionsOffset;
+                end.x += coupleTransitionsOffset;
+            }
         }
         else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
         {
             start.x -= start.width / 2;
             end.x += end.width / 2;
             direction = Vector3.left;
+
+            if (hasCouple)
+            {
+                start.y -= coupleTransitionsOffset;
+                end.y -= coupleTransitionsOffset;
+            }
         }
         else if (ang > -135 && ang <= -45)
         {
             start.y += start.height / 2;
             end.y -= end.height / 2;
             direction = Vector3.up;
+
+            if (hasCouple)
+            {
+                start.x -= coupleTransitionsOffset;
+                end.x -= coupleTransitionsOffset;
+            }
         }
 
         // Draw curve
