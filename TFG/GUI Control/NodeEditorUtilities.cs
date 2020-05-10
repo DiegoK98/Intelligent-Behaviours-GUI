@@ -20,35 +20,44 @@ public class NodeEditorUtilities
     static string subFSMEnding = "_SubFSM";
     static string subBtEnding = "_SubBT";
 
+    static string savesFolderName = "Intelligent Behaviours Saves";
+    static string scriptsFolderName = "Intelligent Behaviours Scripts";
+
     /// <summary>
     /// Generates a new C# script for an element.
     /// </summary>
     public static void GenerateElemScript(ClickableElement elem)
     {
-        string templatePath = "none";
+        string path = "none";
 
         switch (elem.GetType().ToString())
         {
             case nameof(FSM):
-                templatePath = "FSM_Template.cs";
+                path = "FSM_Template.cs";
                 break;
             case nameof(BehaviourTree):
-                templatePath = "BT_Template.cs";
+                path = "BT_Template.cs";
                 break;
         }
-        string[] guids = AssetDatabase.FindAssets(templatePath);
+        string[] guids = AssetDatabase.FindAssets(path);
         if (guids.Length == 0)
         {
-            Debug.LogWarning(templatePath + ".txt not found in asset database");
+            Debug.LogWarning(path + ".txt not found in asset database");
             return;
         }
-        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+        string templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
 
         // Create Asset
-        if (!AssetDatabase.IsValidFolder("Assets/Intelligent Behaviours Scripts"))
-            AssetDatabase.CreateFolder("Assets", "Intelligent Behaviours Scripts");
-        Object o = CreateScript("Assets/Intelligent Behaviours  Scripts/" + CleanName(elem.elementName) + ".cs", path, elem);
-        ProjectWindowUtil.ShowCreatedAsset(o);
+        if (!AssetDatabase.IsValidFolder("Assets/" + scriptsFolderName))
+            AssetDatabase.CreateFolder("Assets", scriptsFolderName);
+
+        string scriptPath = EditorUtility.SaveFilePanel("Select a folder for the script", "Assets/" + scriptsFolderName, CleanName(elem.elementName) + ".cs", "CS");
+
+        if (!string.IsNullOrEmpty(scriptPath))
+        {
+            Object o = CreateScript(scriptPath, templatePath, elem);
+            ProjectWindowUtil.ShowCreatedAsset(o);
+        }
     }
 
     /// <summary>
@@ -56,21 +65,25 @@ public class NodeEditorUtilities
     /// </summary>
     public static void GenerateElemXML(ClickableElement elem)
     {
-        string folderName = "Intelligent Behaviours Saves";
-
         // Create Asset
-        if (!AssetDatabase.IsValidFolder("Assets/" + folderName))
-            AssetDatabase.CreateFolder("Assets", folderName);
+        if (!AssetDatabase.IsValidFolder("Assets/" + savesFolderName))
+            AssetDatabase.CreateFolder("Assets", savesFolderName);
 
-        string path = EditorUtility.SaveFilePanel("Select a folder for the save file", "Assets/" + folderName, CleanName(elem.elementName) + "_savedData.xml", "XML");
+        string path = EditorUtility.SaveFilePanel("Select a folder for the save file", "Assets/" + savesFolderName, CleanName(elem.elementName) + "_savedData.xml", "XML");
 
-        Object o = CreateXML(path, elem);
-        ProjectWindowUtil.ShowCreatedAsset(o);
+        if (!string.IsNullOrEmpty(path))
+        {
+            Object o = CreateXML(path, elem);
+            ProjectWindowUtil.ShowCreatedAsset(o);
+        }
     }
 
     public static XMLElement LoadSavedData()
     {
         string path = EditorUtility.OpenFilePanel("Open a save file", "Assets/Intelligent Behaviours Saves", "XML");
+
+        if (string.IsNullOrEmpty(path))
+            return null;
 
         return LoadXML(path);
     }
@@ -160,7 +173,7 @@ public class NodeEditorUtilities
     /// </summary>
     /// <param name="fileName"></param>
     /// <returns></returns>
-    private static XMLElement LoadXML(string fileName) //Filename is the whole path
+    private static XMLElement LoadXML(string fileName)
     {
         XmlSerializer serial = new XmlSerializer(typeof(XMLElement));
 

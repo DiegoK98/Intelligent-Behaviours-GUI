@@ -55,7 +55,8 @@ public class NodeEditor : EditorWindow
         mousePos = e.mousePosition;
 
         ShowTopBar();
-        ShowOptions();
+        if (currentElem != null)
+            ShowOptions();
         ShowErrorByPriority();
 
         // Draw the curves for everything
@@ -127,6 +128,8 @@ public class NodeEditor : EditorWindow
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                            menu.AddSeparator("");
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
                         }
                         else if (clickedOnWindow)
                         {
@@ -147,10 +150,15 @@ public class NodeEditor : EditorWindow
                     }
                     else if (currentElem is BehaviourTree)
                     {
-                        if (!clickedOnWindow && !clickedOnTransition && ((BehaviourTree)currentElem).nodes.Count == 0)
+                        if (!clickedOnWindow && !clickedOnTransition)
                         {
-                            menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, new string[] { "Sequence", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
+                            if (((BehaviourTree)currentElem).nodes.Count == 0)
+                            {
+                                menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, new string[] { "Sequence", selectIndex.ToString() });
+                                menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
+                                menu.AddSeparator("");
+                            }
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
                         }
                         else if (clickedOnWindow)
                         {
@@ -203,12 +211,16 @@ public class NodeEditor : EditorWindow
                         {
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                            menu.AddSeparator("");
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
 
                             menu.ShowAsContext();
                             e.Use();
                         }
                         else
                         {
+                            menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, Elements[selectIndex]);
+                            menu.AddItem(new GUIContent("Export Code"), false, ExportCode, Elements[selectIndex]);
                             menu.AddItem(new GUIContent("Delete Element"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
                         }
                     }
@@ -615,9 +627,8 @@ public class NodeEditor : EditorWindow
             // Set menu items
             GenericMenu menu = new GenericMenu();
 
-            menu.AddItem(new GUIContent("Save file"), false, SaveElem);
-            menu.AddItem(new GUIContent("Load file"), false, LoadElem);
-            menu.AddItem(new GUIContent("Export Code"), false, ExportCode);
+            menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, currentElem);
+            menu.AddItem(new GUIContent("Export Code"), false, ExportCode, currentElem);
 
             menu.ShowAsContext();
         }
@@ -949,14 +960,11 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Exporta el código de un elemento si no hay errores
     /// </summary>
-    void ExportCode()
+    void ExportCode(object elem)
     {
-        if (GUIUtility.keyboardControl == 0 && errors.Count == 0)
+        if (errors.Count == 0)
         {
-            foreach (ClickableElement elem in Elements)
-            {
-                NodeEditorUtilities.GenerateElemScript(elem);
-            }
+            NodeEditorUtilities.GenerateElemScript((ClickableElement)elem);
         }
         else
         {
@@ -967,12 +975,9 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Guarda el elemento
     /// </summary>
-    void SaveElem()
+    void SaveElem(object elem)
     {
-        foreach (ClickableElement elem in Elements)
-        {
-            NodeEditorUtilities.GenerateElemXML(elem);
-        }
+        NodeEditorUtilities.GenerateElemXML((ClickableElement)elem);
     }
 
     /// <summary>
@@ -982,17 +987,20 @@ public class NodeEditor : EditorWindow
     {
         XMLElement loadedXML = NodeEditorUtilities.LoadSavedData();
 
-        currentElem = null;
-
-        switch (loadedXML.elemType)
+        if (loadedXML != null)
         {
-            case nameof(FSM):
-            case nameof(BehaviourTree):
-                PasteElem(loadedXML.windowPosX, loadedXML.windowPosY, loadedXML);
-                break;
-        }
+            var currentBackup = currentElem;
 
-        currentElem = null;
+            switch (loadedXML.elemType)
+            {
+                case nameof(FSM):
+                case nameof(BehaviourTree):
+                    PasteElem(mousePos.x, mousePos.y, loadedXML);
+                    break;
+            }
+
+            currentElem = currentBackup;
+        }
     }
 
     /// <summary>
@@ -1201,11 +1209,14 @@ public class NodeEditor : EditorWindow
 
                 ((BehaviourTree)currentElem).nodes.Add(node);
 
-                TransitionGUI transition = new TransitionGUI("", selectednode, node);
+                if (selectednode != null)
+                {
+                    TransitionGUI transition = new TransitionGUI("", selectednode, node);
 
-                ((BehaviourTree)currentElem).connections.Add(transition);
+                    ((BehaviourTree)currentElem).connections.Add(transition);
 
-                selectednode = node;
+                    selectednode = node;
+                }
             }
 
             foreach (XMLElement state in elem.nodes)

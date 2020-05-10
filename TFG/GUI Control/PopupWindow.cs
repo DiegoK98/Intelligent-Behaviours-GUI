@@ -45,7 +45,7 @@ public class PopupWindow : EditorWindow
     }
 
     /// <summary>
-    /// Initializer for the popup when deleting an element
+    /// Initializer for the popup when exporting an element
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="focusElem"></param>

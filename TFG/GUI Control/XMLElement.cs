@@ -8,7 +8,7 @@ public class XMLElement
 
     public string elemType { get; set; }
 
-    public string secondType { get; set; }
+    public string secondType { get; set; } = "";
 
     public string name { get; set; }
 
