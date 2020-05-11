@@ -285,12 +285,20 @@ public class NodeEditorUtilities
         attr.Name + "='" + attr.Value + "'");
     }
 
-    //This name cleaning shit should be done in the GUI and not here
+    /// <summary>
+    /// Modifies the given string to be usable in code
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
     private static string CleanName(string name)
     {
         string result;
+        var numberChars = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        var spacesAndNewlines = new[] { ' ', '\n' };
 
-        result = string.Concat(name.Where(c => !char.IsWhiteSpace(c) && !char.IsPunctuation(c) && !char.IsSymbol(c)));
+        result = name.Trim(spacesAndNewlines);
+        result = string.Concat(result.Where(c => !char.IsWhiteSpace(c) && !char.IsPunctuation(c) && !char.IsSymbol(c)));
+        result.TrimStart(numberChars);
 
         return result;
     }

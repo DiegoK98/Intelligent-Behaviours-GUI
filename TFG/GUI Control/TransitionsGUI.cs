@@ -46,7 +46,7 @@ public class TransitionGUI : GUIElement
     /// <param name="parent"></param>
     public void DrawBox(NodeEditor parent)
     {
-        transitionName = EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25));
+        transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
     }
 
     /// <summary>

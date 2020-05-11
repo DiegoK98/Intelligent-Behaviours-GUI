@@ -54,7 +54,7 @@ public abstract class BaseNode : GUIElement
                 case BehaviourNode.behaviourType.Selector:
                 case BehaviourNode.behaviourType.Sequence:
                 case BehaviourNode.behaviourType.Leaf:
-                    nodeName = EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+                    nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                     break;
                 case BehaviourNode.behaviourType.LoopN:
                 case BehaviourNode.behaviourType.DelayT:
@@ -64,7 +64,7 @@ public abstract class BaseNode : GUIElement
         }
         else
         {
-            nodeName = EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+            nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
         }
     }
 }

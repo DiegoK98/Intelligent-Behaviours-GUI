@@ -376,6 +376,19 @@ public class NodeEditor : EditorWindow
                     currentElem = currentElem?.parent;
                     e.Use();
                     break;
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    if (GUIUtility.keyboardControl != 0)
+                    {
+                        GUI.FocusControl(null);
+                        e.Use();
+                    }
+                    else if (focusedObj is ClickableElement)
+                    {
+                        currentElem = (ClickableElement)focusedObj;
+                        e.Use();
+                    }
+                    break;
             }
         }
 

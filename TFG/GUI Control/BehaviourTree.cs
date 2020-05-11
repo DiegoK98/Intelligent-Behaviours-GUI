@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class BehaviourTree : ClickableElement
 {
-    public long identificator;
-
     public List<BehaviourNode> nodes = new List<BehaviourNode>();
 
     public List<TransitionGUI> connections;

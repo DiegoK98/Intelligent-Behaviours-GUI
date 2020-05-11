@@ -29,7 +29,7 @@ public abstract class ClickableElement : GUIElement
     /// <param name="parent"></param>
     public void DrawWindow()
     {
-        elementName = EditorGUILayout.TextArea(elementName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+        elementName = CleanName(EditorGUILayout.TextArea(elementName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
     }
 
     /// <summary>

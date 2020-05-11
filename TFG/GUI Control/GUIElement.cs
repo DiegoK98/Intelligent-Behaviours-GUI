@@ -28,4 +28,21 @@ public abstract class GUIElement : ScriptableObject
     }
 
     public abstract string GetTypeString();
+
+    /// <summary>
+    /// Modifies the given string to remove unnecesary spaces and newlines
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public string CleanName(string name)
+    {
+        string result;
+        var numberChars = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        var spacesAndNewlines = new[] { ' ', '\n' };
+
+        result = name.Trim(spacesAndNewlines);
+        result = result.TrimStart(numberChars);
+
+        return result;
+    }
 }
