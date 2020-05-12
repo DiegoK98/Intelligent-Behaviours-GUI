@@ -1232,32 +1232,32 @@ public class NodeEditor : EditorWindow
                 }
             }
 
-            foreach (XMLElement state in elem.nodes)
+            foreach (XMLElement node in elem.nodes)
             {
                 currentElem = newElem;
 
-                switch (state.elemType)
+                switch (node.elemType)
                 {
                     case nameof(FSM):
                     case nameof(BehaviourTree):
-                        PasteElem(state.windowPosX, state.windowPosY, state);
+                        PasteElem(node.windowPosX, node.windowPosY, node);
                         break;
                     case nameof(StateNode):
-                        StateNode node = new StateNode(2, state.windowPosX, state.windowPosY);
-                        node.identificator = state.Id;
-                        node.name = state.name;
+                        StateNode state = new StateNode(2, node.windowPosX, node.windowPosY);
+                        state.identificator = node.Id;
+                        state.nodeName = node.name;
 
-                        if (state.secondType.Equals(StateNode.stateType.Entry.ToString()))
+                        if (node.secondType.Equals(StateNode.stateType.Entry.ToString()))
                         {
-                            ((FSM)currentElem).AddEntryState(node);
+                            ((FSM)currentElem).AddEntryState(state);
                         }
                         else
                         {
-                            ((FSM)currentElem).states.Add(node);
+                            ((FSM)currentElem).states.Add(state);
                         }
                         break;
                     case nameof(BehaviourNode):
-                        PasteTreeNode(state, true, (BehaviourTree)currentElem);
+                        PasteTreeNode(node, true, (BehaviourTree)currentElem);
                         break;
                     default:
                         Debug.LogError("Wrong content in saved data");
