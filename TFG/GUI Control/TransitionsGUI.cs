@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -18,13 +19,15 @@ public class TransitionGUI : GUIElement
     public static int height = 35;
 
     /// <summary>
-    /// The Transition
+    /// The InitTransitionGUI
     /// </summary>
     /// <param name="name"></param>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    public TransitionGUI(string name, BaseNode from, BaseNode to)
+    public void InitTransitionGUI(string name, BaseNode from, BaseNode to)
     {
+        identificator = UniqueID();
+
         transitionName = name;
 
         fromNode = from;
@@ -59,6 +62,8 @@ public class TransitionGUI : GUIElement
         if (!base.Equals((TransitionGUI)other))
             return false;
         if (this.transitionName != ((TransitionGUI)other).transitionName)
+            return false;
+        if (this.identificator != ((TransitionGUI)other).identificator)
             return false;
         if (!fromNode.Equals(((TransitionGUI)other).fromNode) || !toNode.Equals(((TransitionGUI)other).toNode))
             return false;

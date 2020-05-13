@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class #SCRIPTNAME# : MonoBehaviour {
+public class #SCRIPTNAME#_class : MonoBehaviour {
 
     #region variables
 

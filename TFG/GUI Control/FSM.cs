@@ -9,9 +9,9 @@ public class FSM : ClickableElement
 
     public List<StateNode> states = new List<StateNode>();
 
-    public List<TransitionGUI> transitions;
+    public List<TransitionGUI> transitions = new List<TransitionGUI>();
 
-    static int uniqueNameID = 0;
+    public static int uniqueNameID = 0;
 
     public bool hasEntryState
     {
@@ -28,13 +28,12 @@ public class FSM : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public FSM(StateNode node, ClickableElement parent, float posx, float posy)
+    public void InitFSM(StateNode node, ClickableElement parent, float posx, float posy)
     {
         this.parent = parent;
 
         elementName = "New FSM " + uniqueNameID++;
         identificator = UniqueID();
-        transitions = new List<TransitionGUI>();
         type = elementType.FSM;
         windowRect = new Rect(posx, posy, width, height);
 
@@ -111,6 +110,9 @@ public class FSM : ClickableElement
     {
         foreach (TransitionGUI elem in transitions)
         {
+            if (elem.fromNode is null || elem.toNode is null)
+                break;
+
             bool hasCouple = false;
 
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);

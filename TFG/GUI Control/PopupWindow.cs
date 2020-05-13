@@ -86,15 +86,6 @@ public class PopupWindow : EditorWindow
     //}
 
     /// <summary>
-    /// Closes the popup if open
-    /// </summary>
-    /// <param name="popup"></param>
-    public static void ClosePopup(PopupWindow popup)
-    {
-        popup.Close();
-    }
-
-    /// <summary>
     /// The OnGUI
     /// </summary>
     void OnGUI()

@@ -11,17 +11,16 @@ public class NodeEditorUtilities
     /// <summary>
     /// C#'s Script Icon [The one MonoBhevaiour Scripts have].
     /// </summary>
-    private static Texture2D scriptIcon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
+    private readonly static Texture2D scriptIcon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
 
-    static string tab = "    ";
-    static string actionsEnding = "Action";
-    static string conditionsEnding = "SuccessCheck";
-    static string classEnding = "_class";
-    static string subFSMEnding = "_SubFSM";
-    static string subBtEnding = "_SubBT";
+    static readonly string tab = "    ";
+    static readonly string actionsEnding = "Action";
+    static readonly string conditionsEnding = "SuccessCheck";
+    static readonly string subFSMEnding = "_SubFSM";
+    static readonly string subBtEnding = "_SubBT";
 
-    static string savesFolderName = "Intelligent Behaviours Saves";
-    static string scriptsFolderName = "Intelligent Behaviours Scripts";
+    static readonly string savesFolderName = "Intelligent Behaviours Saves";
+    static readonly string scriptsFolderName = "Intelligent Behaviours Scripts";
 
     /// <summary>
     /// Generates a new C# script for an element.
@@ -56,6 +55,7 @@ public class NodeEditorUtilities
         if (!string.IsNullOrEmpty(scriptPath))
         {
             Object o = CreateScript(scriptPath, templatePath, elem);
+            AssetDatabase.Refresh();
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
     }
@@ -74,6 +74,7 @@ public class NodeEditorUtilities
         if (!string.IsNullOrEmpty(path))
         {
             Object o = CreateXML(path, elem);
+            AssetDatabase.Refresh();
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
     }
@@ -105,10 +106,9 @@ public class NodeEditorUtilities
             reader.Close();
 
             // Replace the tags with the corresponding parts
-            string className = Path.GetFileNameWithoutExtension(pathName);
             List<ClickableElement> subElems = new List<ClickableElement>();
 
-            templateText = templateText.Replace("#SCRIPTNAME#", className);
+            templateText = templateText.Replace("#SCRIPTNAME#", CleanName(elem.elementName));
 
             switch (elem.GetType().ToString())
             {
@@ -298,7 +298,7 @@ public class NodeEditorUtilities
 
         result = name.Trim(spacesAndNewlines);
         result = string.Concat(result.Where(c => !char.IsWhiteSpace(c) && !char.IsPunctuation(c) && !char.IsSymbol(c)));
-        result.TrimStart(numberChars);
+        result = result.TrimStart(numberChars);
 
         return result;
     }

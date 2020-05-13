@@ -40,30 +40,27 @@ public class BehaviourNode : BaseNode
     }
 
     /// <summary>
-    /// The BehaviourNode
+    /// The InitBehaviourNode
     /// </summary>
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public BehaviourNode(int typeNumber, float posx, float posy) : base()
+    public void InitBehaviourNode(int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
+        InitBaseNode();
+
         type = (behaviourType)typeNumber;
-        nodeName = "New " + type + " Node " + uniqueNameID++;
+
+        if (subElem != null)
+        {
+            this.subElem = subElem;
+            nodeName = this.subElem.elementName;
+        }
+        else
+        {
+            nodeName = "New " + type + " Node " + uniqueNameID++;
+        }
 
         windowRect = new Rect(posx, posy, width, height);
-    }
-
-    /// <summary>
-    /// The BehaviourNode with a clickable element in it
-    /// </summary>
-    /// <param name="typeNumber"></param>
-    /// <param name="subElem"></param>
-    public BehaviourNode(int typeNumber, ClickableElement subElem) : base()
-    {
-        type = (behaviourType)typeNumber;
-
-        this.subElem = subElem;
-
-        nodeName = this.subElem.elementName;
     }
 }

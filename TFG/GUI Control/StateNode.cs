@@ -17,37 +17,30 @@ public class StateNode : BaseNode
 
     public stateType type;
 
-    public List<TransitionGUI> nodeTransitions;
+    public List<TransitionGUI> nodeTransitions = new List<TransitionGUI>();
 
     static int uniqueNameID = 0;
 
     /// <summary>
-    /// The StateNode
+    /// The InitStateNode
     /// </summary>
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public StateNode(int typeNumber, float posx, float posy) : base()
+    public void InitStateNode(int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
-        nodeTransitions = new List<TransitionGUI>();
-        nodeName = "New State " + uniqueNameID++;
-        type = (stateType)typeNumber;
+        InitBaseNode();
 
-        windowRect = new Rect(posx, posy, width, height);
-    }
-
-    /// <summary>
-    /// The StateNode with a clickable element inside of it
-    /// </summary>
-    /// <param name="typeNumber"></param>
-    /// <param name="posx"></param>
-    /// <param name="posy"></param>
-    /// <param name="subElem"></param>
-    public StateNode(int typeNumber, float posx, float posy, ClickableElement subElem) : base()
-    {
-        nodeTransitions = new List<TransitionGUI>();
-        this.subElem = subElem;
-        nodeName = this.subElem.elementName;
+        if (subElem != null)
+        {
+            this.subElem = subElem;
+            nodeName = this.subElem.elementName;
+        }
+        else
+        {
+            nodeName = "New State " + uniqueNameID++;
+        }
+        
         type = (stateType)typeNumber;
 
         windowRect = new Rect(posx, posy, width, height);

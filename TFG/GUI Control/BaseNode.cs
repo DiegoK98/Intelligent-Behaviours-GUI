@@ -17,9 +17,9 @@ public abstract class BaseNode : GUIElement
     public int NProperty = 0;
 
     /// <summary>
-    /// The BaseNode
+    /// The InitBaseNode
     /// </summary>
-    public BaseNode()
+    public void InitBaseNode()
     {
         identificator = UniqueID();
     }

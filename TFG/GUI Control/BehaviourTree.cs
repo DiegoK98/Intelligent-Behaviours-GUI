@@ -7,7 +7,7 @@ public class BehaviourTree : ClickableElement
 {
     public List<BehaviourNode> nodes = new List<BehaviourNode>();
 
-    public List<TransitionGUI> connections;
+    public List<TransitionGUI> connections = new List<TransitionGUI>();
 
     static int uniqueNameID = 0;
 
@@ -17,14 +17,13 @@ public class BehaviourTree : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public BehaviourTree(ClickableElement parent, float posx, float posy)
+    public void InitBehaviourTree(ClickableElement parent, float posx, float posy)
     {
         this.parent = parent;
 
         type = elementType.BT;
         elementName = "New BT " + uniqueNameID++;
         identificator = UniqueID();
-        connections = new List<TransitionGUI>();
 
         windowRect = new Rect(posx, posy, width, height);
     }
