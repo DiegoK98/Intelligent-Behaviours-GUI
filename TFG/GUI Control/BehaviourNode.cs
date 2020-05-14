@@ -25,7 +25,7 @@ public class BehaviourNode : BaseNode
 
     static int uniqueNameID = 0;
 
-    public bool isRootNode = false;
+    public bool isRootNode { get; set; } = false;
 
     /// <summary>
     /// Gets the type of the element properly written

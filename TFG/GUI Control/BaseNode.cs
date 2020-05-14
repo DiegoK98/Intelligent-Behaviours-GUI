@@ -31,7 +31,7 @@ public abstract class BaseNode : GUIElement
     /// <returns></returns>
     public override bool Equals(object other)
     {
-        if (!base.Equals((BaseNode)other))
+        if (!base.Equals(other))
             return false;
         if (this.nodeName != ((BaseNode)other).nodeName)
             return false;

@@ -541,7 +541,32 @@ public class NodeEditorUtilities
             }
         }
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => n.type > BehaviourNode.behaviourType.Leaf))
+        // Decorator nodes
+        // We check every node from the root so it is written in order in the generated code
+
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRootNode))
+        {
+            RecursiveDecorators(ref result, machineName, elem, node);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Check if it's a decorator and if it is it writes it
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="machineName"></param>
+    /// <param name="elem"></param>
+    /// <param name="node"></param>
+    private static void RecursiveDecorators(ref string result, string machineName, ClickableElement elem, BehaviourNode node)
+    {
+        foreach (BehaviourNode childNode in ((BehaviourTree)elem).connections.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
+        {
+            RecursiveDecorators(ref result, machineName, elem, childNode);
+        }
+
+        if (node.type > BehaviourNode.behaviourType.Leaf)
         {
             string nodeName = CleanName(node.nodeName);
             TransitionGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
@@ -604,8 +629,6 @@ public class NodeEditorUtilities
                     break;
             }
         }
-
-        return result;
     }
 
     private static string GetChilds(ClickableElement elem, ref List<ClickableElement> subElems)

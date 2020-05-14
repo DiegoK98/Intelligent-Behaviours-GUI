@@ -342,7 +342,7 @@ public class NodeEditor : EditorWindow
                             transition.InitTransitionGUI("", ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
                             ((BehaviourTree)currentElem).connections.Add(transition);
 
-                            ((BehaviourTree)currentElem).nodes[selectIndex].isRootNode = false;
+                            ((BehaviourNode)selectednode).isRootNode = false;
                         }
 
                         makeConnectionMode = false;

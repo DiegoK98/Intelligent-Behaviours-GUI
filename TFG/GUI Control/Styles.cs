@@ -46,18 +46,22 @@ public static class Styles
 
     public static GUIStyle DeleteStyle = new GUIStyle(GUI.skin.button)
     {
+        active = new GUIStyleState()
+        {
+            textColor = Color.red
+        },
+        focused = new GUIStyleState()
+        {
+            textColor = Color.red
+        },
+        hover = new GUIStyleState()
+        {
+            textColor = Color.red
+        },
         normal = new GUIStyleState()
         {
-            background = MakeBackground(Color.red)
-        }
-    };
-
-    public static GUIStyle CancelStyle = new GUIStyle(GUI.skin.button)
-    {
-        normal = new GUIStyleState()
-        {
-            background = MakeBackground(Color.grey)
-        }
+            textColor = Color.red
+        },
     };
 
     public static GUIStyle WarningLabel = new GUIStyle(GUI.skin.label)
@@ -68,7 +72,7 @@ public static class Styles
         }
     };
 
-    //Habrá que cambiarlo
+    // Useless
     private static Texture2D MakeBackground(Color col)
     {
         Color[] pix = new Color[2 * 2];

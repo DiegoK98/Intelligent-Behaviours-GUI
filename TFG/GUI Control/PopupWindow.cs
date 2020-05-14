@@ -20,9 +20,9 @@ public class PopupWindow : EditorWindow
 
     static string repeatedName;
 
-    static int width = 250;
+    static int width = 300;
 
-    static int height = 100;
+    static int height = 150;
 
     /// <summary>
     /// Initializer for the popup when deleting an element
@@ -123,17 +123,20 @@ public class PopupWindow : EditorWindow
             if (numberOfSons > 0)
             {
                 EditorGUILayout.LabelField(numberOfSons + " child nodes will be deleted as well", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+                GUILayout.Space(20);
             }
         }
-
-        GUILayout.Space(30);
+        else
+        {
+            GUILayout.Space(30);
+        }
 
         if (GUILayout.Button("Delete", Styles.DeleteStyle))
         {
             senderEditor.Delete(elem);
             this.Close();
         }
-        if (GUILayout.Button("Cancel", Styles.CancelStyle))
+        if (GUILayout.Button("Cancel"))
         {
             this.Close();
         }
@@ -145,7 +148,7 @@ public class PopupWindow : EditorWindow
 
         GUILayout.Space(30);
 
-        if (GUILayout.Button("Ok", Styles.CancelStyle))
+        if (GUILayout.Button("Ok"))
         {
             this.Close();
         }

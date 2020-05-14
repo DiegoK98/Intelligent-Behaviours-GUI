@@ -59,7 +59,7 @@ public class TransitionGUI : GUIElement
     /// <returns></returns>
     public override bool Equals(object other)
     {
-        if (!base.Equals((TransitionGUI)other))
+        if (!base.Equals(other))
             return false;
         if (this.transitionName != ((TransitionGUI)other).transitionName)
             return false;
