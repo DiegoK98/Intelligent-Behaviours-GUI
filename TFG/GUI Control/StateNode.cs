@@ -35,15 +35,15 @@ public class StateNode : BaseNode
         {
             this.subElem = subElem;
             nodeName = this.subElem.elementName;
+            windowRect = new Rect(posx, posy, ClickableElement.width, ClickableElement.height);
         }
         else
         {
             nodeName = "New State " + uniqueNameID++;
+            windowRect = new Rect(posx, posy, width, height);
         }
         
         type = (stateType)typeNumber;
-
-        windowRect = new Rect(posx, posy, width, height);
     }
 
     /// <summary>

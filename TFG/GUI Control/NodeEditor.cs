@@ -468,7 +468,7 @@ public class NodeEditor : EditorWindow
 
                 Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
-                Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionGUI.width, TransitionGUI.height);
+                Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionGUI.baseWidth, TransitionGUI.baseHeight);
                 textBox.position += offset;
 
                 elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)

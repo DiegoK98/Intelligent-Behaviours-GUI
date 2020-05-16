@@ -55,12 +55,12 @@ public class BehaviourNode : BaseNode
         {
             this.subElem = subElem;
             nodeName = this.subElem.elementName;
+            windowRect = new Rect(posx, posy, ClickableElement.width, ClickableElement.height);
         }
         else
         {
             nodeName = "New " + type + " Node " + uniqueNameID++;
+            windowRect = new Rect(posx, posy, width, height);
         }
-
-        windowRect = new Rect(posx, posy, width, height);
     }
 }
