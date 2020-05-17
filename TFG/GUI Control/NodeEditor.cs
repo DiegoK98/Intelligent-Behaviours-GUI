@@ -468,7 +468,7 @@ public class NodeEditor : EditorWindow
 
                 Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
-                Rect textBox = new Rect(pos.x - 75, pos.y - 15, TransitionGUI.baseWidth, TransitionGUI.baseHeight);
+                Rect textBox = new Rect(pos.x - 75, pos.y - 15, elem.width, elem.height);
                 textBox.position += offset;
 
                 elem.textBox = GUI.Window(i + MAX_N_STATES, textBox, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
@@ -906,7 +906,7 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawTransitionBox(int id)
     {
-        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox(this);
+        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox();
         GUI.DragWindow();
     }
 

@@ -107,6 +107,11 @@ public class PopupWindow : EditorWindow
                 case KeyCode.Escape:
                     this.Close();
                     break;
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    senderEditor.Delete(elem);
+                    this.Close();
+                    break;
             }
         }
     }
