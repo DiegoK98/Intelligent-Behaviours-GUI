@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class XMLElement
 {
-    public long Id { get; set; }
+    public string Id { get; set; }
 
     public string elemType { get; set; }
 

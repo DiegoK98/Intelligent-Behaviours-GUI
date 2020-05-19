@@ -185,7 +185,7 @@ public class NodeEditorUtilities
         return (XMLElement)serial.Deserialize(fs);
     }
 
-    private static XMLElement CreateXMLElement(GUIElement elem, string elementName, float xPos, float yPos, long parentId = 0, BehaviourTree parentTree = null)
+    private static XMLElement CreateXMLElement(GUIElement elem, string elementName, float xPos, float yPos, string parentId = "", BehaviourTree parentTree = null)
     {
         GUIElement originalElem = elem;
 

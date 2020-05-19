@@ -1281,8 +1281,8 @@ public class NodeEditor : EditorWindow
             {
                 string[] str = transString.Split('#');
 
-                BaseNode node1 = ((FSM)newElem).states.Where(n => n.identificator == Int32.Parse(str[1])).FirstOrDefault();
-                BaseNode node2 = ((FSM)newElem).states.Where(n => n.identificator == Int32.Parse(str[2])).FirstOrDefault();
+                BaseNode node1 = ((FSM)newElem).states.Where(n => n.identificator == str[1]).FirstOrDefault();
+                BaseNode node2 = ((FSM)newElem).states.Where(n => n.identificator == str[2]).FirstOrDefault();
 
                 TransitionGUI transition = CreateInstance<TransitionGUI>();
                 transition.InitTransitionGUI(str[0], node1, node2);

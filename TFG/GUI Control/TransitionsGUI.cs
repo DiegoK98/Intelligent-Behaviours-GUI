@@ -7,18 +7,6 @@ using System.Linq;
 
 public class TransitionGUI : GUIElement
 {
-    public enum perceptionType
-    {
-        Push,
-        Timer,
-        Value,
-        IsInState,
-        BehaviourTreeStatus,
-        And,
-        Or,
-        Custom
-    }
-
     public string transitionName = "";
 
     public BaseNode fromNode;
@@ -37,14 +25,7 @@ public class TransitionGUI : GUIElement
 
     public int height;
 
-    // These parameters are for each percetion, ordered so they don't get mixed in the tree of perceptions
-    // Make serializable
-
-    public Dictionary<string, perceptionType> orderedTypes;
-
-    public Dictionary<string, int> orderedTimerNumber;
-
-    public Dictionary<string, bool> orderedOpenFoldout;
+    public PerceptionGUI rootPerception;
 
     /// <summary>
     /// The InitTransitionGUI
@@ -64,11 +45,8 @@ public class TransitionGUI : GUIElement
         fromNode = from;
         toNode = to;
 
-        orderedTypes = new Dictionary<string, perceptionType>();
-
-        orderedTimerNumber = new Dictionary<string, int>();
-
-        orderedOpenFoldout = new Dictionary<string, bool>();
+        rootPerception = CreateInstance<PerceptionGUI>();
+        rootPerception.InitPerceptionGUI(false, 0, Enums.perceptionType.Push);
     }
 
     /// <summary>
@@ -89,8 +67,6 @@ public class TransitionGUI : GUIElement
         int heightAcc = 0;
         int widthAcc = 0;
 
-        int index = 0;
-
         transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
 
         // Narrower area than the main rect
@@ -99,7 +75,7 @@ public class TransitionGUI : GUIElement
         GUILayout.BeginArea(areaRect);
         try
         {
-            PerceptionFoldout(ref heightAcc, ref widthAcc, ref index, 0);
+            PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
         }
         finally
         {
@@ -119,57 +95,42 @@ public class TransitionGUI : GUIElement
     /// <param name="widthAcc"></param>
     /// <param name="index"></param>
     /// <param name="treeLevel"></param>
-    private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref int index, int treeLevel)
+    private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref PerceptionGUI currentPerception)
     {
         GUILayout.BeginHorizontal();
         GUILayout.Space(10);
         GUILayout.BeginVertical();
         try
         {
-            string indexLvl = index.ToString() + "#" + treeLevel.ToString();
+            currentPerception.openFoldout = EditorGUILayout.Foldout(currentPerception.openFoldout, currentPerception.type.ToString() + "Perception");
 
-            if (!orderedTypes.ContainsKey(indexLvl))
-            {
-                orderedTypes[indexLvl] = perceptionType.Push;
-            }
-            if (!orderedTimerNumber.ContainsKey(indexLvl))
-            {
-                orderedTimerNumber[indexLvl] = 0;
-            }
-            if (!orderedOpenFoldout.ContainsKey(indexLvl))
-            {
-                orderedOpenFoldout[indexLvl] = false;
-            }
-
-            orderedOpenFoldout[indexLvl] = EditorGUILayout.Foldout(orderedOpenFoldout[indexLvl], orderedTypes[indexLvl].ToString() + "Perception");
-
-            if (orderedOpenFoldout[indexLvl])
+            if (currentPerception.openFoldout)
             {
                 heightAcc += 30;
 
-                if (GUILayout.Button(orderedTypes[indexLvl].ToString(), EditorStyles.toolbarDropDown))
+                if (GUILayout.Button(currentPerception.type.ToString(), EditorStyles.toolbarDropDown))
                 {
                     GenericMenu toolsMenu = new GenericMenu();
 
-                    foreach (string name in Enum.GetNames(typeof(perceptionType)))
+                    foreach (string name in Enum.GetNames(typeof(Enums.perceptionType)))
                     {
-                        toolsMenu.AddItem(new GUIContent(name), false, ChangeType, new string[] { name, index.ToString(), treeLevel.ToString() });
+                        toolsMenu.AddItem(new GUIContent(name), false, ChangeType, new string[] { name, currentPerception.identificator });
                     }
 
                     toolsMenu.DropDown(new Rect(0, 40, 0, 0));
                     EditorGUIUtility.ExitGUI();
                 }
 
-                switch (orderedTypes[indexLvl])
+                switch (currentPerception.type)
                 {
-                    case perceptionType.Push:
+                    case Enums.perceptionType.Push:
                         heightAcc += 40;
                         GUILayout.Label("You will be able to\nfire this transition\nmanually through code", new GUIStyle(Styles.SubTitleText)
                         {
                             fontStyle = FontStyle.Italic
                         }, GUILayout.Height(50));
                         break;
-                    case perceptionType.Timer:
+                    case Enums.perceptionType.Timer:
                         heightAcc += 20;
 
                         GUILayout.BeginHorizontal();
@@ -182,53 +143,47 @@ public class TransitionGUI : GUIElement
 
                             int aux;
 
-                            int.TryParse(GUILayout.TextField(orderedTimerNumber[indexLvl].ToString(), new GUIStyle(Styles.TitleText)
+                            int.TryParse(GUILayout.TextField(currentPerception.timerNumber.ToString(), new GUIStyle(Styles.TitleText)
                             {
                                 alignment = TextAnchor.MiddleCenter
                             }, GUILayout.Height(20), GUILayout.Width(20)), out aux);
 
-                            orderedTimerNumber[indexLvl] = aux;
+                            currentPerception.timerNumber = aux;
                         }
                         finally
                         {
                             GUILayout.EndHorizontal();
                         }
                         break;
-                    case perceptionType.Value:
+                    case Enums.perceptionType.Value:
                         heightAcc += 20;
                         GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
                         break;
-                    case perceptionType.IsInState:
+                    case Enums.perceptionType.IsInState:
                         heightAcc += 20;
                         GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
                         break;
-                    case perceptionType.BehaviourTreeStatus:
+                    case Enums.perceptionType.BehaviourTreeStatus:
                         heightAcc += 20;
                         GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
                         break;
-                    case perceptionType.And:
+                    case Enums.perceptionType.And:
                         heightAcc += 60;
                         widthAcc += 20;
 
-                        index++;
-                        treeLevel++;
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref index, treeLevel);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild);
                         GUILayout.Label("-AND-", Styles.TitleText, GUILayout.Height(20));
-                        index++;
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref index, treeLevel);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild);
                         break;
-                    case perceptionType.Or:
+                    case Enums.perceptionType.Or:
                         heightAcc += 60;
                         widthAcc += 20;
 
-                        index++;
-                        treeLevel++;
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref index, treeLevel);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild);
                         GUILayout.Label("-OR-", Styles.TitleText, GUILayout.Height(20));
-                        index++;
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref index, treeLevel);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild);
                         break;
-                    case perceptionType.Custom:
+                    case Enums.perceptionType.Custom:
                         heightAcc += 50;
                         GUILayout.Label("You will have to code\nthe Check method\nin the generated script", new GUIStyle(Styles.SubTitleText)
                         {
@@ -268,21 +223,47 @@ public class TransitionGUI : GUIElement
     {
         string[] data = (string[])param;
         string newType = data[0];
-        int index = int.Parse(data[1]);
-        int treeLevel = int.Parse(data[2]);
-        string key = index.ToString() + "#" + treeLevel.ToString();
+        string id = data[1];
 
-        orderedTypes[key] = (perceptionType)Enum.Parse(typeof(perceptionType), newType);
-        orderedTimerNumber[key] = 0;
+        ChangeTypeRecursive(ref rootPerception, id, (Enums.perceptionType)Enum.Parse(typeof(Enums.perceptionType), newType));
+    }
 
-        foreach (string indexLvl in orderedTypes.Keys)
+    public void ChangeTypeRecursive(ref PerceptionGUI perception, string id, Enums.perceptionType newType)
+    {
+        if (perception.identificator == id)
         {
-            string[] numbers = indexLvl.Split('#');
-            if (int.Parse(numbers[1]) > treeLevel)
+            switch (perception.type)
             {
-                orderedTypes[indexLvl] = perceptionType.Push;
-                orderedTimerNumber[indexLvl] = 0;
-                orderedOpenFoldout[indexLvl] = false;
+                case Enums.perceptionType.Timer:
+                    if (newType != Enums.perceptionType.Timer)
+                    {
+                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    }
+                    break;
+                case Enums.perceptionType.And:
+                case Enums.perceptionType.Or:
+                    if (newType == Enums.perceptionType.And || newType == Enums.perceptionType.Or)
+                    {
+                        perception.type = newType;
+                    }
+                    else
+                    {
+                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    }
+                    break;
+                default:
+                    perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    break;
+            }
+
+            perception.openFoldout = true;
+        }
+        else
+        {
+            if (perception.firstChild != null && perception.secondChild != null)
+            {
+                ChangeTypeRecursive(ref perception.firstChild, id, newType);
+                ChangeTypeRecursive(ref perception.secondChild, id, newType);
             }
         }
     }

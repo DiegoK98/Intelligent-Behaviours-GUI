@@ -11,6 +11,18 @@ public class Enums
         RepeatedName = 2
     }
 
+    public enum perceptionType
+    {
+        Push,
+        Timer,
+        Value,
+        IsInState,
+        BehaviourTreeStatus,
+        And,
+        Or,
+        Custom
+    }
+
     /// <summary>
     /// Transforms the error given into a pre-defined message
     /// </summary>
