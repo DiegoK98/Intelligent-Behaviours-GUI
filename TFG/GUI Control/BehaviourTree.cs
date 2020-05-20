@@ -127,4 +127,20 @@ public class BehaviourTree : ClickableElement
 
         return false;
     }
+
+    public override List<ClickableElement> GetSubElems()
+    {
+        List<ClickableElement> result = new List<ClickableElement>();
+
+        foreach (BehaviourNode node in nodes)
+        {
+            if (node.subElem != null)
+            {
+                result.AddRange(node.subElem.GetSubElems());
+                result.Add(node.subElem);
+            }
+        }
+
+        return result;
+    }
 }

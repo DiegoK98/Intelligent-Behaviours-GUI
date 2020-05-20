@@ -15,7 +15,7 @@ public class TransitionGUI : GUIElement
 
     public Rect textBox;
 
-    public static int baseWidth = 170;
+    public static int baseWidth = 200;
 
     public static int baseHeight = 70;
 
@@ -46,7 +46,7 @@ public class TransitionGUI : GUIElement
         toNode = to;
 
         rootPerception = CreateInstance<PerceptionGUI>();
-        rootPerception.InitPerceptionGUI(false, 0, Enums.perceptionType.Push);
+        rootPerception.InitPerceptionGUI(false, 0, perceptionType.Push);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class TransitionGUI : GUIElement
     /// Draws all the elements inside the Transition box
     /// </summary>
     /// <param name="parent"></param>
-    public void DrawBox()
+    public void DrawBox(NodeEditor sender)
     {
         int heightAcc = 0;
         int widthAcc = 0;
@@ -75,7 +75,7 @@ public class TransitionGUI : GUIElement
         GUILayout.BeginArea(areaRect);
         try
         {
-            PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
+            PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception, sender);
         }
         finally
         {
@@ -95,7 +95,7 @@ public class TransitionGUI : GUIElement
     /// <param name="widthAcc"></param>
     /// <param name="index"></param>
     /// <param name="treeLevel"></param>
-    private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref PerceptionGUI currentPerception)
+    private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref PerceptionGUI currentPerception, NodeEditor sender)
     {
         GUILayout.BeginHorizontal();
         GUILayout.Space(10);
@@ -112,7 +112,7 @@ public class TransitionGUI : GUIElement
                 {
                     GenericMenu toolsMenu = new GenericMenu();
 
-                    foreach (string name in Enum.GetNames(typeof(Enums.perceptionType)))
+                    foreach (string name in Enum.GetNames(typeof(perceptionType)))
                     {
                         toolsMenu.AddItem(new GUIContent(name), false, ChangeType, new string[] { name, currentPerception.identificator });
                     }
@@ -123,14 +123,14 @@ public class TransitionGUI : GUIElement
 
                 switch (currentPerception.type)
                 {
-                    case Enums.perceptionType.Push:
+                    case perceptionType.Push:
                         heightAcc += 40;
                         GUILayout.Label("You will be able to\nfire this transition\nmanually through code", new GUIStyle(Styles.SubTitleText)
                         {
                             fontStyle = FontStyle.Italic
                         }, GUILayout.Height(50));
                         break;
-                    case Enums.perceptionType.Timer:
+                    case perceptionType.Timer:
                         heightAcc += 20;
 
                         GUILayout.BeginHorizontal();
@@ -155,35 +155,142 @@ public class TransitionGUI : GUIElement
                             GUILayout.EndHorizontal();
                         }
                         break;
-                    case Enums.perceptionType.Value:
+                    case perceptionType.Value:
                         heightAcc += 20;
                         GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
                         break;
-                    case Enums.perceptionType.IsInState:
-                        heightAcc += 20;
-                        GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
+                    case perceptionType.IsInState:
+                        heightAcc += 30;
+
+                        GUILayout.Space(5);
+
+                        List<ClickableElement> subFSMsList = sender.currentElem.GetSubElems();
+
+                        GUI.enabled = subFSMsList.Count > 0;
+                        if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
+                        {
+                            GenericMenu toolsMenu = new GenericMenu();
+
+                            List<string> list = subFSMsList.Where(e => e is FSM).Select(e => e.elementName).ToList();
+                            list.Sort();
+
+                            foreach (string name in list)
+                            {
+                                toolsMenu.AddItem(new GUIContent(name), false, (current) =>
+                                {
+                                    if (((PerceptionGUI)current).elemName != name)
+                                    {
+                                        ((PerceptionGUI)current).elemName = name;
+                                        ((PerceptionGUI)current).stateName = "Select a State";
+                                    }
+                                }, currentPerception);
+                            }
+
+                            toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                            EditorGUIUtility.ExitGUI();
+                        }
+
+                        GUI.enabled = true;
+
+                        if (subFSMsList.Count > 0 && currentPerception.elemName != "Select a FSM" && currentPerception.elemName != "Select a BT" && !string.IsNullOrEmpty(currentPerception.elemName))
+                        {
+                            heightAcc += 30;
+
+                            GUILayout.Space(5);
+
+                            if (GUILayout.Button(currentPerception.stateName, EditorStyles.toolbarDropDown))
+                            {
+                                GenericMenu toolsMenu = new GenericMenu();
+
+                                string auxName = currentPerception.elemName;
+                                List<string> list = subFSMsList.Where(e => e is FSM).Cast<FSM>().Where(e => e.elementName == auxName).FirstOrDefault().states.Select(s => s.nodeName).ToList();
+                                list.Sort();
+
+                                foreach (string name in list)
+                                {
+                                    toolsMenu.AddItem(new GUIContent(name), false, (current) =>
+                                    {
+                                        ((PerceptionGUI)current).stateName = name;
+                                    }, currentPerception);
+                                }
+
+                                toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                                EditorGUIUtility.ExitGUI();
+                            }
+                        }
                         break;
-                    case Enums.perceptionType.BehaviourTreeStatus:
-                        heightAcc += 20;
-                        GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
+                    case perceptionType.BehaviourTreeStatus:
+                        heightAcc += 30;
+
+                        GUILayout.Space(5);
+
+                        List<ClickableElement> subBTsList = sender.currentElem.GetSubElems();
+
+                        GUI.enabled = subBTsList.Count > 0;
+                        if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
+                        {
+                            GenericMenu toolsMenu = new GenericMenu();
+
+                            List<string> list = subBTsList.Where(e => e is BehaviourTree).Select(e => e.elementName).ToList();
+                            list.Sort();
+
+                            foreach (string name in list)
+                            {
+                                toolsMenu.AddItem(new GUIContent(name), false, (current) =>
+                                {
+                                    if (((PerceptionGUI)current).elemName != name)
+                                    {
+                                        ((PerceptionGUI)current).elemName = name;
+                                        ((PerceptionGUI)current).status = ReturnValues.Succeed;
+                                    }
+                                }, currentPerception);
+                            }
+
+                            toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                            EditorGUIUtility.ExitGUI();
+                        }
+                        GUI.enabled = true;
+
+                        if (subBTsList.Count > 0 && currentPerception.elemName != "Select a FSM" && currentPerception.elemName != "Select a BT" && !string.IsNullOrEmpty(currentPerception.elemName))
+                        {
+                            heightAcc += 30;
+
+                            GUILayout.Space(5);
+
+                            if (GUILayout.Button(currentPerception.status.ToString(), EditorStyles.toolbarDropDown))
+                            {
+                                GenericMenu toolsMenu = new GenericMenu();
+
+                                foreach (string name in Enum.GetNames(typeof(ReturnValues)))
+                                {
+                                    toolsMenu.AddItem(new GUIContent(name), false, (current) =>
+                                    {
+                                        ((PerceptionGUI)current).status = (ReturnValues)Enum.Parse(typeof(ReturnValues), name);
+                                    }, currentPerception);
+                                }
+
+                                toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                                EditorGUIUtility.ExitGUI();
+                            }
+                        }
                         break;
-                    case Enums.perceptionType.And:
+                    case perceptionType.And:
                         heightAcc += 60;
                         widthAcc += 20;
 
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild, sender);
                         GUILayout.Label("-AND-", Styles.TitleText, GUILayout.Height(20));
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild, sender);
                         break;
-                    case Enums.perceptionType.Or:
+                    case perceptionType.Or:
                         heightAcc += 60;
                         widthAcc += 20;
 
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild, sender);
                         GUILayout.Label("-OR-", Styles.TitleText, GUILayout.Height(20));
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild, sender);
                         break;
-                    case Enums.perceptionType.Custom:
+                    case perceptionType.Custom:
                         heightAcc += 50;
                         GUILayout.Label("You will have to code\nthe Check method\nin the generated script", new GUIStyle(Styles.SubTitleText)
                         {
@@ -225,24 +332,42 @@ public class TransitionGUI : GUIElement
         string newType = data[0];
         string id = data[1];
 
-        ChangeTypeRecursive(ref rootPerception, id, (Enums.perceptionType)Enum.Parse(typeof(Enums.perceptionType), newType));
+        ChangeTypeRecursive(ref rootPerception, id, (perceptionType)Enum.Parse(typeof(perceptionType), newType));
     }
 
-    public void ChangeTypeRecursive(ref PerceptionGUI perception, string id, Enums.perceptionType newType)
+    public void ChangeTypeRecursive(ref PerceptionGUI perception, string id, perceptionType newType)
     {
         if (perception.identificator == id)
         {
             switch (perception.type)
             {
-                case Enums.perceptionType.Timer:
-                    if (newType != Enums.perceptionType.Timer)
+                case perceptionType.Timer:
+                    if (newType != perceptionType.Timer)
                     {
                         perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
                     }
                     break;
-                case Enums.perceptionType.And:
-                case Enums.perceptionType.Or:
-                    if (newType == Enums.perceptionType.And || newType == Enums.perceptionType.Or)
+                case perceptionType.Value:
+                    if (newType != perceptionType.Value)
+                    {
+                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    }
+                    break;
+                case perceptionType.IsInState:
+                    if (newType != perceptionType.IsInState)
+                    {
+                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    }
+                    break;
+                case perceptionType.BehaviourTreeStatus:
+                    if (newType != perceptionType.BehaviourTreeStatus)
+                    {
+                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    }
+                    break;
+                case perceptionType.And:
+                case perceptionType.Or:
+                    if (newType == perceptionType.And || newType == perceptionType.Or)
                     {
                         perception.type = newType;
                     }

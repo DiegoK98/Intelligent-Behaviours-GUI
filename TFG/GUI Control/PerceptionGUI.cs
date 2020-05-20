@@ -11,9 +11,15 @@ public class PerceptionGUI : GUIElement
 
     public int treeLevel;
 
-    public Enums.perceptionType type;
+    public perceptionType type;
 
     public int timerNumber;
+
+    public string elemName;
+
+    public string stateName;
+
+    public ReturnValues status;
 
     public bool openFoldout;
 
@@ -47,7 +53,7 @@ public class PerceptionGUI : GUIElement
     /// <param name="name"></param>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    public void InitPerceptionGUI(bool isSecondChild, int treeLevel, Enums.perceptionType type)
+    public void InitPerceptionGUI(bool isSecondChild, int treeLevel, perceptionType type)
     {
         identificator = UniqueID();
 
@@ -58,12 +64,29 @@ public class PerceptionGUI : GUIElement
         timerNumber = 0;
         openFoldout = false;
 
-        if (type == Enums.perceptionType.And || type == Enums.perceptionType.Or)
+        if (type == perceptionType.IsInState)
+        {
+            elemName = "Select a FSM";
+        }
+        else if (type == perceptionType.BehaviourTreeStatus)
+        {
+            elemName = "Select a BT";
+        }
+        else
+        {
+            elemName = "";
+        }
+
+        stateName = "Select a State";
+
+        status = ReturnValues.Succeed;
+
+        if (type == perceptionType.And || type == perceptionType.Or)
         {
             firstChild = CreateInstance<PerceptionGUI>();
-            firstChild.InitPerceptionGUI(false, treeLevel + 1, Enums.perceptionType.Push);
+            firstChild.InitPerceptionGUI(false, treeLevel + 1, perceptionType.Push);
             secondChild = CreateInstance<PerceptionGUI>();
-            secondChild.InitPerceptionGUI(true, treeLevel + 1, Enums.perceptionType.Push);
+            secondChild.InitPerceptionGUI(true, treeLevel + 1, perceptionType.Push);
         }
         else
         {

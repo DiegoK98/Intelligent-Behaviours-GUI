@@ -77,4 +77,6 @@ public abstract class ClickableElement : GUIElement
 
         return repeatedNames > threshold;
     }
+
+    public abstract List<ClickableElement> GetSubElems();
 }

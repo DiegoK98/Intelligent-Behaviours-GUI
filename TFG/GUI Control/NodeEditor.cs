@@ -84,11 +84,11 @@ public class NodeEditor : EditorWindow
 
             if (!((FSM)currentElem).hasEntryState)
             {
-                AddError(Enums.Errors.NoEntryState);
+                AddError(Errors.NoEntryState);
             }
             else
             {
-                RemoveError(Enums.Errors.NoEntryState);
+                RemoveError(Errors.NoEntryState);
             }
         }
 
@@ -533,9 +533,9 @@ public class NodeEditor : EditorWindow
             }
 
             if (repeatedNames)
-                AddError(Enums.Errors.RepeatedName);
+                AddError(Errors.RepeatedName);
             else
-                RemoveError(Enums.Errors.RepeatedName);
+                RemoveError(Errors.RepeatedName);
         }
 
         #endregion
@@ -906,7 +906,7 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawTransitionBox(int id)
     {
-        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox();
+        ((FSM)currentElem).transitions[id - MAX_N_STATES].DrawBox(this);
         GUI.DragWindow();
     }
 
@@ -1605,7 +1605,7 @@ public class NodeEditor : EditorWindow
     /// Add an error that is happening right now
     /// </summary>
     /// <param name="error"></param>
-    public void AddError(Enums.Errors error)
+    public void AddError(Errors error)
     {
         if (!errors.ContainsKey(Enums.EnumToString(error)))
             errors.Add(Enums.EnumToString(error), (int)error);
@@ -1615,7 +1615,7 @@ public class NodeEditor : EditorWindow
     /// Remove an error that is no longer happening
     /// </summary>
     /// <param name="error"></param>
-    public void RemoveError(Enums.Errors error)
+    public void RemoveError(Errors error)
     {
         if (errors.ContainsKey(Enums.EnumToString(error)))
             errors.Remove(Enums.EnumToString(error));

@@ -2,27 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum Errors
+{
+    //The higher the number, the higher its priority
+    NoEntryState = 3,
+    RepeatedName = 2
+}
+
+public enum perceptionType
+{
+    Push,
+    Timer,
+    Value,
+    IsInState,
+    BehaviourTreeStatus,
+    And,
+    Or,
+    Custom
+}
+
 public class Enums
 {
-    public enum Errors
-    {
-        //The higher the number, the higher its priority
-        NoEntryState = 3,
-        RepeatedName = 2
-    }
-
-    public enum perceptionType
-    {
-        Push,
-        Timer,
-        Value,
-        IsInState,
-        BehaviourTreeStatus,
-        And,
-        Or,
-        Custom
-    }
-
     /// <summary>
     /// Transforms the error given into a pre-defined message
     /// </summary>

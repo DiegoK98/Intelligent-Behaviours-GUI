@@ -209,4 +209,20 @@ public class FSM : ClickableElement
 
         CheckConnected();
     }
+
+    public override List<ClickableElement> GetSubElems()
+    {
+        List<ClickableElement> result = new List<ClickableElement>();
+
+        foreach (StateNode node in states)
+        {
+            if (node.subElem != null)
+            {
+                result.AddRange(node.subElem.GetSubElems());
+                result.Add(node.subElem);
+            }
+        }
+
+        return result;
+    }
 }
