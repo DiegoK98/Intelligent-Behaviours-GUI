@@ -28,6 +28,11 @@ public class BehaviourTree : ClickableElement
         windowRect = new Rect(posx, posy, width, height);
     }
 
+    public override XMLElement ToXMLElement()
+    {
+        return null;
+    }
+
     /// <summary>
     /// Gets the type of the element properly written
     /// </summary>

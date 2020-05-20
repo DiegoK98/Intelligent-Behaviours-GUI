@@ -20,6 +20,8 @@ public abstract class GUIElement : ScriptableObject
 
     public abstract string GetTypeString();
 
+    public abstract XMLElement ToXMLElement();
+
     /// <summary>
     /// Modifies the given string to remove unnecesary spaces and newlines
     /// </summary>

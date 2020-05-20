@@ -207,7 +207,7 @@ public class NodeEditorUtilities
             windowPosX = xPos,
             windowPosY = yPos,
             nodes = new List<XMLElement>(),
-            transitions = new List<string>()
+            transitions = new List<XMLElement>()
         };
 
         switch (result.elemType)
@@ -217,25 +217,15 @@ public class NodeEditorUtilities
 
                 foreach (StateNode node in ((FSM)elem).states)
                 {
-                    XMLElement elemNode;
-
-                    if (node.subElem == null)
-                        elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, ((FSM)elem).identificator);
-                    else
-                        elemNode = CreateXMLElement(node, node.subElem.elementName, node.subElem.windowRect.position.x, node.subElem.windowRect.position.y, ((FSM)elem).identificator);
-
-                    elemNode.secondType = node.type.ToString();
+                    XMLElement elemNode = node.ToXMLElement();
 
                     result.nodes.Add(elemNode);
                 }
 
                 foreach (TransitionGUI transition in ((FSM)elem).transitions)
                 {
-                    string concatTransition = transition.transitionName;
-
-                    concatTransition += "#" + transition.fromNode.identificator + "#" + transition.toNode.identificator;
-
-                    result.transitions.Add(concatTransition);
+                    XMLElement trans = transition.ToXMLElement();
+                    result.transitions.Add(trans);
                 }
                 break;
             case nameof(BehaviourTree):
@@ -243,15 +233,11 @@ public class NodeEditorUtilities
 
                 foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRootNode))
                 {
-                    XMLElement elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, ((BehaviourTree)elem).identificator, (BehaviourTree)elem);
+                    XMLElement elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, elem.identificator, (BehaviourTree)elem);
                     elemNode.secondType = node.type.ToString();
 
                     result.nodes.Add(elemNode);
                 }
-                break;
-            case nameof(StateNode):
-                result.Id = originalElem.identificator;
-
                 break;
             case nameof(BehaviourNode):
                 result.Id = originalElem.identificator;

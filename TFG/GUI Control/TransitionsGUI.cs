@@ -46,7 +46,24 @@ public class TransitionGUI : GUIElement
         toNode = to;
 
         rootPerception = CreateInstance<PerceptionGUI>();
-        rootPerception.InitPerceptionGUI(false, 0, perceptionType.Push);
+        rootPerception.InitPerceptionGUI(perceptionType.Push);
+    }
+
+    public override XMLElement ToXMLElement()
+    {
+        XMLElement result = new XMLElement
+        {
+            name = CleanName(this.transitionName),
+            elemType = this.GetType().ToString(),
+            windowPosX = this.textBox.x,
+            windowPosY = this.textBox.y,
+            Id = this.identificator,
+            fromId = this.fromNode.identificator,
+            toId = this.toNode.identificator,
+            perception = this.rootPerception.ToPerceptionXML()
+        };
+
+        return result;
     }
 
     /// <summary>
@@ -355,25 +372,25 @@ public class TransitionGUI : GUIElement
                 case perceptionType.Timer:
                     if (newType != perceptionType.Timer)
                     {
-                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                        perception.InitPerceptionGUI(newType);
                     }
                     break;
                 case perceptionType.Value:
                     if (newType != perceptionType.Value)
                     {
-                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                        perception.InitPerceptionGUI(newType);
                     }
                     break;
                 case perceptionType.IsInState:
                     if (newType != perceptionType.IsInState)
                     {
-                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                        perception.InitPerceptionGUI(newType);
                     }
                     break;
                 case perceptionType.BehaviourTreeStatus:
                     if (newType != perceptionType.BehaviourTreeStatus)
                     {
-                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                        perception.InitPerceptionGUI(newType);
                     }
                     break;
                 case perceptionType.And:
@@ -384,11 +401,11 @@ public class TransitionGUI : GUIElement
                     }
                     else
                     {
-                        perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                        perception.InitPerceptionGUI(newType);
                     }
                     break;
                 default:
-                    perception.InitPerceptionGUI(perception.isSecondChild, perception.treeLevel, newType);
+                    perception.InitPerceptionGUI(newType);
                     break;
             }
 

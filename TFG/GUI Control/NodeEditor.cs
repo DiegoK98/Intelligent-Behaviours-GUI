@@ -1247,6 +1247,7 @@ public class NodeEditor : EditorWindow
             {
                 currentElem = newElem;
 
+                // WIP
                 switch (node.elemType)
                 {
                     case nameof(FSM):
@@ -1277,17 +1278,11 @@ public class NodeEditor : EditorWindow
                 }
             }
 
-            foreach (string transString in elem.transitions)
+            foreach (XMLElement trans in elem.transitions)
             {
-                string[] str = transString.Split('#');
-
-                BaseNode node1 = ((FSM)newElem).states.Where(n => n.identificator == str[1]).FirstOrDefault();
-                BaseNode node2 = ((FSM)newElem).states.Where(n => n.identificator == str[2]).FirstOrDefault();
-
-                TransitionGUI transition = CreateInstance<TransitionGUI>();
-                transition.InitTransitionGUI(str[0], node1, node2);
-
-                ((FSM)newElem).AddTransition(transition);
+                BaseNode node1 = ((FSM)newElem).states.Where(n => n.identificator == trans.fromId).FirstOrDefault();
+                BaseNode node2 = ((FSM)newElem).states.Where(n => n.identificator == trans.toId).FirstOrDefault();
+                ((FSM)newElem).AddTransition(trans.ToTransitionGUI(node1, node2));
             }
         }
         else

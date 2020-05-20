@@ -7,10 +7,6 @@ using System.Linq;
 
 public class PerceptionGUI : GUIElement
 {
-    public bool isSecondChild;
-
-    public int treeLevel;
-
     public perceptionType type;
 
     public int timerNumber;
@@ -48,17 +44,13 @@ public class PerceptionGUI : GUIElement
     }
 
     /// <summary>
-    /// The InitTransitionGUI
+    /// The default initiator
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="from"></param>
-    /// <param name="to"></param>
-    public void InitPerceptionGUI(bool isSecondChild, int treeLevel, perceptionType type)
+    /// <param name="type"></param>
+    public void InitPerceptionGUI(perceptionType type)
     {
         identificator = UniqueID();
 
-        this.isSecondChild = isSecondChild;
-        this.treeLevel = treeLevel;
         this.type = type;
 
         timerNumber = 0;
@@ -84,14 +76,40 @@ public class PerceptionGUI : GUIElement
         if (type == perceptionType.And || type == perceptionType.Or)
         {
             firstChild = CreateInstance<PerceptionGUI>();
-            firstChild.InitPerceptionGUI(false, treeLevel + 1, perceptionType.Push);
+            firstChild.InitPerceptionGUI(perceptionType.Push);
             secondChild = CreateInstance<PerceptionGUI>();
-            secondChild.InitPerceptionGUI(true, treeLevel + 1, perceptionType.Push);
+            secondChild.InitPerceptionGUI(perceptionType.Push);
         }
         else
         {
             firstChild = null;
             secondChild = null;
         }
+    }
+
+    public PerceptionXML ToPerceptionXML()
+    {
+        PerceptionXML result = new PerceptionXML
+        {
+            Id = this.identificator,
+            type = this.type,
+            timerNumber = this.timerNumber,
+            elemName = this.elemName,
+            stateName = this.stateName,
+            status = this.status,
+            openFoldout = this.openFoldout
+        };
+
+        if (this.firstChild != null)
+            result.firstChild = this.firstChild.ToPerceptionXML();
+        if (this.secondChild != null)
+            result.secondChild = this.secondChild.ToPerceptionXML();
+
+        return result;
+    }
+
+    public override XMLElement ToXMLElement()
+    {
+        throw new NotImplementedException();
     }
 }

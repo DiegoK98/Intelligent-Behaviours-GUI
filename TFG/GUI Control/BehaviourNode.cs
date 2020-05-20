@@ -63,4 +63,22 @@ public class BehaviourNode : BaseNode
             windowRect = new Rect(posx, posy, width, height);
         }
     }
+
+    // Unused
+    public override XMLElement ToXMLElement()
+    {
+        XMLElement result = new XMLElement
+        {
+            name = this.subElem ? CleanName(this.subElem.elementName) : CleanName(this.nodeName),
+            elemType = this.subElem ? this.subElem.GetType().ToString() : this.GetType().ToString(),
+            windowPosX = this.subElem ? this.subElem.windowRect.x : this.windowRect.x,
+            windowPosY = this.subElem ? this.subElem.windowRect.y : this.windowRect.y,
+            nodes = new List<XMLElement>(),
+            transitions = new List<XMLElement>(),
+            Id = this.identificator,
+            secondType = this.type.ToString()
+        };
+
+        return result;
+    }
 }

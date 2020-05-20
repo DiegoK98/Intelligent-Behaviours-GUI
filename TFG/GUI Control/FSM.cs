@@ -41,6 +41,11 @@ public class FSM : ClickableElement
             AddEntryState(node);
     }
 
+    public override XMLElement ToXMLElement()
+    {
+        return null;
+    }
+
     /// <summary>
     /// Gets the type of the element properly written
     /// </summary>
