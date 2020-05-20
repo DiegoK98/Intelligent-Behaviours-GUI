@@ -164,60 +164,71 @@ public class TransitionGUI : GUIElement
 
                         GUILayout.Space(5);
 
-                        List<ClickableElement> subFSMsList = sender.currentElem.GetSubElems();
+                        List<FSM> subFSMsList = sender.currentElem.GetSubElems().Where(e => e is FSM).Cast<FSM>().ToList();
 
                         GUI.enabled = subFSMsList.Count > 0;
-                        if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
+
+                        try
                         {
-                            GenericMenu toolsMenu = new GenericMenu();
-
-                            List<string> list = subFSMsList.Where(e => e is FSM).Select(e => e.elementName).ToList();
-                            list.Sort();
-
-                            foreach (string name in list)
-                            {
-                                toolsMenu.AddItem(new GUIContent(name), false, (current) =>
-                                {
-                                    if (((PerceptionGUI)current).elemName != name)
-                                    {
-                                        ((PerceptionGUI)current).elemName = name;
-                                        ((PerceptionGUI)current).stateName = "Select a State";
-                                    }
-                                }, currentPerception);
-                            }
-
-                            toolsMenu.DropDown(new Rect(0, 40, 0, 0));
-                            EditorGUIUtility.ExitGUI();
-                        }
-
-                        GUI.enabled = true;
-
-                        if (subFSMsList.Count > 0 && currentPerception.elemName != "Select a FSM" && currentPerception.elemName != "Select a BT" && !string.IsNullOrEmpty(currentPerception.elemName))
-                        {
-                            heightAcc += 30;
-
-                            GUILayout.Space(5);
-
-                            if (GUILayout.Button(currentPerception.stateName, EditorStyles.toolbarDropDown))
+                            if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
                             {
                                 GenericMenu toolsMenu = new GenericMenu();
 
-                                string auxName = currentPerception.elemName;
-                                List<string> list = subFSMsList.Where(e => e is FSM).Cast<FSM>().Where(e => e.elementName == auxName).FirstOrDefault().states.Select(s => s.nodeName).ToList();
+                                List<string> list = subFSMsList.Select(e => e.elementName).ToList();
                                 list.Sort();
 
                                 foreach (string name in list)
                                 {
                                     toolsMenu.AddItem(new GUIContent(name), false, (current) =>
                                     {
-                                        ((PerceptionGUI)current).stateName = name;
+                                        if (((PerceptionGUI)current).elemName != name)
+                                        {
+                                            ((PerceptionGUI)current).elemName = name;
+                                            ((PerceptionGUI)current).stateName = "Select a State";
+                                        }
                                     }, currentPerception);
                                 }
 
                                 toolsMenu.DropDown(new Rect(0, 40, 0, 0));
                                 EditorGUIUtility.ExitGUI();
                             }
+
+                            if (subFSMsList.Count > 0 && currentPerception.elemName != "Select a FSM" && currentPerception.elemName != "Select a BT" && !string.IsNullOrEmpty(currentPerception.elemName))
+                            {
+                                heightAcc += 30;
+
+                                GUILayout.Space(5);
+
+                                string auxName = currentPerception.elemName;
+                                List<StateNode> subStatesList = subFSMsList.Where(e => e.elementName == auxName).FirstOrDefault().states;
+
+                                GUI.enabled = subStatesList.Count > 0;
+
+                                if (GUILayout.Button(currentPerception.stateName, EditorStyles.toolbarDropDown))
+                                {
+                                    GenericMenu toolsMenu = new GenericMenu();
+
+                                    List<string> list = subStatesList.Select(s => s.nodeName).ToList();
+                                    list.Sort();
+
+                                    foreach (string name in list)
+                                    {
+                                        toolsMenu.AddItem(new GUIContent(name), false, (current) =>
+                                        {
+                                            ((PerceptionGUI)current).stateName = name;
+                                        }, currentPerception);
+                                    }
+
+                                    toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                                    EditorGUIUtility.ExitGUI();
+                                }
+                            }
                         }
+                        finally
+                        {
+                            GUI.enabled = true;
+                        }
+
                         break;
                     case perceptionType.BehaviourTreeStatus:
                         heightAcc += 30;
