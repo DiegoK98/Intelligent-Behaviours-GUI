@@ -11,6 +11,8 @@ public class PerceptionXML
 
     public int timerNumber;
 
+    public string customName;
+
     public string elemName;
 
     public string stateName;
@@ -29,6 +31,7 @@ public class PerceptionXML
         result.identificator = this.Id;
         result.type = this.type;
         result.timerNumber = this.timerNumber;
+        result.customName = this.customName;
         result.elemName = this.elemName;
         result.stateName = this.stateName;
         result.status = this.status;

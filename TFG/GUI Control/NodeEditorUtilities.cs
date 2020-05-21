@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,7 +55,7 @@ public class NodeEditorUtilities
 
         if (!string.IsNullOrEmpty(scriptPath))
         {
-            Object o = CreateScript(scriptPath, templatePath, elem);
+            UnityEngine.Object o = CreateScript(scriptPath, templatePath, elem);
             AssetDatabase.Refresh();
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
@@ -73,7 +74,7 @@ public class NodeEditorUtilities
 
         if (!string.IsNullOrEmpty(path))
         {
-            Object o = CreateXML(path, elem);
+            UnityEngine.Object o = CreateXML(path, elem);
             AssetDatabase.Refresh();
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
@@ -92,9 +93,11 @@ public class NodeEditorUtilities
     /// <summary>
     /// Creates Script from Template's path.
     /// </summary>
-    private static Object CreateScript(string pathName, string templatePath, ClickableElement elem)
+    private static UnityEngine.Object CreateScript(string pathName, string templatePath, object obj)
     {
         string templateText = string.Empty;
+
+        string folderPath = pathName.Substring(0, pathName.LastIndexOf("/") + 1);
 
         UTF8Encoding encoding = new UTF8Encoding(true, false);
 
@@ -105,32 +108,43 @@ public class NodeEditorUtilities
             templateText = reader.ReadToEnd();
             reader.Close();
 
-            // Replace the tags with the corresponding parts
-            List<ClickableElement> subElems = new List<ClickableElement>();
-
-            templateText = templateText.Replace("#SCRIPTNAME#", CleanName(elem.elementName));
-
-            switch (elem.GetType().ToString())
+            if (obj is ClickableElement)
             {
-                case nameof(FSM):
-                    templateText = templateText.Replace("#ENDING#", "_FSM");
-                    templateText = templateText.Replace("#FSMCREATE#", GetFSMCreate(elem, "_FSM", false, ref subElems));
-                    templateText = GetAllSubElemsRecursive(templateText, ref subElems);
-                    templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
-                    break;
-                case nameof(BehaviourTree):
-                    templateText = templateText.Replace("#ENDING#", "_BT");
-                    templateText = templateText.Replace("#BTCREATE#", GetBTCreate(elem, "_BT", false, ref subElems));
-                    templateText = GetAllSubElemsRecursive(templateText, ref subElems);
-                    templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
-                    break;
-            }
-            templateText = templateText.Replace("#ACTIONS#", GetMethods(elem));
+                ClickableElement elem = (ClickableElement)obj;
 
-            // SubFSM
-            templateText = templateText.Replace("#SUBELEM1#", GetSubElemDecl(elem, subElems));
-            templateText = templateText.Replace("#SUBELEM2#", GetSubElemInit(elem, subElems));
-            templateText = templateText.Replace("#SUBELEM3#", GetSubFSMUpdate(elem, subElems));
+                // Replace the tags with the corresponding parts
+                List<ClickableElement> subElems = new List<ClickableElement>();
+
+                templateText = templateText.Replace("#SCRIPTNAME#", CleanName(elem.elementName));
+
+                switch (elem.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        templateText = templateText.Replace("#ENDING#", "_FSM");
+                        templateText = templateText.Replace("#FSMCREATE#", GetFSMCreate(elem, "_FSM", false, ref subElems, folderPath));
+                        templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
+                        templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
+                        break;
+                    case nameof(BehaviourTree):
+                        templateText = templateText.Replace("#ENDING#", "_BT");
+                        templateText = templateText.Replace("#BTCREATE#", GetBTCreate(elem, "_BT", false, ref subElems));
+                        templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
+                        templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
+                        break;
+                }
+                templateText = templateText.Replace("#ACTIONS#", GetMethods(elem));
+
+                // SubFSM
+                templateText = templateText.Replace("#SUBELEM1#", GetSubElemDecl(elem, subElems));
+                templateText = templateText.Replace("#SUBELEM2#", GetSubElemInit(elem, subElems));
+                templateText = templateText.Replace("#SUBELEM3#", GetSubFSMUpdate(elem, subElems));
+            }
+            else if (obj is string)
+            {
+                string elemName = obj.ToString();
+
+                templateText = templateText.Replace("#CUSTOMNAME#", elemName);
+            }
 
             /// You can replace as many tags you make on your templates, just repeat Replace function
             /// e.g.:
@@ -142,7 +156,7 @@ public class NodeEditorUtilities
             writer.Close();
 
             AssetDatabase.ImportAsset(pathName);
-            return AssetDatabase.LoadAssetAtPath(pathName, typeof(Object));
+            return AssetDatabase.LoadAssetAtPath(pathName, typeof(UnityEngine.Object));
         }
         else
         {
@@ -154,7 +168,7 @@ public class NodeEditorUtilities
     /// <summary>
     /// Creates XML object and serializes it to a file.
     /// </summary>
-    private static Object CreateXML(string pathName, ClickableElement elem)
+    private static UnityEngine.Object CreateXML(string pathName, ClickableElement elem)
     {
         var data = elem.ToXMLElement();
 
@@ -215,19 +229,19 @@ public class NodeEditorUtilities
         return result;
     }
 
-    private static string GetAllSubElemsRecursive(string templateText, ref List<ClickableElement> subElems)
+    private static string GetAllSubElemsRecursive(string templateText, ref List<ClickableElement> subElems, string folderPath = null)
     {
         List<ClickableElement> subElemsCopy = new List<ClickableElement>();
         foreach (ClickableElement sub in subElems)
         {
             if (sub is FSM)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetFSMCreate(sub, subFSMEnding, true, ref subElemsCopy));
+                templateText = templateText.Replace("#SUBELEMCREATE#", GetFSMCreate(sub, subFSMEnding, true, ref subElemsCopy, folderPath));
             if (sub is BehaviourTree)
                 templateText = templateText.Replace("#SUBELEMCREATE#", GetBTCreate(sub, subBtEnding, true, ref subElemsCopy));
         }
         if (subElemsCopy.Count > 0)
         {
-            templateText = GetAllSubElemsRecursive(templateText, ref subElemsCopy);
+            templateText = GetAllSubElemsRecursive(templateText, ref subElemsCopy, folderPath);
             subElems.AddRange(subElemsCopy);
         }
 
@@ -265,7 +279,7 @@ public class NodeEditorUtilities
         return result;
     }
 
-    private static string GetFSMCreate(ClickableElement elem, string engineEnding, bool isSub, ref List<ClickableElement> subElems)
+    private static string GetFSMCreate(ClickableElement elem, string engineEnding, bool isSub, ref List<ClickableElement> subElems, string folderPath = null)
     {
         string className = CleanName(elem.elementName);
         string machineName = className + engineEnding;
@@ -287,7 +301,7 @@ public class NodeEditorUtilities
         if (isSub)
             templateSub += "#SUBELEMCREATE#";
 
-        templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding));
+        templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding, folderPath));
         templateSub = templateSub.Replace("#STATES#", GetStates(elem, engineEnding, ref subElems));
         templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
 
@@ -337,7 +351,7 @@ public class NodeEditorUtilities
     }
 
     #region FSM
-    private static string GetPerceptions(ClickableElement elem, string engineEnding)
+    private static string GetPerceptions(ClickableElement elem, string engineEnding, string folderPath = null)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -346,7 +360,105 @@ public class NodeEditorUtilities
         foreach (TransitionGUI transition in ((FSM)elem).transitions)
         {
             string transitionName = CleanName(transition.transitionName);
-            result += "Perception " + transitionName + "Perception = " + machineName + ".CreatePerception<PushPerception>();\n" + tab + tab;
+
+            result += RecursivePerceptionsCode(transition.rootPerception, transitionName, machineName, folderPath);
+        }
+
+        return result;
+    }
+
+    private static string RecursivePerceptionsCode(PerceptionGUI perception, string transitionName, string machineName, string folderPath)
+    {
+        string res = "";
+        string auxAndOr = "";
+
+        if (perception.type == perceptionType.And || perception.type == perceptionType.Or)
+        {
+            auxAndOr = perception.type.ToString();
+            res += RecursivePerceptionsCode(perception.firstChild, transitionName, machineName, folderPath);
+            res += RecursivePerceptionsCode(perception.secondChild, transitionName, machineName, folderPath);
+        }
+
+        string typeName;
+        if (perception.type == perceptionType.Custom)
+        {
+            typeName = perception.customName;
+
+            string scriptName = typeName + "Perception.cs";
+
+            // Generate the script for the custom perception if it doesn't exist already
+
+            string[] assets = AssetDatabase.FindAssets(scriptName);
+            if (assets.Length == 0)
+            {
+                string path = "CustomPerception_Template.cs";
+
+                string[] guids = AssetDatabase.FindAssets(path);
+                if (guids.Length == 0)
+                {
+                    Debug.LogWarning(path + ".txt not found in asset database");
+                }
+                else
+                {
+                    string templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    UnityEngine.Object o = CreateScript(folderPath + scriptName, templatePath, typeName);
+                }
+            }
+        }
+        else
+        {
+            typeName = perception.type.ToString();
+        }
+
+        string perceptionName = transitionName + "_" + typeName + "Perception";
+        res += "Perception " + perceptionName + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception, transitionName) + ");\n" + tab + tab;
+
+        return res;
+    }
+
+    private static string GetPerceptionParameters(PerceptionGUI perception, string transitionName)
+    {
+        string result = "";
+
+        switch (perception.type)
+        {
+            case perceptionType.Timer:
+                result = perception.timerNumber.ToString();
+                break;
+            case perceptionType.IsInState:
+                result = CleanName(perception.elemName) + subFSMEnding + ", " + "\"" + perception.stateName + "\"";
+                break;
+            case perceptionType.BehaviourTreeStatus:
+                result = CleanName(perception.elemName) + subBtEnding + ", " + "ReturnValues." + perception.status.ToString();
+                break;
+            case perceptionType.And:
+            case perceptionType.Or:
+                //First child
+                string firstChildTypeName;
+
+                if (perception.firstChild.type == perceptionType.Custom)
+                {
+                    firstChildTypeName = perception.firstChild.customName;
+                }
+                else
+                {
+                    firstChildTypeName = perception.firstChild.type.ToString();
+                }
+
+                //Second child
+                string secondChildTypeName;
+
+                if (perception.secondChild.type == perceptionType.Custom)
+                {
+                    secondChildTypeName = perception.secondChild.customName;
+                }
+                else
+                {
+                    secondChildTypeName = perception.secondChild.type.ToString();
+                }
+
+                result = transitionName + "_" + firstChildTypeName + "Perception, " + transitionName + "_" + secondChildTypeName + "Perception";
+                break;
         }
 
         return result;
@@ -396,13 +508,25 @@ public class NodeEditorUtilities
             string transitionName = CleanName(transition.transitionName);
             string fromNodeName = CleanName(transition.fromNode.nodeName);
             string toNodeName = CleanName(transition.toNode.nodeName);
-            if (((StateNode)transition.fromNode).subElem != null)
+
+            string typeName = "";
+
+            if (transition.rootPerception.type == perceptionType.Custom)
             {
-                result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "Perception, " + toNodeName + ");";
+                typeName = transition.rootPerception.customName;
             }
             else
             {
-                result += "\n" + tab + tab + machineName + ".CreateTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "Perception, " + toNodeName + ");";
+                typeName = transition.rootPerception.type.ToString();
+            }
+
+            if (((StateNode)transition.fromNode).subElem != null)
+            {
+                result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "_" + typeName + "Perception, " + toNodeName + ");";
+            }
+            else
+            {
+                result += "\n" + tab + tab + machineName + ".CreateTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "_" + typeName + "Perception, " + toNodeName + ");";
             }
         }
 

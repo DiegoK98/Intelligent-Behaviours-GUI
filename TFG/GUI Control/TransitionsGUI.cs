@@ -158,14 +158,13 @@ public class TransitionGUI : GUIElement
                                 alignment = TextAnchor.MiddleCenter
                             }, GUILayout.Height(20), GUILayout.Width(width * 0.5f));
 
-                            int aux;
 
                             int.TryParse(GUILayout.TextField(currentPerception.timerNumber.ToString(), new GUIStyle(Styles.TitleText)
                             {
                                 alignment = TextAnchor.MiddleCenter
-                            }, GUILayout.Height(20), GUILayout.Width(20)), out aux);
+                            }, GUILayout.Height(20), GUILayout.Width(20)), out int number);
 
-                            currentPerception.timerNumber = aux;
+                            currentPerception.timerNumber = number;
                         }
                         finally
                         {
@@ -219,7 +218,6 @@ public class TransitionGUI : GUIElement
                                 string auxName = currentPerception.elemName;
 
                                 FSM selectedFSM = subFSMsList.Where(e => e.elementName == auxName).FirstOrDefault();
-
                                 List<StateNode> subStatesList = selectedFSM ? selectedFSM.states.Where(s => s.subElem == null).ToList() : new List<StateNode>();
 
                                 GUI.enabled = subStatesList.Count > 0;
@@ -322,7 +320,30 @@ public class TransitionGUI : GUIElement
                         PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild, sender);
                         break;
                     case perceptionType.Custom:
-                        heightAcc += 50;
+                        heightAcc += 70;
+                        widthAcc += 30;
+
+                        GUILayout.BeginHorizontal();
+                        try
+                        {
+                            GUILayout.Label("Name: ", new GUIStyle(Styles.TitleText)
+                            {
+                                alignment = TextAnchor.MiddleCenter
+                            }, GUILayout.Height(20), GUILayout.Width(width * 0.3f));
+
+
+                            string name = GUILayout.TextField(currentPerception.customName, new GUIStyle(Styles.TitleText)
+                            {
+                                alignment = TextAnchor.MiddleCenter
+                            }, GUILayout.Height(20), GUILayout.Width(100));
+
+                            currentPerception.customName = name;
+                        }
+                        finally
+                        {
+                            GUILayout.EndHorizontal();
+                        }
+
                         GUILayout.Label("You will have to code\nthe Check method\nin the generated script", new GUIStyle(Styles.SubTitleText)
                         {
                             fontStyle = FontStyle.Italic

@@ -13,6 +13,8 @@ public class PerceptionGUI : GUIElement
 
     public string elemName;
 
+    public string customName;
+
     public string stateName;
 
     public ReturnValues status;
@@ -54,6 +56,7 @@ public class PerceptionGUI : GUIElement
         this.type = type;
 
         timerNumber = 0;
+        customName = "CustomName";
         openFoldout = false;
 
         if (type == perceptionType.IsInState)
@@ -94,6 +97,7 @@ public class PerceptionGUI : GUIElement
             Id = this.identificator,
             type = this.type,
             timerNumber = this.timerNumber,
+            customName = this.customName,
             elemName = this.elemName,
             stateName = this.stateName,
             status = this.status,
