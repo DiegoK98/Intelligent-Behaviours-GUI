@@ -217,7 +217,10 @@ public class TransitionGUI : GUIElement
                                 GUILayout.Space(5);
 
                                 string auxName = currentPerception.elemName;
-                                List<StateNode> subStatesList = subFSMsList.Where(e => e.elementName == auxName).FirstOrDefault().states;
+
+                                FSM selectedFSM = subFSMsList.Where(e => e.elementName == auxName).FirstOrDefault();
+
+                                List<StateNode> subStatesList = selectedFSM ? selectedFSM.states.Where(s => s.subElem == null).ToList() : new List<StateNode>();
 
                                 GUI.enabled = subStatesList.Count > 0;
 
