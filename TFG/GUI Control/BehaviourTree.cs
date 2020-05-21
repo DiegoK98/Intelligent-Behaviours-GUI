@@ -28,9 +28,22 @@ public class BehaviourTree : ClickableElement
         windowRect = new Rect(posx, posy, width, height);
     }
 
-    public override XMLElement ToXMLElement()
+    public override XMLElement ToXMLElement(params object[] args)
     {
-        return null;
+        XMLElement result = new XMLElement
+        {
+            name = CleanName(this.elementName),
+            elemType = this.GetType().ToString(),
+            windowPosX = this.windowRect.x,
+            windowPosY = this.windowRect.y,
+            nodes = nodes.FindAll(o => o.isRootNode).ConvertAll((rootNode) =>
+            {
+                return rootNode.ToXMLElement(this);
+            }),
+            Id = this.identificator
+        };
+
+        return result;
     }
 
     /// <summary>

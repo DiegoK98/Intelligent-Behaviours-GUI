@@ -108,7 +108,7 @@ public class PerceptionGUI : GUIElement
         return result;
     }
 
-    public override XMLElement ToXMLElement()
+    public override XMLElement ToXMLElement(params object[] args)
     {
         throw new NotImplementedException();
     }

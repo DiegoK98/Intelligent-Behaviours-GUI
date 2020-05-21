@@ -41,9 +41,26 @@ public class FSM : ClickableElement
             AddEntryState(node);
     }
 
-    public override XMLElement ToXMLElement()
+    public override XMLElement ToXMLElement(params object[] args)
     {
-        return null;
+        XMLElement result = new XMLElement
+        {
+            name = CleanName(this.elementName),
+            elemType = this.GetType().ToString(),
+            windowPosX = this.windowRect.x,
+            windowPosY = this.windowRect.y,
+            nodes = states.ConvertAll((node) =>
+            {
+                return node.ToXMLElement();
+            }),
+            transitions = transitions.ConvertAll((trans) =>
+            {
+                return trans.ToXMLElement();
+            }),
+            Id = this.identificator
+        };
+
+        return result;
     }
 
     /// <summary>
@@ -78,7 +95,7 @@ public class FSM : ClickableElement
     /// <param name="node"></param>
     public void AddEntryState(StateNode node)
     {
-        node.type = StateNode.stateType.Entry;
+        node.type = stateType.Entry;
         states.Add(node);
         EntryState = node;
     }
@@ -90,9 +107,9 @@ public class FSM : ClickableElement
     public void SetAsEntry(StateNode node)
     {
         //Previous Entry Node set to Unconnected
-        EntryState.type = StateNode.stateType.Unconnected;
+        EntryState.type = stateType.Unconnected;
 
-        node.type = StateNode.stateType.Entry;
+        node.type = stateType.Entry;
         EntryState = node;
 
         CheckConnected();
@@ -123,7 +140,7 @@ public class FSM : ClickableElement
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-            if(transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
+            if (transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
             {
                 hasCouple = true;
             }
@@ -178,17 +195,17 @@ public class FSM : ClickableElement
         {
             baseNode = EntryState;
 
-            foreach (StateNode elem in states.FindAll(o => o.type != StateNode.stateType.Entry))
+            foreach (StateNode elem in states.FindAll(o => o.type != stateType.Entry))
             {
-                elem.type = StateNode.stateType.Unconnected;
+                elem.type = stateType.Unconnected;
             }
 
             if (!states.Contains(baseNode))
                 return;
         }
-        else if (baseNode.type == StateNode.stateType.Unconnected)
+        else if (baseNode.type == stateType.Unconnected)
         {
-            baseNode.type = StateNode.stateType.Default;
+            baseNode.type = stateType.Default;
         }
         else
         {

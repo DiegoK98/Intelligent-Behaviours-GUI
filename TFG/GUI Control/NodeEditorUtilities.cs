@@ -156,7 +156,7 @@ public class NodeEditorUtilities
     /// </summary>
     private static Object CreateXML(string pathName, ClickableElement elem)
     {
-        var data = CreateXMLElement(elem, elem.elementName, elem.windowRect.position.x, elem.windowRect.position.y);
+        var data = elem.ToXMLElement();
 
         // Serialize to XML
         using (var stream = new FileStream(pathName, FileMode.Create))
@@ -183,80 +183,6 @@ public class NodeEditorUtilities
         FileStream fs = new FileStream(fileName, FileMode.Open);
 
         return (XMLElement)serial.Deserialize(fs);
-    }
-
-    private static XMLElement CreateXMLElement(GUIElement elem, string elementName, float xPos, float yPos, string parentId = "", BehaviourTree parentTree = null)
-    {
-        GUIElement originalElem = elem;
-
-        switch (elem.GetType().ToString())
-        {
-            case nameof(StateNode):
-                if (((StateNode)elem).subElem != null)
-                    elem = ((StateNode)elem).subElem;
-                break;
-            case nameof(BehaviourNode):
-                if (((BehaviourNode)elem).subElem != null)
-                    elem = ((BehaviourNode)elem).subElem;
-                break;
-        }
-        var result = new XMLElement
-        {
-            name = CleanName(elementName),
-            elemType = elem.GetType().ToString(),
-            windowPosX = xPos,
-            windowPosY = yPos,
-            nodes = new List<XMLElement>(),
-            transitions = new List<XMLElement>()
-        };
-
-        switch (result.elemType)
-        {
-            case nameof(FSM):
-                result.Id = originalElem.identificator;
-
-                foreach (StateNode node in ((FSM)elem).states)
-                {
-                    XMLElement elemNode = node.ToXMLElement();
-
-                    result.nodes.Add(elemNode);
-                }
-
-                foreach (TransitionGUI transition in ((FSM)elem).transitions)
-                {
-                    XMLElement trans = transition.ToXMLElement();
-                    result.transitions.Add(trans);
-                }
-                break;
-            case nameof(BehaviourTree):
-                result.Id = originalElem.identificator;
-
-                foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRootNode))
-                {
-                    XMLElement elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, elem.identificator, (BehaviourTree)elem);
-                    elemNode.secondType = node.type.ToString();
-
-                    result.nodes.Add(elemNode);
-                }
-                break;
-            case nameof(BehaviourNode):
-                result.Id = originalElem.identificator;
-                result.NProperty = ((BehaviourNode)elem).NProperty;
-
-                foreach (BehaviourNode node in parentTree.connections.FindAll(o => o.fromNode.Equals(elem)).Select(o => o.toNode))
-                {
-                    XMLElement elemNode;
-                    if (node.subElem == null)
-                        elemNode = CreateXMLElement(node, node.nodeName, node.windowRect.position.x, node.windowRect.position.y, parentId, parentTree);
-                    else
-                        elemNode = CreateXMLElement(node, node.subElem.elementName, node.subElem.windowRect.position.x, node.subElem.windowRect.position.y, parentId, parentTree);
-                    elemNode.secondType = node.type.ToString();
-                    result.nodes.Add(elemNode);
-                }
-                break;
-        }
-
-        return result;
     }
 
     private static void UnknownNode(object sender, XmlNodeEventArgs e)
@@ -446,7 +372,7 @@ public class NodeEditorUtilities
                 subElems.Add(node.subElem);
 
             }
-            else if (node.type == StateNode.stateType.Entry)
+            else if (node.type == stateType.Entry)
             {
                 result += "State " + nodeName + " = " + machineName + ".CreateEntryState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
             }

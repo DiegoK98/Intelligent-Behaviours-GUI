@@ -1013,11 +1013,23 @@ public class NodeEditor : EditorWindow
         {
             var currentBackup = currentElem;
 
+            ClickableElement newElem;
             switch (loadedXML.elemType)
             {
                 case nameof(FSM):
+                    newElem = loadedXML.ToFSM(currentElem);
+                    newElem.windowRect.x = mousePos.x;
+                    newElem.windowRect.y = mousePos.y;
+                    Elements.Add(newElem);
+                    break;
                 case nameof(BehaviourTree):
-                    PasteElem(mousePos.x, mousePos.y, loadedXML);
+                    newElem = loadedXML.ToBehaviourTree(currentElem);
+                    newElem.windowRect.x = mousePos.x;
+                    newElem.windowRect.y = mousePos.y;
+                    Elements.Add(newElem);
+                    break;
+                default:
+                    Debug.LogError("Wrong content in saved data");
                     break;
             }
 
@@ -1178,158 +1190,6 @@ public class NodeEditor : EditorWindow
         // Draw arrow
         Handles.DrawBezier(pos1, endPos, pos1, endPos, Color.black, null, 1);
         Handles.DrawBezier(pos2, endPos, pos2, endPos, Color.black, null, 1);
-    }
-
-    private void PasteElem(float posX, float posY, XMLElement elem)
-    {
-        ClickableElement newElem;
-
-        switch (elem.elemType)
-        {
-            case nameof(FSM):
-                newElem = CreateInstance<FSM>();
-                ((FSM)newElem).InitFSM(null, currentElem, posX, posY);
-                break;
-            case nameof(BehaviourTree):
-                newElem = CreateInstance<BehaviourTree>();
-                ((BehaviourTree)newElem).InitBehaviourTree(currentElem, posX, posY);
-                break;
-            default:
-                newElem = null;
-                break;
-        }
-
-        if (newElem != null)
-        {
-            newElem.identificator = elem.Id;
-            newElem.elementName = elem.name;
-
-            if (currentElem is null)
-            {
-                Elements.Add(newElem);
-            }
-
-            if (currentElem is FSM)
-            {
-                StateNode node = CreateInstance<StateNode>();
-                node.InitStateNode(2, newElem.windowRect.position.x, newElem.windowRect.position.y, newElem);
-                node.identificator = elem.Id;
-
-                if (elem.secondType.Equals(StateNode.stateType.Entry.ToString()))
-                {
-                    ((FSM)currentElem).AddEntryState(node);
-                }
-                else
-                {
-                    ((FSM)currentElem).states.Add(node);
-                }
-            }
-
-            if (currentElem is BehaviourTree)
-            {
-                BehaviourNode node = CreateInstance<BehaviourNode>();
-                node.InitBehaviourNode(2, newElem.windowRect.x, newElem.windowRect.y, newElem);
-
-                ((BehaviourTree)currentElem).nodes.Add(node);
-
-                if (selectednode != null)
-                {
-                    TransitionGUI transition = CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI("", selectednode, node);
-
-                    ((BehaviourTree)currentElem).connections.Add(transition);
-
-                    selectednode = node;
-                }
-            }
-
-            foreach (XMLElement node in elem.nodes)
-            {
-                currentElem = newElem;
-
-                // WIP
-                switch (node.elemType)
-                {
-                    case nameof(FSM):
-                    case nameof(BehaviourTree):
-                        PasteElem(node.windowPosX, node.windowPosY, node);
-                        break;
-                    case nameof(StateNode):
-                        StateNode state = CreateInstance<StateNode>();
-                        state.InitStateNode(2, node.windowPosX, node.windowPosY);
-                        state.identificator = node.Id;
-                        state.nodeName = node.name;
-
-                        if (node.secondType.Equals(StateNode.stateType.Entry.ToString()))
-                        {
-                            ((FSM)currentElem).AddEntryState(state);
-                        }
-                        else
-                        {
-                            ((FSM)currentElem).states.Add(state);
-                        }
-                        break;
-                    case nameof(BehaviourNode):
-                        PasteTreeNode(node, true, (BehaviourTree)currentElem);
-                        break;
-                    default:
-                        Debug.LogError("Wrong content in saved data");
-                        break;
-                }
-            }
-
-            foreach (XMLElement trans in elem.transitions)
-            {
-                BaseNode node1 = ((FSM)newElem).states.Where(n => n.identificator == trans.fromId).FirstOrDefault();
-                BaseNode node2 = ((FSM)newElem).states.Where(n => n.identificator == trans.toId).FirstOrDefault();
-                ((FSM)newElem).AddTransition(trans.ToTransitionGUI(node1, node2));
-            }
-        }
-        else
-        {
-            Debug.LogError("Wrong content in saved data");
-        }
-    }
-
-    private void PasteTreeNode(XMLElement state, bool isRoot, BehaviourTree currentTree)
-    {
-        switch (state.elemType)
-        {
-            case nameof(FSM):
-            case nameof(BehaviourTree):
-                PasteElem(state.windowPosX, state.windowPosY, state);
-                break;
-            case nameof(BehaviourNode):
-                BehaviourNode nodeBT = CreateInstance<BehaviourNode>();
-                nodeBT.InitBehaviourNode((int)Enum.Parse(typeof(BehaviourNode.behaviourType), state.secondType), state.windowPosX, state.windowPosY);
-                nodeBT.nodeName = state.name;
-                nodeBT.NProperty = state.NProperty;
-
-                currentTree.nodes.Add(nodeBT);
-
-                if (!isRoot)
-                {
-                    TransitionGUI transition = CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI("", selectednode, nodeBT);
-
-                    currentTree.connections.Add(transition);
-                }
-                else
-                {
-                    nodeBT.isRootNode = true;
-                }
-
-                foreach (XMLElement childState in state.nodes)
-                {
-                    selectednode = nodeBT;
-
-                    PasteTreeNode(childState, false, currentTree);
-                }
-                break;
-            default:
-                Debug.LogError("Wrong content in saved data");
-                break;
-        }
     }
 
     /// <summary>

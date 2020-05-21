@@ -49,7 +49,7 @@ public class TransitionGUI : GUIElement
         rootPerception.InitPerceptionGUI(perceptionType.Push);
     }
 
-    public override XMLElement ToXMLElement()
+    public override XMLElement ToXMLElement(params object[] args)
     {
         XMLElement result = new XMLElement
         {

@@ -9,6 +9,13 @@ public enum Errors
     RepeatedName = 2
 }
 
+public enum stateType
+{
+    Default,
+    Entry,
+    Unconnected
+}
+
 public enum perceptionType
 {
     Push,

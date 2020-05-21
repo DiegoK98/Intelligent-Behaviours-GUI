@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
+using System.Linq;
 
 public class BehaviourNode : BaseNode
 {
@@ -64,20 +65,33 @@ public class BehaviourNode : BaseNode
         }
     }
 
-    // Unused
-    public override XMLElement ToXMLElement()
+    public override XMLElement ToXMLElement(params object[] args)
     {
-        XMLElement result = new XMLElement
+        BehaviourTree parentTree = (BehaviourTree)args[0];
+
+        XMLElement result;
+        if (this.subElem)
         {
-            name = this.subElem ? CleanName(this.subElem.elementName) : CleanName(this.nodeName),
-            elemType = this.subElem ? this.subElem.GetType().ToString() : this.GetType().ToString(),
-            windowPosX = this.subElem ? this.subElem.windowRect.x : this.windowRect.x,
-            windowPosY = this.subElem ? this.subElem.windowRect.y : this.windowRect.y,
-            nodes = new List<XMLElement>(),
-            transitions = new List<XMLElement>(),
-            Id = this.identificator,
-            secondType = this.type.ToString()
-        };
+            result = this.subElem.ToXMLElement();
+        }
+        else
+        {
+            result = new XMLElement
+            {
+                name = CleanName(this.nodeName),
+                elemType = this.GetType().ToString(),
+                windowPosX = this.windowRect.x,
+                windowPosY = this.windowRect.y,
+                NProperty = this.NProperty,
+                nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
+                {
+                    return node.ToXMLElement(parentTree);
+                }),
+            };
+        }
+
+        result.Id = this.identificator;
+        result.secondType = this.type.ToString();
 
         return result;
     }
