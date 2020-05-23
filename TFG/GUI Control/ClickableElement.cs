@@ -23,6 +23,11 @@ public abstract class ClickableElement : GUIElement
 
     public ClickableElement parent;
 
+    public void InitClickableElement()
+    {
+        identificator = UniqueID();
+    }
+
     /// <summary>
     /// Draws all the elements inside the Element window
     /// </summary>

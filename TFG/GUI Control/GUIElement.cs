@@ -7,6 +7,8 @@ public abstract class GUIElement : ScriptableObject
 {
     public bool isFocused = false;
 
+    internal static UniqueNamer uniqueNamer;
+
     public string identificator { get; set; }
 
     /// <summary>

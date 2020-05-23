@@ -130,7 +130,7 @@ public class XMLElement
             if (selectedNode != null)
             {
                 TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                transition.InitTransitionGUI("", selectedNode, node);
+                transition.InitTransitionGUI(selectedNode, node);
 
                 ((BehaviourTree)parent).connections.Add(transition);
 
@@ -195,7 +195,7 @@ public class XMLElement
             if (selectedNode != null)
             {
                 TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                transition.InitTransitionGUI("", selectedNode, node);
+                transition.InitTransitionGUI(selectedNode, node);
 
                 ((BehaviourTree)parent).connections.Add(transition);
 
@@ -227,7 +227,7 @@ public class XMLElement
                 if (selectedNode)
                 {
                     TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI("", selectedNode, nodeBT);
+                    transition.InitTransitionGUI(selectedNode, nodeBT);
 
                     currentTree.connections.Add(transition);
                 }

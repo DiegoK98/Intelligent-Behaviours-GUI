@@ -9,8 +9,6 @@ public class BehaviourTree : ClickableElement
 
     public List<TransitionGUI> connections = new List<TransitionGUI>();
 
-    static int uniqueNameID = 0;
-
     /// <summary>
     /// The BehaviourTree
     /// </summary>
@@ -19,11 +17,11 @@ public class BehaviourTree : ClickableElement
     /// <param name="posy"></param>
     public void InitBehaviourTree(ClickableElement parent, float posx, float posy)
     {
-        this.parent = parent;
+        InitClickableElement();
 
+        this.parent = parent;
         type = elementType.BT;
-        elementName = "New BT " + uniqueNameID++;
-        identificator = UniqueID();
+        elementName = uniqueNamer.GenerateUniqueName(identificator, "New BT ");
 
         windowRect = new Rect(posx, posy, width, height);
     }
@@ -103,6 +101,11 @@ public class BehaviourTree : ClickableElement
         {
             connections.Remove(transition);
         }
+
+        if (node.subElem == null)
+            uniqueNamer.RemoveName(node.identificator);
+        else
+            uniqueNamer.RemoveName(node.subElem.identificator);
     }
 
     /// <summary>
@@ -112,6 +115,8 @@ public class BehaviourTree : ClickableElement
     public void DeleteConnection(TransitionGUI deletedTrans)
     {
         connections.Remove(deletedTrans);
+
+        uniqueNamer.RemoveName(deletedTrans.identificator);
     }
 
     /// <summary>

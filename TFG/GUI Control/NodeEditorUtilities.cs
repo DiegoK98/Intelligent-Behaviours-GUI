@@ -23,11 +23,15 @@ public class NodeEditorUtilities
     static readonly string savesFolderName = "Intelligent Behaviours Saves";
     static readonly string scriptsFolderName = "Intelligent Behaviours Scripts";
 
+    static UniqueNamer uniqueNamer;
+
     /// <summary>
     /// Generates a new C# script for an element.
     /// </summary>
     public static void GenerateElemScript(ClickableElement elem)
     {
+        uniqueNamer = ScriptableObject.CreateInstance<UniqueNamer>();
+
         string path = "none";
 
         switch (elem.GetType().ToString())
@@ -410,8 +414,8 @@ public class NodeEditorUtilities
             typeName = perception.type.ToString();
         }
 
-        string perceptionName = transitionName + "_" + typeName + "Perception";
-        res += "Perception " + perceptionName + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception, transitionName) + ");\n" + tab + tab;
+        uniqueNamer.AddName(perception.identificator, transitionName + "_" + typeName + "Perception");
+        res += "Perception " + uniqueNamer.GetName(perception.identificator) + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception, transitionName) + ");\n" + tab + tab;
 
         return res;
     }
@@ -433,31 +437,7 @@ public class NodeEditorUtilities
                 break;
             case perceptionType.And:
             case perceptionType.Or:
-                //First child
-                string firstChildTypeName;
-
-                if (perception.firstChild.type == perceptionType.Custom)
-                {
-                    firstChildTypeName = perception.firstChild.customName;
-                }
-                else
-                {
-                    firstChildTypeName = perception.firstChild.type.ToString();
-                }
-
-                //Second child
-                string secondChildTypeName;
-
-                if (perception.secondChild.type == perceptionType.Custom)
-                {
-                    secondChildTypeName = perception.secondChild.customName;
-                }
-                else
-                {
-                    secondChildTypeName = perception.secondChild.type.ToString();
-                }
-
-                result = transitionName + "_" + firstChildTypeName + "Perception, " + transitionName + "_" + secondChildTypeName + "Perception";
+                result = uniqueNamer.GetName(perception.firstChild.identificator) + ", " + uniqueNamer.GetName(perception.secondChild.identificator);
                 break;
         }
 
@@ -522,11 +502,11 @@ public class NodeEditorUtilities
 
             if (((StateNode)transition.fromNode).subElem != null)
             {
-                result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "_" + typeName + "Perception, " + toNodeName + ");";
+                result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
             }
             else
             {
-                result += "\n" + tab + tab + machineName + ".CreateTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + transitionName + "_" + typeName + "Perception, " + toNodeName + ");";
+                result += "\n" + tab + tab + machineName + ".CreateTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
             }
         }
 

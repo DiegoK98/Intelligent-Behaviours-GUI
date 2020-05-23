@@ -24,8 +24,6 @@ public class BehaviourNode : BaseNode
 
     public behaviourType type;
 
-    static int uniqueNameID = 0;
-
     public bool isRootNode { get; set; } = false;
 
     /// <summary>
@@ -60,7 +58,7 @@ public class BehaviourNode : BaseNode
         }
         else
         {
-            nodeName = "New " + type + " Node " + uniqueNameID++;
+            nodeName = uniqueNamer.GenerateUniqueName(identificator, "New " + type + " Node ");
             windowRect = new Rect(posx, posy, width, height);
         }
     }

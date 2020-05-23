@@ -12,8 +12,6 @@ public class StateNode : BaseNode
 
     public List<TransitionGUI> nodeTransitions = new List<TransitionGUI>();
 
-    static int uniqueNameID = 0;
-
     /// <summary>
     /// The InitStateNode
     /// </summary>
@@ -32,7 +30,7 @@ public class StateNode : BaseNode
         }
         else
         {
-            nodeName = "New State " + uniqueNameID++;
+            nodeName = uniqueNamer.GenerateUniqueName(identificator, "New State ");
             windowRect = new Rect(posx, posy, width, height);
         }
 

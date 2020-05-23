@@ -47,6 +47,9 @@ public class NodeEditor : EditorWindow
 
         // Open a new Editor Window
         GetWindow<NodeEditor>();
+
+        // Reset the namer
+        GUIElement.uniqueNamer = CreateInstance<UniqueNamer>();
     }
 
     /// <summary>
@@ -298,7 +301,7 @@ public class NodeEditor : EditorWindow
                         if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
                         {
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
-                            transition.InitTransitionGUI("New Transition " + ((FSM)currentElem).transitions.Count, selectednode, ((FSM)currentElem).states[selectIndex]);
+                            transition.InitTransitionGUI(selectednode, ((FSM)currentElem).states[selectIndex]);
 
                             ((FSM)currentElem).AddTransition(transition);
                         }
@@ -324,7 +327,7 @@ public class NodeEditor : EditorWindow
                         ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)toCreateNode);
 
                         TransitionGUI transition = CreateInstance<TransitionGUI>();
-                        transition.InitTransitionGUI("", selectednode, toCreateNode);
+                        transition.InitTransitionGUI(selectednode, toCreateNode);
 
                         ((BehaviourTree)currentElem).connections.Add(transition);
 
@@ -339,7 +342,7 @@ public class NodeEditor : EditorWindow
                         if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck(selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == BehaviourNode.behaviourType.Leaf))
                         {
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
-                            transition.InitTransitionGUI("", ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
+                            transition.InitTransitionGUI(((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
                             ((BehaviourTree)currentElem).connections.Add(transition);
 
                             ((BehaviourNode)selectednode).isRootNode = false;
@@ -1070,12 +1073,16 @@ public class NodeEditor : EditorWindow
                 FSM fsm = (FSM)elem;
                 Elements.Remove(fsm);
 
+                GUIElement.uniqueNamer.RemoveName(fsm.identificator);
+
                 focusedObj = null;
                 break;
 
             case nameof(BehaviourTree):
                 BehaviourTree bt = (BehaviourTree)elem;
                 Elements.Remove(bt);
+
+                GUIElement.uniqueNamer.RemoveName(bt.identificator);
 
                 focusedObj = null;
                 break;

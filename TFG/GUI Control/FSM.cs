@@ -11,8 +11,6 @@ public class FSM : ClickableElement
 
     public List<TransitionGUI> transitions = new List<TransitionGUI>();
 
-    public static int uniqueNameID = 0;
-
     public bool hasEntryState
     {
         get
@@ -30,10 +28,10 @@ public class FSM : ClickableElement
     /// <param name="posy"></param>
     public void InitFSM(StateNode node, ClickableElement parent, float posx, float posy)
     {
-        this.parent = parent;
+        InitClickableElement();
 
-        elementName = "New FSM " + uniqueNameID++;
-        identificator = UniqueID();
+        this.parent = parent;
+        elementName = uniqueNamer.GenerateUniqueName(identificator, "New FSM ");
         type = elementType.FSM;
         windowRect = new Rect(posx, posy, width, height);
 
@@ -167,6 +165,11 @@ public class FSM : ClickableElement
         {
             n.NodeDeleted(node);
         }
+
+        if (node.subElem == null)
+            uniqueNamer.RemoveName(node.identificator);
+        else
+            uniqueNamer.RemoveName(node.subElem.identificator);
     }
 
     /// <summary>
@@ -183,6 +186,8 @@ public class FSM : ClickableElement
         }
 
         CheckConnected();
+
+        uniqueNamer.RemoveName(deletedTrans.identificator);
     }
 
     /// <summary>
