@@ -44,7 +44,7 @@ public class BehaviourNode : BaseNode
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitBehaviourNode(int typeNumber, float posx, float posy, ClickableElement subElem = null)
+    public void InitBehaviourNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode();
 
@@ -58,7 +58,7 @@ public class BehaviourNode : BaseNode
         }
         else
         {
-            nodeName = uniqueNamer.GenerateUniqueName(identificator, "New " + type + " Node ");
+            nodeName = parent.elementNamer.GenerateUniqueName(identificator, "New " + type + " Node ");
             windowRect = new Rect(posx, posy, width, height);
         }
     }

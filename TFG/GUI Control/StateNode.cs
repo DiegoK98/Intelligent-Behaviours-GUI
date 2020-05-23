@@ -18,7 +18,7 @@ public class StateNode : BaseNode
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitStateNode(int typeNumber, float posx, float posy, ClickableElement subElem = null)
+    public void InitStateNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode();
 
@@ -30,7 +30,7 @@ public class StateNode : BaseNode
         }
         else
         {
-            nodeName = uniqueNamer.GenerateUniqueName(identificator, "New State ");
+            nodeName = parent.elementNamer.GenerateUniqueName(identificator, "New State ");
             windowRect = new Rect(posx, posy, width, height);
         }
 

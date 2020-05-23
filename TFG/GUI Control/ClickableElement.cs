@@ -23,8 +23,11 @@ public abstract class ClickableElement : GUIElement
 
     public ClickableElement parent;
 
+    public UniqueNamer elementNamer;
+
     public void InitClickableElement()
     {
+        elementNamer = CreateInstance<UniqueNamer>();
         identificator = UniqueID();
     }
 

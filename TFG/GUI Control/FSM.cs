@@ -26,17 +26,24 @@ public class FSM : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitFSM(StateNode node, ClickableElement parent, float posx, float posy)
+    public void InitFSM(NodeEditor editor, ClickableElement parent, float posx, float posy)
     {
         InitClickableElement();
 
         this.parent = parent;
-        elementName = uniqueNamer.GenerateUniqueName(identificator, "New FSM ");
+        if (parent != null)
+            elementName = parent.elementNamer.GenerateUniqueName(identificator, "New FSM ");
+        else
+            elementName = editor.editorNamer.GenerateUniqueName(identificator, "New FSM ");
         type = elementType.FSM;
         windowRect = new Rect(posx, posy, width, height);
 
-        if (node != null)
-            AddEntryState(node);
+        // Create the entry state
+        StateNode entryNode = CreateInstance<StateNode>();
+        entryNode.InitStateNode(this, 1, 50, 50);
+
+        if (entryNode != null)
+            AddEntryState(entryNode);
     }
 
     public override XMLElement ToXMLElement(params object[] args)
@@ -167,9 +174,9 @@ public class FSM : ClickableElement
         }
 
         if (node.subElem == null)
-            uniqueNamer.RemoveName(node.identificator);
+            elementNamer.RemoveName(node.identificator);
         else
-            uniqueNamer.RemoveName(node.subElem.identificator);
+            elementNamer.RemoveName(node.subElem.identificator);
     }
 
     /// <summary>
@@ -187,7 +194,7 @@ public class FSM : ClickableElement
 
         CheckConnected();
 
-        uniqueNamer.RemoveName(deletedTrans.identificator);
+        elementNamer.RemoveName(deletedTrans.identificator);
     }
 
     /// <summary>

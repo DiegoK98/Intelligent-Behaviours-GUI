@@ -33,11 +33,11 @@ public class TransitionGUI : GUIElement
     /// <param name="name"></param>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    public void InitTransitionGUI(BaseNode from, BaseNode to)
+    public void InitTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to)
     {
         identificator = UniqueID();
 
-        transitionName = uniqueNamer.GenerateUniqueName(identificator, "New Transition ");
+        transitionName = parent.elementNamer.GenerateUniqueName(identificator, "New Transition ");
 
         width = baseWidth;
         height = baseHeight;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Errors
+public enum Error
 {
     //The higher the number, the higher its priority
     NoEntryState = 3,
@@ -35,13 +35,13 @@ public class Enums
     /// </summary>
     /// <param name="error"></param>
     /// <returns></returns>
-    public static string EnumToString(Errors error)
+    public static string EnumToString(Error error)
     {
         switch (error)
         {
-            case Errors.NoEntryState:
+            case Error.NoEntryState:
                 return "ERROR: You can't have a FSM without an Entry State";
-            case Errors.RepeatedName:
+            case Error.RepeatedName:
                 return "ERROR: You can't have two elements with the same name";
             default:
                 return "ERROR: Unexpected error :(";

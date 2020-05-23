@@ -25,9 +25,11 @@ public class NodeEditor : EditorWindow
 
     public ClickableElement currentElem;
 
+    public UniqueNamer editorNamer;
+
     private readonly int MAX_N_STATES = 100;
 
-    private Dictionary<string, int> errors = new Dictionary<string, int>();
+    private List<Error> errors = new List<Error>();
 
     public bool popupShown;
 
@@ -46,10 +48,8 @@ public class NodeEditor : EditorWindow
         GetWindow<NodeEditor>().Close();
 
         // Open a new Editor Window
-        GetWindow<NodeEditor>();
-
-        // Reset the namer
-        GUIElement.uniqueNamer = CreateInstance<UniqueNamer>();
+        // And reset the editorNamer
+        GetWindow<NodeEditor>().editorNamer = CreateInstance<UniqueNamer>();
     }
 
     /// <summary>
@@ -87,11 +87,11 @@ public class NodeEditor : EditorWindow
 
             if (!((FSM)currentElem).hasEntryState)
             {
-                AddError(Errors.NoEntryState);
+                AddError(Error.NoEntryState);
             }
             else
             {
-                RemoveError(Errors.NoEntryState);
+                RemoveError(Error.NoEntryState);
             }
         }
 
@@ -301,7 +301,7 @@ public class NodeEditor : EditorWindow
                         if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
                         {
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
-                            transition.InitTransitionGUI(selectednode, ((FSM)currentElem).states[selectIndex]);
+                            transition.InitTransitionGUI(currentElem, selectednode, ((FSM)currentElem).states[selectIndex]);
 
                             ((FSM)currentElem).AddTransition(transition);
                         }
@@ -327,7 +327,7 @@ public class NodeEditor : EditorWindow
                         ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)toCreateNode);
 
                         TransitionGUI transition = CreateInstance<TransitionGUI>();
-                        transition.InitTransitionGUI(selectednode, toCreateNode);
+                        transition.InitTransitionGUI(currentElem, selectednode, toCreateNode);
 
                         ((BehaviourTree)currentElem).connections.Add(transition);
 
@@ -342,7 +342,7 @@ public class NodeEditor : EditorWindow
                         if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck(selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == BehaviourNode.behaviourType.Leaf))
                         {
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
-                            transition.InitTransitionGUI(((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
+                            transition.InitTransitionGUI(currentElem, ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
                             ((BehaviourTree)currentElem).connections.Add(transition);
 
                             ((BehaviourNode)selectednode).isRootNode = false;
@@ -536,9 +536,9 @@ public class NodeEditor : EditorWindow
             }
 
             if (repeatedNames)
-                AddError(Errors.RepeatedName);
+                AddError(Error.RepeatedName);
             else
-                RemoveError(Errors.RepeatedName);
+                RemoveError(Error.RepeatedName);
         }
 
         #endregion
@@ -1073,7 +1073,7 @@ public class NodeEditor : EditorWindow
                 FSM fsm = (FSM)elem;
                 Elements.Remove(fsm);
 
-                GUIElement.uniqueNamer.RemoveName(fsm.identificator);
+                editorNamer.RemoveName(fsm.identificator);
 
                 focusedObj = null;
                 break;
@@ -1082,7 +1082,7 @@ public class NodeEditor : EditorWindow
                 BehaviourTree bt = (BehaviourTree)elem;
                 Elements.Remove(bt);
 
-                GUIElement.uniqueNamer.RemoveName(bt.identificator);
+                editorNamer.RemoveName(bt.identificator);
 
                 focusedObj = null;
                 break;
@@ -1204,13 +1204,8 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void CreateFSM(int nodeIndex, float posX, float posY)
     {
-        FSM newFSM;
-
-        StateNode entryNode = CreateInstance<StateNode>();
-        entryNode.InitStateNode(1, 50, 50);
-
-        newFSM = CreateInstance<FSM>();
-        newFSM.InitFSM(entryNode, currentElem, posX, posY);
+        FSM newFSM = CreateInstance<FSM>();
+        newFSM.InitFSM(this, currentElem, posX, posY);
 
         if (currentElem is null)
         {
@@ -1220,7 +1215,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is FSM)
         {
             StateNode node = CreateInstance<StateNode>();
-            node.InitStateNode(2, newFSM.windowRect.position.x, newFSM.windowRect.position.y, newFSM);
+            node.InitStateNode(currentElem, 2, newFSM.windowRect.position.x, newFSM.windowRect.position.y, newFSM);
 
             if (!((FSM)currentElem).hasEntryState)
             {
@@ -1235,7 +1230,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             BehaviourNode node = CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(2, newFSM.windowRect.x, newFSM.windowRect.y, newFSM);
+            node.InitBehaviourNode(currentElem, 2, newFSM.windowRect.x, newFSM.windowRect.y, newFSM);
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
@@ -1249,7 +1244,7 @@ public class NodeEditor : EditorWindow
     private void CreateBT(int nodeIndex, float posX, float posY)
     {
         BehaviourTree newBT = CreateInstance<BehaviourTree>();
-        newBT.InitBehaviourTree(currentElem, posX, posY);
+        newBT.InitBehaviourTree(this, currentElem, posX, posY);
 
         if (!string.IsNullOrEmpty(name))
         {
@@ -1264,7 +1259,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is FSM)
         {
             StateNode node = CreateInstance<StateNode>();
-            node.InitStateNode(2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
+            node.InitStateNode(currentElem, 2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
 
             if (!((FSM)currentElem).hasEntryState)
             {
@@ -1279,7 +1274,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             BehaviourNode node = CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(2, newBT.windowRect.x, newBT.windowRect.y, newBT);
+            node.InitBehaviourNode(currentElem, 2, newBT.windowRect.x, newBT.windowRect.y, newBT);
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
@@ -1293,7 +1288,7 @@ public class NodeEditor : EditorWindow
     private void CreateNode(float posX, float posY)
     {
         StateNode node = CreateInstance<StateNode>();
-        node.InitStateNode(2, posX, posY);
+        node.InitStateNode(currentElem, 2, posX, posY);
 
         if (!((FSM)currentElem).hasEntryState)
         {
@@ -1311,7 +1306,7 @@ public class NodeEditor : EditorWindow
     private void CreateSequence(int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(0, posX, posY);
+        node.InitBehaviourNode(currentElem, 0, posX, posY);
 
         if (nodeIndex > -1)
         {
@@ -1332,7 +1327,7 @@ public class NodeEditor : EditorWindow
     private void CreateSelector(int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(1, posX, posY);
+        node.InitBehaviourNode(currentElem, 1, posX, posY);
 
         if (nodeIndex > -1)
         {
@@ -1354,7 +1349,7 @@ public class NodeEditor : EditorWindow
     private void CreateLeafNode(int type, int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(type, posX, posY);
+        node.InitBehaviourNode(currentElem, type, posX, posY);
 
         selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -1447,10 +1442,10 @@ public class NodeEditor : EditorWindow
 
         foreach (var error in errors)
         {
-            if (error.Value > currentPriority)
+            if ((int)error > currentPriority)
             {
-                maxPriorityError = error.Key;
-                currentPriority = error.Value;
+                maxPriorityError = Enums.EnumToString(error);
+                currentPriority = (int)error;
             }
         }
 
@@ -1467,19 +1462,18 @@ public class NodeEditor : EditorWindow
     /// Add an error that is happening right now
     /// </summary>
     /// <param name="error"></param>
-    public void AddError(Errors error)
+    public void AddError(Error error)
     {
-        if (!errors.ContainsKey(Enums.EnumToString(error)))
-            errors.Add(Enums.EnumToString(error), (int)error);
+        if (!errors.Contains(error))
+            errors.Add(error);
     }
 
     /// <summary>
     /// Remove an error that is no longer happening
     /// </summary>
     /// <param name="error"></param>
-    public void RemoveError(Errors error)
+    public void RemoveError(Error error)
     {
-        if (errors.ContainsKey(Enums.EnumToString(error)))
-            errors.Remove(Enums.EnumToString(error));
+        errors.Remove(error);
     }
 }

@@ -15,13 +15,16 @@ public class BehaviourTree : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitBehaviourTree(ClickableElement parent, float posx, float posy)
+    public void InitBehaviourTree(NodeEditor editor, ClickableElement parent, float posx, float posy)
     {
         InitClickableElement();
 
         this.parent = parent;
         type = elementType.BT;
-        elementName = uniqueNamer.GenerateUniqueName(identificator, "New BT ");
+        if (parent != null)
+            elementName = parent.elementNamer.GenerateUniqueName(identificator, "New BT ");
+        else
+            elementName = editor.editorNamer.GenerateUniqueName(identificator, "New BT ");
 
         windowRect = new Rect(posx, posy, width, height);
     }
@@ -103,9 +106,9 @@ public class BehaviourTree : ClickableElement
         }
 
         if (node.subElem == null)
-            uniqueNamer.RemoveName(node.identificator);
+            elementNamer.RemoveName(node.identificator);
         else
-            uniqueNamer.RemoveName(node.subElem.identificator);
+            elementNamer.RemoveName(node.subElem.identificator);
     }
 
     /// <summary>
@@ -116,7 +119,7 @@ public class BehaviourTree : ClickableElement
     {
         connections.Remove(deletedTrans);
 
-        uniqueNamer.RemoveName(deletedTrans.identificator);
+        elementNamer.RemoveName(deletedTrans.identificator);
     }
 
     /// <summary>
