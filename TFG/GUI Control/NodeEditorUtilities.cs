@@ -386,7 +386,7 @@ public class NodeEditorUtilities
         string typeName;
         if (perception.type == perceptionType.Custom)
         {
-            typeName = perception.customName;
+            typeName = CleanName(perception.customName);
 
             string scriptName = typeName + "Perception.cs";
 
@@ -415,12 +415,12 @@ public class NodeEditorUtilities
         }
 
         uniqueNamer.AddName(perception.identificator, transitionName + "_" + typeName + "Perception");
-        res += "Perception " + uniqueNamer.GetName(perception.identificator) + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception, transitionName) + ");\n" + tab + tab;
+        res += "Perception " + uniqueNamer.GetName(perception.identificator) + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
 
         return res;
     }
 
-    private static string GetPerceptionParameters(PerceptionGUI perception, string transitionName)
+    private static string GetPerceptionParameters(PerceptionGUI perception)
     {
         string result = "";
 
@@ -438,6 +438,9 @@ public class NodeEditorUtilities
             case perceptionType.And:
             case perceptionType.Or:
                 result = uniqueNamer.GetName(perception.firstChild.identificator) + ", " + uniqueNamer.GetName(perception.secondChild.identificator);
+                break;
+            case perceptionType.Custom:
+                result = "new " + uniqueNamer.GetName(perception.identificator) + "()";
                 break;
         }
 
@@ -502,7 +505,16 @@ public class NodeEditorUtilities
 
             if (((StateNode)transition.fromNode).subElem != null)
             {
-                result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
+                string ending;
+
+                if (((StateNode)transition.fromNode).subElem is FSM)
+                    ending = "_SubFSM";
+                else
+                    ending = "_SubBT";
+
+                string subClassName = CleanName(((StateNode)transition.fromNode).subElem.elementName);
+
+                result += "\n" + tab + tab + subClassName + ending + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
             }
             else
             {
