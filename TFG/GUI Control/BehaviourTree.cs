@@ -15,9 +15,9 @@ public class BehaviourTree : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitBehaviourTree(NodeEditor editor, ClickableElement parent, float posx, float posy)
+    public void InitBehaviourTree(NodeEditor editor, ClickableElement parent, float posx, float posy, string id = null)
     {
-        InitClickableElement();
+        InitClickableElement(id);
 
         this.parent = parent;
         type = elementType.BT;

@@ -5,7 +5,9 @@ using UnityEngine;
 public enum Error
 {
     //The higher the number, the higher its priority
-    NoEntryState = 3,
+    // Number must be unique
+    NoEntryState = 4,
+    MoreThanOneRoot = 3,
     RepeatedName = 2
 }
 
@@ -43,6 +45,8 @@ public class Enums
                 return "ERROR: You can't have a FSM without an Entry State";
             case Error.RepeatedName:
                 return "ERROR: You can't have two elements with the same name";
+            case Error.MoreThanOneRoot:
+                return "ERROR: You can't have a BT with more than one Root";
             default:
                 return "ERROR: Unexpected error :(";
         }

@@ -98,6 +98,15 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             ((BehaviourTree)currentElem).DrawCurves();
+
+            if (((BehaviourTree)currentElem).nodes.Where(n => n.isRootNode).Count() > 1)
+            {
+                AddError(Error.MoreThanOneRoot);
+            }
+            else
+            {
+                RemoveError(Error.MoreThanOneRoot);
+            }
         }
 
         #endregion
@@ -1026,7 +1035,7 @@ public class NodeEditor : EditorWindow
                     Elements.Add(newElem);
                     break;
                 case nameof(BehaviourTree):
-                    newElem = loadedXML.ToBehaviourTree(currentElem);
+                    newElem = loadedXML.ToBehaviourTree(currentElem, null, this);
                     newElem.windowRect.x = mousePos.x;
                     newElem.windowRect.y = mousePos.y;
                     Elements.Add(newElem);

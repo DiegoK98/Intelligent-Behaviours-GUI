@@ -16,7 +16,7 @@ public abstract class BaseNode : GUIElement
 
     public int NProperty = 0;
 
-    public bool isRandomSelector = false;
+    public bool isRandomSequence { get; set; } = false;
 
     /// <summary>
     /// The InitBaseNode
@@ -53,14 +53,14 @@ public abstract class BaseNode : GUIElement
         {
             switch (((BehaviourNode)this).type)
             {
-                case BehaviourNode.behaviourType.Selector:
+                case BehaviourNode.behaviourType.Sequence:
                     nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                     
                     GUILayout.BeginArea(new Rect(windowRect.width * 0.25f, windowRect.height - 20, windowRect.width * 0.5f, height * 0.3f));
-                    isRandomSelector = GUILayout.Toggle(isRandomSelector, "Random", new GUIStyle(GUI.skin.toggle) { alignment = TextAnchor.MiddleCenter });
+                    isRandomSequence = GUILayout.Toggle(isRandomSequence, "Random", new GUIStyle(GUI.skin.toggle) { alignment = TextAnchor.MiddleCenter });
                     GUILayout.EndArea();
                     break;
-                case BehaviourNode.behaviourType.Sequence:
+                case BehaviourNode.behaviourType.Selector:
                 case BehaviourNode.behaviourType.Leaf:
                     nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                     break;

@@ -19,7 +19,9 @@ public class XMLElement
 
     public float windowPosY { get; set; }
 
-    /// Decorator Nodes properties
+    /// Behaviour Nodes properties
+    public bool isRandomSequence { get; set; }
+
     public int NProperty { get; set; }
 
     /// Transitions properties
@@ -141,14 +143,10 @@ public class XMLElement
         return fsm;
     }
 
-    public BehaviourTree ToBehaviourTree(ClickableElement parent, BaseNode selectedNode = null)
+    public BehaviourTree ToBehaviourTree(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
     {
         BehaviourTree bt = ScriptableObject.CreateInstance<BehaviourTree>();
-        bt.identificator = this.Id;
-        bt.elementName = this.name;
-        bt.windowRect = new Rect(this.windowPosX, this.windowPosY, BehaviourTree.width, BehaviourTree.height);
-        bt.type = ClickableElement.elementType.BT;
-        bt.parent = parent;
+        bt.InitBehaviourTree(sender, parent, this.windowPosX, this.windowPosY);
 
         foreach (XMLElement node in this.nodes)
         {
@@ -220,6 +218,7 @@ public class XMLElement
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
                 nodeBT.InitBehaviourNode(currentTree, (int)Enum.Parse(typeof(BehaviourNode.behaviourType), this.secondType), this.windowPosX, this.windowPosY);
                 nodeBT.nodeName = this.name;
+                nodeBT.isRandomSequence = this.isRandomSequence;
                 nodeBT.NProperty = this.NProperty;
 
                 currentTree.nodes.Add(nodeBT);

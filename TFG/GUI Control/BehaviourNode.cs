@@ -80,7 +80,9 @@ public class BehaviourNode : BaseNode
                 elemType = this.GetType().ToString(),
                 windowPosX = this.windowRect.x,
                 windowPosY = this.windowRect.y,
+                isRandomSequence = this.isRandomSequence,
                 NProperty = this.NProperty,
+
                 nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
                 {
                     return node.ToXMLElement(parentTree);

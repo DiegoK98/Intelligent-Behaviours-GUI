@@ -548,7 +548,7 @@ public class NodeEditorUtilities
                     result += "SelectorNode " + nodeName + " = " + machineName + ".CreateSelectorNode(\"" + node.nodeName + "\");\n" + tab + tab;
                     break;
                 case BehaviourNode.behaviourType.Sequence:
-                    result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", false);\n" + tab + tab;
+                    result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", " + (node.isRandomSequence ? "true" : "false") + ");\n" + tab + tab;
                     break;
                 case BehaviourNode.behaviourType.Leaf:
                     if (node.subElem is FSM)
@@ -581,7 +581,7 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Check if it's a decorator and if it is it writes it
+    /// Check if it's a decorator and if it is, it writes it
     /// </summary>
     /// <param name="result"></param>
     /// <param name="machineName"></param>
