@@ -325,7 +325,7 @@ public class NodeEditorUtilities
         + tab + tab + "\n"
         + tab + tab + "// Nodes\n"
         + tab + tab + "#NODES#\n"
-        + tab + tab + "// Child adding#CHILDS#\n"
+        + tab + tab + "#CHILDS#\n"
         + tab + tab + "// SetRoot\n"
         + tab + tab + "#SETROOT#\n"
         + tab + "}";
@@ -732,7 +732,10 @@ public class NodeEditorUtilities
             }
         }
 
-        return result;
+        if (string.IsNullOrEmpty(result))
+            return result;
+
+        return "// Child adding" + result;
     }
 
     private static string GetSetRoot(ClickableElement elem, string engineEnding)
@@ -745,6 +748,13 @@ public class NodeEditorUtilities
         {
             if (node.isRootNode)
                 result += machineName + ".SetRootNode(" + CleanName(node.nodeName) + ");";
+        }
+
+        if (elem.parent is BehaviourTree)
+        {
+            result += "\n" + tab + tab +
+                      "\n" + tab + tab + "// Exit Transition" +
+                      "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + machineName + " Exit" + "\");";
         }
 
         return result;
