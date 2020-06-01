@@ -107,11 +107,10 @@ public class TransitionGUI : GUIElement
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="parentRect"></param>
     /// <param name="heightAcc"></param>
     /// <param name="widthAcc"></param>
-    /// <param name="index"></param>
-    /// <param name="treeLevel"></param>
+    /// <param name="currentPerception"></param>
+    /// <param name="sender"></param>
     private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref PerceptionGUI currentPerception, NodeEditor sender)
     {
         GUILayout.BeginHorizontal();
@@ -134,7 +133,7 @@ public class TransitionGUI : GUIElement
                         toolsMenu.AddItem(new GUIContent(name), false, ChangeType, new string[] { name, currentPerception.identificator });
                     }
 
-                    toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                    toolsMenu.DropDown(new Rect(8 + widthAcc * 0.5f, Event.current.mousePosition.y + 10, 0, 0));
                     EditorGUIUtility.ExitGUI();
                 }
 
@@ -205,7 +204,7 @@ public class TransitionGUI : GUIElement
                                     }, currentPerception);
                                 }
 
-                                toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                                toolsMenu.DropDown(new Rect(8 + widthAcc * 0.5f, Event.current.mousePosition.y + 10, 0, 0));
                                 EditorGUIUtility.ExitGUI();
                             }
 
@@ -237,7 +236,7 @@ public class TransitionGUI : GUIElement
                                         }, currentPerception);
                                     }
 
-                                    toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                                    toolsMenu.DropDown(new Rect(8 + widthAcc * 0.5f, Event.current.mousePosition.y + 10, 0, 0));
                                     EditorGUIUtility.ExitGUI();
                                 }
                             }
@@ -253,14 +252,14 @@ public class TransitionGUI : GUIElement
 
                         GUILayout.Space(5);
 
-                        List<ClickableElement> subBTsList = sender.currentElem.GetSubElems();
+                        List<BehaviourTree> subBTsList = sender.currentElem.GetSubElems().Where(e => e is BehaviourTree).Cast<BehaviourTree>().ToList();
 
                         GUI.enabled = subBTsList.Count > 0;
                         if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
                         {
                             GenericMenu toolsMenu = new GenericMenu();
 
-                            List<string> list = subBTsList.Where(e => e is BehaviourTree).Select(e => e.elementName).ToList();
+                            List<string> list = subBTsList.Select(e => e.elementName).ToList();
                             list.Sort();
 
                             foreach (string name in list)
@@ -275,7 +274,7 @@ public class TransitionGUI : GUIElement
                                 }, currentPerception);
                             }
 
-                            toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                            toolsMenu.DropDown(new Rect(8 + widthAcc * 0.5f, Event.current.mousePosition.y + 10, 0, 0));
                             EditorGUIUtility.ExitGUI();
                         }
                         GUI.enabled = true;
@@ -298,7 +297,7 @@ public class TransitionGUI : GUIElement
                                     }, currentPerception);
                                 }
 
-                                toolsMenu.DropDown(new Rect(0, 40, 0, 0));
+                                toolsMenu.DropDown(new Rect(8 + widthAcc * 0.5f, Event.current.mousePosition.y + 10, 0, 0));
                                 EditorGUIUtility.ExitGUI();
                             }
                         }
