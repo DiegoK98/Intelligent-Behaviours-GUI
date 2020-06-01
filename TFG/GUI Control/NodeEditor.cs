@@ -77,8 +77,6 @@ public class NodeEditor : EditorWindow
                 DrawNodeCurve(mouseRect, nodeRect, true);
             else
                 DrawNodeCurve(nodeRect, mouseRect, true);
-
-            Repaint();
         }
 
         if (currentElem is FSM)
@@ -549,6 +547,8 @@ public class NodeEditor : EditorWindow
             else
                 RemoveError(Error.RepeatedName);
         }
+
+        Repaint();
 
         #endregion
     }

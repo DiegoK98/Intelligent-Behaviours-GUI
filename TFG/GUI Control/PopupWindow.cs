@@ -61,30 +61,6 @@ public class PopupWindow : EditorWindow
         window.ShowPopup();
     }
 
-    //public static void InitNameRepeated(NodeEditor sender, string name, Rect rect)
-    //{
-    //    senderEditor = sender;
-
-    //    PopupType = typeOfPopup.NameRepeat;
-
-    //    repeatedName = name;
-
-    //    PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
-    //    window.position = new Rect(sender.position.x + rect.center.x - width / 2, sender.position.y + rect.center.y + height / 2, width, height);
-    //    window.ShowPopup();
-    //}
-
-    //public static void InitNoEntryState(NodeEditor sender)
-    //{
-    //    senderEditor = sender;
-
-    //    PopupType = typeOfPopup.NoEntry;
-
-    //    PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
-    //    window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
-    //    window.ShowPopup();
-    //}
-
     /// <summary>
     /// The OnGUI
     /// </summary>
@@ -158,24 +134,6 @@ public class PopupWindow : EditorWindow
             this.Close();
         }
     }
-
-    //private void ShowNamePopup()
-    //{
-    //    CancelStyle = new GUIStyle(GUI.skin.button);
-    //    CancelStyle.normal.background = MakeBackground(Color.gray);
-
-    //    GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-    //    labelStyle.normal.textColor = Color.red;
-
-    //    EditorGUILayout.LabelField("This element's name " + repeatedName + " is repeated in another element", labelStyle, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
-
-    //    GUILayout.Space(30);
-
-    //    if (GUILayout.Button("Cancel", CancelStyle))
-    //    {
-    //        this.Close();
-    //    }
-    //}
 
     /// <summary>
     /// The OnLostFocus
