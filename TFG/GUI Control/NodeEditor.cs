@@ -1070,7 +1070,7 @@ public class NodeEditor : EditorWindow
     /// </summary>
     void SaveElem(object elem)
     {
-        NodeEditorUtilities.GenerateElemXML((ClickableElement)elem);
+        NodeEditorUtilities.GenerateElemXMLFile((ClickableElement)elem);
     }
 
     /// <summary>

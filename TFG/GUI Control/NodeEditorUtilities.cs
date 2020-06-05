@@ -10,24 +10,106 @@ using UnityEngine;
 public class NodeEditorUtilities
 {
     /// <summary>
-    /// C#'s Script Icon [The one MonoBhevaiour Scripts have].
+    /// C# Script Icon
     /// </summary>
     private readonly static Texture2D scriptIcon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
 
+    /// <summary>
+    /// 4 blank spaces to imitate pressing tab
+    /// </summary>
     static readonly string tab = "    ";
-    static readonly string actionsEnding = "Action";
-    static readonly string conditionsEnding = "SuccessCheck";
-    static readonly string subFSMEnding = "_SubFSM";
-    static readonly string subBtEnding = "_SubBT";
 
+    /// <summary>
+    /// Text to add at the end of an Action's name
+    /// </summary>
+    static readonly string actionsEnding = "Action";
+
+    /// <summary>
+    /// Text to add at the end of a Conditions method's name
+    /// </summary>
+    static readonly string conditionsEnding = "SuccessCheck";
+
+    /// <summary>
+    /// Text to add at the end of the CreateMethod of a <see cref="FSM"/>
+    /// </summary>
+    static readonly string FSMCreateName = "StateMachine";
+
+    /// <summary>
+    /// Template for the CreateMethod of a <see cref="FSM"/>
+    /// </summary>
+    static readonly string FSMCreateTemplate = "\n"
+        + tab + "private void Create#CREATENAME#()\n"
+        + tab + "{\n"
+        + tab + tab + "#MACHNAME# = new StateMachineEngine(#ISSUB#);\n"
+        + tab + tab + "\n"
+        + tab + tab + "// Perceptions\n"
+        + tab + tab + "// Modify or add new Perceptions, see the guide for more\n"
+        + tab + tab + "#PERCEPIONS#\n"
+        + tab + tab + "// States\n"
+        + tab + tab + "#STATES#\n"
+        + tab + tab + "// Transitions#TRANSITIONS#\n"
+        + tab + "}";
+
+    /// <summary>
+    /// Text to add at the end of the CreateMethod of a <see cref="BehaviourTree"/>
+    /// </summary>
+    static readonly string BTCreateName = "BehaviourTree";
+
+    /// <summary>
+    /// Template for the CreateMethod of a <see cref="BehaviourTree"/>
+    /// </summary>
+    static readonly string BTCreateTemplate = "\n"
+        + tab + "private void Create#CREATENAME#()\n"
+        + tab + "{\n"
+        + tab + tab + "#MACHNAME# = new BehaviourTreeEngine(#ISSUB#);\n"
+        + tab + tab + "\n"
+        + tab + tab + "// Nodes\n"
+        + tab + tab + "#NODES#\n"
+        + tab + tab + "#CHILDS#\n"
+        + tab + tab + "// SetRoot\n"
+        + tab + tab + "#SETROOT#\n"
+        + tab + "}";
+
+
+    /// <summary>
+    /// Text to add at the end of a FSM's name
+    /// </summary>
+    static readonly string FSMEnding = "_FSM";
+
+    /// <summary>
+    /// Text to add at the end of a BT's name
+    /// </summary>
+    static readonly string BTEnding = "_BT";
+
+    /// <summary>
+    /// Text to add at the end of a subFSM's name
+    /// </summary>
+    static readonly string subFSMEnding = "_SubFSM";
+
+    /// <summary>
+    /// Text to add at the end of a subBT's name
+    /// </summary>
+    static readonly string subBTEnding = "_SubBT";
+
+    /// <summary>
+    /// Name for the saves Folder
+    /// </summary>
     static readonly string savesFolderName = "Saves (Intelligent Behaviours)";
+
+    /// <summary>
+    /// Name for the scripts Folder
+    /// </summary>
     static readonly string scriptsFolderName = "Scripts (Intelligent Behaviours)";
 
+    /// <summary>
+    /// The <see cref="UniqueNamer"/> for managing the names of the variables of the perceptions
+    /// </summary>
     static UniqueNamer uniqueNamer;
 
     /// <summary>
-    /// Generates a new C# script for an element.
+    /// Generates a new C# script for an <paramref name="elem"/>
     /// </summary>
+    /// <param name="elem"></param>
     public static void GenerateElemScript(ClickableElement elem)
     {
         uniqueNamer = ScriptableObject.CreateInstance<UniqueNamer>();
@@ -59,16 +141,17 @@ public class NodeEditorUtilities
 
         if (!string.IsNullOrEmpty(scriptPath))
         {
-            UnityEngine.Object o = CreateScript(scriptPath, templatePath, elem);
+            UnityEngine.Object o = CreateScriptFromTemplate(scriptPath, templatePath, elem);
             AssetDatabase.Refresh();
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
     }
 
     /// <summary>
-    /// Generates a new XML file for an element.
+    /// Generates a new XML file for an <paramref name="elem"/>
     /// </summary>
-    public static void GenerateElemXML(ClickableElement elem)
+    /// <param name="elem"></param>
+    public static void GenerateElemXMLFile(ClickableElement elem)
     {
         // Create Asset
         if (!AssetDatabase.IsValidFolder("Assets/" + savesFolderName))
@@ -78,12 +161,16 @@ public class NodeEditorUtilities
 
         if (!string.IsNullOrEmpty(path))
         {
-            UnityEngine.Object o = CreateXML(path, elem);
+            UnityEngine.Object o = CreateXMLFromElem(path, elem);
             AssetDatabase.Refresh();
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
     }
 
+    /// <summary>
+    /// Shows the File Panel, and returns the <see cref="XMLElement"/> corresponding to the XML file that the user selects
+    /// </summary>
+    /// <returns></returns>
     public static XMLElement LoadSavedData()
     {
         string path = EditorUtility.OpenFilePanel("Open a save file", "Assets/Intelligent Behaviours Saves", "XML");
@@ -95,9 +182,13 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Creates Script from Template's path.
+    /// Creates Script from <paramref name="templatePath"/>
     /// </summary>
-    private static UnityEngine.Object CreateScript(string pathName, string templatePath, object obj)
+    /// <param name="pathName"></param>
+    /// <param name="templatePath"></param>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    private static UnityEngine.Object CreateScriptFromTemplate(string pathName, string templatePath, object obj)
     {
         string templateText = string.Empty;
 
@@ -124,24 +215,24 @@ public class NodeEditorUtilities
                 switch (elem.GetType().ToString())
                 {
                     case nameof(FSM):
-                        templateText = templateText.Replace("#ENDING#", "_FSM");
-                        templateText = templateText.Replace("#FSMCREATE#", GetFSMCreate(elem, "_FSM", false, ref subElems, folderPath));
+                        templateText = templateText.Replace("#ENDING#", FSMEnding);
+                        templateText = templateText.Replace("#FSMCREATE#", GetCreateMethod(elem, false, ref subElems, folderPath));
                         templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
                         templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
                         break;
                     case nameof(BehaviourTree):
-                        templateText = templateText.Replace("#ENDING#", "_BT");
-                        templateText = templateText.Replace("#BTCREATE#", GetBTCreate(elem, "_BT", false, ref subElems));
+                        templateText = templateText.Replace("#ENDING#", BTEnding);
+                        templateText = templateText.Replace("#BTCREATE#", GetCreateMethod(elem, false, ref subElems));
                         templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
                         templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
                         break;
                 }
-                templateText = templateText.Replace("#ACTIONS#", GetMethods(elem));
+                templateText = templateText.Replace("#ACTIONS#", GetActionMethods(elem));
 
                 // SubFSM
-                templateText = templateText.Replace("#SUBELEM1#", GetSubElemDecl(elem, subElems));
-                templateText = templateText.Replace("#SUBELEM2#", GetSubElemInit(elem, subElems));
-                templateText = templateText.Replace("#SUBELEM3#", GetSubFSMUpdate(elem, subElems));
+                templateText = templateText.Replace("#SUBELEM1#", GetSubElemDecl(subElems));
+                templateText = templateText.Replace("#SUBELEM2#", GetSubElemInit(subElems));
+                templateText = templateText.Replace("#SUBELEM3#", GetSubElemUpdate(subElems));
             }
             else if (obj is string)
             {
@@ -170,9 +261,12 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Creates XML object and serializes it to a file.
+    /// Creates XML object from <paramref name="elem"/>, serializes it to a file and saves it in <paramref name="pathName"/>
     /// </summary>
-    private static UnityEngine.Object CreateXML(string pathName, ClickableElement elem)
+    /// <param name="pathName"></param>
+    /// <param name="elem"></param>
+    /// <returns></returns>
+    private static UnityEngine.Object CreateXMLFromElem(string pathName, ClickableElement elem)
     {
         var data = elem.ToXMLElement();
 
@@ -187,7 +281,7 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Loads an XML file and converts it to XMLElement
+    /// Loads an XML file and converts it to <see cref="XMLElement"/>
     /// </summary>
     /// <param name="fileName"></param>
     /// <returns></returns>
@@ -203,11 +297,21 @@ public class NodeEditorUtilities
         return (XMLElement)serial.Deserialize(fs);
     }
 
+    /// <summary>
+    /// Event that is called when an node is unknown in the serialization
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private static void UnknownNode(object sender, XmlNodeEventArgs e)
     {
         Debug.LogError("[XMLSerializer] Unknown Node:" + e.Name + "\t" + e.Text);
     }
 
+    /// <summary>
+    /// Event that is called when an attribute is unknown in the serialization
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private static void UnknownAttribute(object sender, XmlAttributeEventArgs e)
     {
         System.Xml.XmlAttribute attr = e.Attr;
@@ -216,7 +320,7 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Modifies the given string to be usable in code
+    /// Modifies the <paramref name="name"/> to be usable in code
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
@@ -233,15 +337,78 @@ public class NodeEditorUtilities
         return result;
     }
 
+    /// <summary>
+    /// Writes the Create method for the <paramref name="elem"/>
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="isSub"></param>
+    /// <param name="subElems"></param>
+    /// <param name="folderPath"></param>
+    /// <returns></returns>
+    private static string GetCreateMethod(ClickableElement elem, bool isSub, ref List<ClickableElement> subElems, string folderPath = null)
+    {
+        // Set the strings to what they need to be
+        string className = CleanName(elem.elementName);
+        string engineEnding = "";
+        string createName = "";
+        string templateSub = "";
+        if (elem is FSM)
+        {
+            engineEnding = isSub ? subFSMEnding : FSMEnding;
+            createName = FSMCreateName;
+            templateSub = FSMCreateTemplate;
+        }
+        else if (elem is BehaviourTree)
+        {
+            engineEnding = isSub ? subBTEnding : BTEnding;
+            createName = BTCreateName;
+            templateSub = BTCreateTemplate;
+        }
+        string machineName = className + engineEnding;
+        string createdName = isSub ? machineName : createName;
+        string isSubStr = isSub ? "true" : "false";
+
+        // Adjust the template names
+        templateSub = templateSub.Replace("#CREATENAME#", createdName);
+        templateSub = templateSub.Replace("#MACHNAME#", machineName);
+        templateSub = templateSub.Replace("#ISSUB#", isSubStr);
+
+        if (isSub)
+            templateSub += "#SUBELEMCREATE#";
+
+        // Fill the template with the content
+        if (elem is FSM)
+        {
+            templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding, folderPath));
+            templateSub = templateSub.Replace("#STATES#", GetStates(elem, engineEnding, ref subElems));
+            templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
+        }
+        else if (elem is BehaviourTree)
+        {
+            templateSub = templateSub.Replace("#NODES#", GetNodes(elem, engineEnding, ref subElems));
+            templateSub = templateSub.Replace("#CHILDS#", GetChilds(elem, ref subElems));
+            templateSub = templateSub.Replace("#SETROOT#", GetSetRoot(elem, engineEnding));
+        }
+
+        return templateSub;
+    }
+
+    /// <summary>
+    /// Writes the Create Method for all <paramref name="subElems"/>
+    /// </summary>
+    /// <param name="templateText"></param>
+    /// <param name="subElems"></param>
+    /// <param name="folderPath"></param>
+    /// <returns></returns>
     private static string GetAllSubElemsRecursive(string templateText, ref List<ClickableElement> subElems, string folderPath = null)
     {
         List<ClickableElement> subElemsCopy = new List<ClickableElement>();
         foreach (ClickableElement sub in subElems)
         {
             if (sub is FSM)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetFSMCreate(sub, subFSMEnding, true, ref subElemsCopy, folderPath));
+                templateText = templateText.Replace("#SUBELEMCREATE#", GetCreateMethod(sub, true, ref subElemsCopy, folderPath));
             if (sub is BehaviourTree)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetBTCreate(sub, subBtEnding, true, ref subElemsCopy));
+                templateText = templateText.Replace("#SUBELEMCREATE#", GetCreateMethod(sub, true, ref subElemsCopy));
         }
         if (subElemsCopy.Count > 0)
         {
@@ -252,14 +419,18 @@ public class NodeEditorUtilities
         return templateText;
     }
 
-    private static string GetSubElemDecl(ClickableElement elem, List<ClickableElement> subElems)
+    /// <summary>
+    /// Writes the declaration of all <paramref name="subElems"/>
+    /// </summary>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
+    private static string GetSubElemDecl(List<ClickableElement> subElems)
     {
-        string className = CleanName(elem.elementName);
         string result = string.Empty;
 
         foreach (ClickableElement sub in subElems)
         {
-            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBtEnding : "";
+            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBTEnding : "";
             string type = sub is FSM ? "StateMachineEngine" : sub is BehaviourTree ? "BehaviourTreeEngine" : "";
             string elemName = CleanName(sub.elementName);
             result += "private " + type + " " + elemName + engineEnding + ";\n" + tab;
@@ -268,14 +439,19 @@ public class NodeEditorUtilities
         return result;
     }
 
-    private static string GetSubElemInit(ClickableElement elem, List<ClickableElement> subElems)
+    /// <summary>
+    /// Writes the initialization of all <paramref name="subElems"/>
+    /// </summary>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
+    private static string GetSubElemInit(List<ClickableElement> subElems)
     {
 
         string result = string.Empty;
 
         for (int i = subElems.Count - 1; i >= 0; i--)
         {
-            string engineEnding = subElems[i] is FSM ? subFSMEnding : subElems[i] is BehaviourTree ? subBtEnding : "";
+            string engineEnding = subElems[i] is FSM ? subFSMEnding : subElems[i] is BehaviourTree ? subBTEnding : "";
             string elemName = CleanName(subElems[i].elementName) + engineEnding;
             result += "Create" + elemName + "();\n" + tab + tab;
         }
@@ -283,70 +459,18 @@ public class NodeEditorUtilities
         return result;
     }
 
-    private static string GetFSMCreate(ClickableElement elem, string engineEnding, bool isSub, ref List<ClickableElement> subElems, string folderPath = null)
-    {
-        string className = CleanName(elem.elementName);
-        string machineName = className + engineEnding;
-        string createdName = isSub ? machineName : "StateMachine";
-        string isSubStr = isSub ? "true" : "false";
-        string templateSub = "\n"
-        + tab + "private void Create" + createdName + "()\n"
-        + tab + "{\n"
-        + tab + tab + machineName + " = new StateMachineEngine(" + isSubStr + ");\n"
-        + tab + tab + "\n"
-        + tab + tab + "// Perceptions\n"
-        + tab + tab + "// Modify or add new Perceptions, see the guide for more\n"
-        + tab + tab + "#PERCEPIONS#\n"
-        + tab + tab + "// States\n"
-        + tab + tab + "#STATES#\n"
-        + tab + tab + "// Transitions#TRANSITIONS#\n"
-        + tab + "}";
-
-        if (isSub)
-            templateSub += "#SUBELEMCREATE#";
-
-        templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding, folderPath));
-        templateSub = templateSub.Replace("#STATES#", GetStates(elem, engineEnding, ref subElems));
-        templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
-
-        return templateSub;
-    }
-
-    private static string GetBTCreate(ClickableElement elem, string engineEnding, bool isSub, ref List<ClickableElement> subElems)
-    {
-        string className = CleanName(elem.elementName);
-        string machineName = className + engineEnding;
-        string createdName = isSub ? machineName : "BehaviourTree";
-        string isSubStr = isSub ? "true" : "false";
-        string templateSub = "\n"
-        + tab + "private void Create" + createdName + "()\n"
-        + tab + "{\n"
-        + tab + tab + machineName + " = new BehaviourTreeEngine(" + isSubStr + ");\n"
-        + tab + tab + "\n"
-        + tab + tab + "// Nodes\n"
-        + tab + tab + "#NODES#\n"
-        + tab + tab + "#CHILDS#\n"
-        + tab + tab + "// SetRoot\n"
-        + tab + tab + "#SETROOT#\n"
-        + tab + "}";
-
-        if (isSub)
-            templateSub += "#SUBELEMCREATE#";
-
-        templateSub = templateSub.Replace("#NODES#", GetNodes(elem, engineEnding, ref subElems));
-        templateSub = templateSub.Replace("#CHILDS#", GetChilds(elem, ref subElems));
-        templateSub = templateSub.Replace("#SETROOT#", GetSetRoot(elem, engineEnding));
-
-        return templateSub;
-    }
-
-    private static string GetSubFSMUpdate(ClickableElement elem, List<ClickableElement> subElems)
+    /// <summary>
+    /// Writes the Update call of all <paramref name="subElems"/>
+    /// </summary>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
+    private static string GetSubElemUpdate(List<ClickableElement> subElems)
     {
         string result = string.Empty;
 
         foreach (ClickableElement sub in subElems)
         {
-            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBtEnding : "";
+            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBTEnding : "";
             string elemName = CleanName(sub.elementName);
             result += "\n" + tab + tab + elemName + engineEnding + ".Update();";
         }
@@ -355,6 +479,13 @@ public class NodeEditorUtilities
     }
 
     #region FSM
+    /// <summary>
+    /// Writes all the <see cref="Perception"/> declaration and initialization
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <param name="folderPath"></param>
+    /// <returns></returns>
     private static string GetPerceptions(ClickableElement elem, string engineEnding, string folderPath = null)
     {
         string className = CleanName(elem.elementName);
@@ -365,13 +496,21 @@ public class NodeEditorUtilities
         {
             string transitionName = CleanName(transition.transitionName);
 
-            result += RecursivePerceptionsCode(transition.rootPerception, transitionName, machineName, folderPath);
+            result += RecursivePerceptions(transition.rootPerception, transitionName, machineName, folderPath);
         }
 
         return result;
     }
 
-    private static string RecursivePerceptionsCode(PerceptionGUI perception, string transitionName, string machineName, string folderPath)
+    /// <summary>
+    /// Recursive method for <see cref="GetPerceptions(ClickableElement, string, string)"/>
+    /// </summary>
+    /// <param name="perception"></param>
+    /// <param name="transitionName"></param>
+    /// <param name="machineName"></param>
+    /// <param name="folderPath"></param>
+    /// <returns></returns>
+    private static string RecursivePerceptions(PerceptionGUI perception, string transitionName, string machineName, string folderPath)
     {
         string res = "";
         string auxAndOr = "";
@@ -379,8 +518,8 @@ public class NodeEditorUtilities
         if (perception.type == perceptionType.And || perception.type == perceptionType.Or)
         {
             auxAndOr = perception.type.ToString();
-            res += RecursivePerceptionsCode(perception.firstChild, transitionName, machineName, folderPath);
-            res += RecursivePerceptionsCode(perception.secondChild, transitionName, machineName, folderPath);
+            res += RecursivePerceptions(perception.firstChild, transitionName, machineName, folderPath);
+            res += RecursivePerceptions(perception.secondChild, transitionName, machineName, folderPath);
         }
 
         string typeName;
@@ -405,7 +544,7 @@ public class NodeEditorUtilities
                 else
                 {
                     string templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
-                    UnityEngine.Object o = CreateScript(folderPath + scriptName, templatePath, typeName);
+                    UnityEngine.Object o = CreateScriptFromTemplate(folderPath + scriptName, templatePath, typeName);
                 }
             }
         }
@@ -414,12 +553,16 @@ public class NodeEditorUtilities
             typeName = perception.type.ToString();
         }
 
-        uniqueNamer.AddName(perception.identificator, transitionName + "_" + typeName + "Perception");
-        res += "Perception " + typeName + "Perception" + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
+        res += "Perception " + uniqueNamer.AddName(perception.identificator, typeName + "Perception") + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
 
         return res;
     }
 
+    /// <summary>
+    /// Returns the corresponding parameters for the <paramref name="perception"/>
+    /// </summary>
+    /// <param name="perception"></param>
+    /// <returns></returns>
     private static string GetPerceptionParameters(PerceptionGUI perception)
     {
         string result = "";
@@ -433,7 +576,7 @@ public class NodeEditorUtilities
                 result = CleanName(perception.elemName) + subFSMEnding + ", " + "\"" + perception.stateName + "\"";
                 break;
             case perceptionType.BehaviourTreeStatus:
-                result = CleanName(perception.elemName) + subBtEnding + ", " + "ReturnValues." + perception.status.ToString();
+                result = CleanName(perception.elemName) + subBTEnding + ", " + "ReturnValues." + perception.status.ToString();
                 break;
             case perceptionType.And:
             case perceptionType.Or:
@@ -447,6 +590,13 @@ public class NodeEditorUtilities
         return result;
     }
 
+    /// <summary>
+    /// Writes all the <see cref="State"/> declaration and initialization
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
     private static string GetStates(ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
     {
         string className = CleanName(elem.elementName);
@@ -463,7 +613,7 @@ public class NodeEditorUtilities
             }
             else if (node.subElem is BehaviourTree)
             {
-                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subBtEnding + ");\n" + tab + tab;
+                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subBTEnding + ");\n" + tab + tab;
                 subElems.Add(node.subElem);
 
             }
@@ -480,6 +630,12 @@ public class NodeEditorUtilities
         return result;
     }
 
+    /// <summary>
+    /// Writes all the <see cref="Transition"/> declaration and initialization
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <returns></returns>
     private static string GetTransitions(ClickableElement elem, string engineEnding)
     {
         string className = CleanName(elem.elementName);
@@ -531,7 +687,13 @@ public class NodeEditorUtilities
     #endregion
 
     #region Behaviour Tree
-
+    /// <summary>
+    /// Writes all the <see cref="TreeNode"/> declaration and initialization, except for Decorators
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
     private static string GetNodes(ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
     {
         string className = CleanName(elem.elementName);
@@ -558,7 +720,7 @@ public class NodeEditorUtilities
                     }
                     else if (node.subElem is BehaviourTree)
                     {
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subBtEnding + ");\n" + tab + tab;
+                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subBTEnding + ");\n" + tab + tab;
                         subElems.Add(node.subElem);
                     }
                     else
@@ -581,7 +743,7 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Check if it's a decorator and if it is, it writes it
+    /// Checks if <paramref name="node"/> is a decorator and if it is, it writes its declaration and initialization
     /// </summary>
     /// <param name="result"></param>
     /// <param name="machineName"></param>
@@ -659,6 +821,12 @@ public class NodeEditorUtilities
         }
     }
 
+    /// <summary>
+    /// Writes all the AddChild methods that are necessary
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
     private static string GetChilds(ClickableElement elem, ref List<ClickableElement> subElems)
     {
         string className = CleanName(elem.elementName);
@@ -738,6 +906,12 @@ public class NodeEditorUtilities
         return "// Child adding" + result;
     }
 
+    /// <summary>
+    /// Writes all the SetRootNode methods that are necessary
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <returns></returns>
     private static string GetSetRoot(ClickableElement elem, string engineEnding)
     {
         string className = CleanName(elem.elementName);
@@ -762,7 +936,12 @@ public class NodeEditorUtilities
 
     #endregion
 
-    private static string GetMethods(ClickableElement elem)
+    /// <summary>
+    /// Writes all the methods for the Actions of the <see cref="State"/>
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <returns></returns>
+    private static string GetActionMethods(ClickableElement elem)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -774,7 +953,7 @@ public class NodeEditorUtilities
                 {
                     if (node.subElem != null)
                     {
-                        result += GetMethods(node.subElem);
+                        result += GetActionMethods(node.subElem);
                     }
                     else
                     {
@@ -793,7 +972,7 @@ public class NodeEditorUtilities
                 {
                     if (node.subElem != null)
                     {
-                        result += GetMethods(node.subElem);
+                        result += GetActionMethods(node.subElem);
                     }
                     else
                     {
