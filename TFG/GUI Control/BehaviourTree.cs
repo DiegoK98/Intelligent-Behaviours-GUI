@@ -5,30 +5,42 @@ using UnityEngine;
 
 public class BehaviourTree : ClickableElement
 {
+    /// <summary>
+    /// List of <see cref="BehaviourNode"/> that belong to this <see cref="BehaviourTree"/>
+    /// </summary>
     public List<BehaviourNode> nodes = new List<BehaviourNode>();
 
+    /// <summary>
+    /// List of <see cref="TransitionGUI"/> that connect the <see cref="nodes"/>
+    /// </summary>
     public List<TransitionGUI> connections = new List<TransitionGUI>();
 
     /// <summary>
-    /// The BehaviourTree
+    /// The Initializer for the <seealso cref="BehaviourNode"/>
     /// </summary>
+    /// <param name="editor"></param>
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
+    /// <param name="id"></param>
     public void InitBehaviourTree(NodeEditor editor, ClickableElement parent, float posx, float posy, string id = null)
     {
         InitClickableElement(id);
 
         this.parent = parent;
-        type = elementType.BT;
         if (parent != null)
-            elementName = parent.elementNamer.GenerateUniqueName(identificator, "New BT ");
+            elementName = parent.elementNamer.AddName(identificator, "New BT ");
         else
-            elementName = editor.editorNamer.GenerateUniqueName(identificator, "New BT ");
+            elementName = editor.editorNamer.AddName(identificator, "New BT ");
 
         windowRect = new Rect(posx, posy, width, height);
     }
 
+    /// <summary>
+    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="BehaviourTree"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     public override XMLElement ToXMLElement(params object[] args)
     {
         XMLElement result = new XMLElement
@@ -37,7 +49,7 @@ public class BehaviourTree : ClickableElement
             elemType = this.GetType().ToString(),
             windowPosX = this.windowRect.x,
             windowPosY = this.windowRect.y,
-            nodes = nodes.FindAll(o => o.isRootNode).ConvertAll((rootNode) =>
+            nodes = nodes.FindAll(o => o.isRoot).ConvertAll((rootNode) =>
             {
                 return rootNode.ToXMLElement(this);
             }),
@@ -48,7 +60,7 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
-    /// Gets the type of the element properly written
+    /// Returns the type properly written
     /// </summary>
     /// <returns></returns>
     public override string GetTypeString()
@@ -57,7 +69,7 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
-    /// The Equals
+    /// Compares this <see cref="BehaviourTree"/> with <paramref name="other"/>
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -74,7 +86,7 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
-    /// Draws all transitions curves for the Behaviour Tree
+    /// Draws all <see cref="TransitionGUI"/> curves for the <see cref="BehaviourTree"/>
     /// </summary>
     public void DrawCurves()
     {
@@ -88,7 +100,7 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
-    /// Deletes the node and its children, including the transitions connected to all of them
+    /// Deletes the <paramref name="node"/> and its children
     /// </summary>
     /// <param name="node"></param>
     public void DeleteNode(BehaviourNode node)
@@ -112,26 +124,26 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
-    /// Deletes the connection
+    /// Deletes the <paramref name="connection"/>
     /// </summary>
-    /// <param name="deletedTrans"></param>
-    public void DeleteConnection(TransitionGUI deletedTrans)
+    /// <param name="connection"></param>
+    public void DeleteConnection(TransitionGUI connection)
     {
-        connections.Remove(deletedTrans);
+        connections.Remove(connection);
 
-        elementNamer.RemoveName(deletedTrans.identificator);
+        elementNamer.RemoveName(connection.identificator);
     }
 
     /// <summary>
-    /// Returns how many sons a node has
+    /// Returns how many children <paramref name="node"/> has
     /// </summary>
     /// <param name="i"></param>
-    /// <returns></returns>
-    public int ChildrenCount(GUIElement elem)
+    /// <returns>The number of children <paramref name="node"/> has</returns>
+    public int ChildrenCount(BehaviourNode node)
     {
         int res = 0;
 
-        foreach (TransitionGUI transition in connections.FindAll(t => elem.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
         {
             res += ChildrenCount((BehaviourNode)transition.toNode) + 1;
         }
@@ -139,7 +151,13 @@ public class BehaviourTree : ClickableElement
         return res;
     }
 
-    public bool ConnectedCheck(GUIElement start, GUIElement end)
+    /// <summary>
+    /// Checks wether <paramref name="start"/> could ever reach <paramref name="end"/> in the <see cref="BehaviourTree"/> execution
+    /// </summary>
+    /// <param name="start"></param>
+    /// <param name="end"></param>
+    /// <returns></returns>
+    public bool ConnectedCheck(BehaviourNode start, BehaviourNode end)
     {
         foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
         {
@@ -154,6 +172,10 @@ public class BehaviourTree : ClickableElement
         return false;
     }
 
+    /// <summary>
+    /// Returns the list of <see cref="ClickableElement"/> that exist inside each <see cref="BehaviourNode"/> of this <see cref="BehaviourTree"/> 
+    /// </summary>
+    /// <returns>The list of <see cref="ClickableElement"/> that exist inside each <see cref="BehaviourNode"/> of this <see cref="BehaviourTree"/></returns>
     public override List<ClickableElement> GetSubElems()
     {
         List<ClickableElement> result = new List<ClickableElement>();

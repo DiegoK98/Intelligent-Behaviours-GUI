@@ -7,28 +7,48 @@ using System.Linq;
 
 public class TransitionGUI : GUIElement
 {
+    /// <summary>
+    /// Name of the <see cref="TransitionGUI"/>
+    /// </summary>
     public string transitionName = "";
 
+    /// <summary>
+    /// <see cref="BaseNode"/> that this transition comes from
+    /// </summary>
     public BaseNode fromNode;
 
+    /// <summary>
+    /// <see cref="BaseNode"/> that this transition goes to
+    /// </summary>
     public BaseNode toNode;
 
-    public Rect textBox;
-
+    /// <summary>
+    /// Initial width of the <see cref="GUIElement.windowRect"/>
+    /// </summary>
     public static int baseWidth = 200;
 
+    /// <summary>
+    /// Initial height of the <see cref="GUIElement.windowRect"/>
+    /// </summary>
     public static int baseHeight = 70;
 
-    public static int areaHeight = 100;
-
+    /// <summary>
+    /// Variable width value of the <see cref="TransitionGUI.windowRect"/>
+    /// </summary>
     public int width;
 
+    /// <summary>
+    /// Variable height value of the <see cref="TransitionGUI.windowRect"/>
+    /// </summary>
     public int height;
 
+    /// <summary>
+    /// The root <see cref="PerceptionGUI"/> used to go through the others like navigating a tree
+    /// </summary>
     public PerceptionGUI rootPerception;
 
     /// <summary>
-    /// The InitTransitionGUI
+    /// The Initializer for the <seealso cref="TransitionGUI"/>
     /// </summary>
     /// <param name="name"></param>
     /// <param name="from"></param>
@@ -37,7 +57,7 @@ public class TransitionGUI : GUIElement
     {
         identificator = UniqueID();
 
-        transitionName = parent.elementNamer.GenerateUniqueName(identificator, "New Transition ");
+        transitionName = parent.elementNamer.AddName(identificator, "New Transition ");
 
         width = baseWidth;
         height = baseHeight;
@@ -49,14 +69,19 @@ public class TransitionGUI : GUIElement
         rootPerception.InitPerceptionGUI(perceptionType.Push);
     }
 
+    /// <summary>
+    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="TransitionGUI"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     public override XMLElement ToXMLElement(params object[] args)
     {
         XMLElement result = new XMLElement
         {
             name = CleanName(this.transitionName),
             elemType = this.GetType().ToString(),
-            windowPosX = this.textBox.x,
-            windowPosY = this.textBox.y,
+            windowPosX = this.windowRect.x,
+            windowPosY = this.windowRect.y,
             Id = this.identificator,
             fromId = this.fromNode.identificator,
             toId = this.toNode.identificator,
@@ -67,7 +92,7 @@ public class TransitionGUI : GUIElement
     }
 
     /// <summary>
-    /// Gets the type of the element properly written
+    /// Gets the type of the <see cref="TransitionGUI"/> properly written
     /// </summary>
     /// <returns></returns>
     public override string GetTypeString()
@@ -76,7 +101,7 @@ public class TransitionGUI : GUIElement
     }
 
     /// <summary>
-    /// Draws all the elements inside the Transition box
+    /// Draws all the elements inside the <see cref="GUIElement.windowRect"/>
     /// </summary>
     /// <param name="parent"></param>
     public void DrawBox(NodeEditor sender)
@@ -105,7 +130,7 @@ public class TransitionGUI : GUIElement
     }
 
     /// <summary>
-    /// 
+    /// Draws the <see cref="PerceptionGUI"/> as a foldout. Works recursively when there's a <see cref="PerceptionGUI"/> in another
     /// </summary>
     /// <param name="heightAcc"></param>
     /// <param name="widthAcc"></param>
@@ -359,7 +384,7 @@ public class TransitionGUI : GUIElement
     }
 
     /// <summary>
-    /// The Equals
+    /// Compares this <see cref="TransitionGUI"/> with <paramref name="other"/>
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -377,6 +402,10 @@ public class TransitionGUI : GUIElement
         return true;
     }
 
+    /// <summary>
+    /// Changes the <see cref="perceptionType"/> of a <see cref="PerceptionGUI"/> (its id is in <paramref name="param"/>) to a new selected type (it's in <paramref name="param"/>)
+    /// </summary>
+    /// <param name="param"></param>
     public void ChangeType(object param)
     {
         string[] data = (string[])param;
@@ -386,6 +415,12 @@ public class TransitionGUI : GUIElement
         ChangeTypeRecursive(ref rootPerception, id, (perceptionType)Enum.Parse(typeof(perceptionType), newType));
     }
 
+    /// <summary>
+    /// Recursive function for <see cref="ChangeType(object)"/>
+    /// </summary>
+    /// <param name="perception"></param>
+    /// <param name="id"></param>
+    /// <param name="newType"></param>
     public void ChangeTypeRecursive(ref PerceptionGUI perception, string id, perceptionType newType)
     {
         if (perception.identificator == id)
@@ -442,5 +477,13 @@ public class TransitionGUI : GUIElement
                 ChangeTypeRecursive(ref perception.secondChild, id, newType);
             }
         }
+    }
+
+    /// <summary>
+    /// Draws all the elements inside the <see cref="TransitionGUI"/>
+    /// </summary>
+    public override void DrawWindow()
+    {
+        throw new NotImplementedException();
     }
 }

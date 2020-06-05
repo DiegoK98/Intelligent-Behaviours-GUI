@@ -6,14 +6,18 @@ using System;
 
 public class StateNode : BaseNode
 {
-    public ClickableElement subElem;
-
+    /// <summary>
+    /// Current status of this <see cref="State"/>
+    /// </summary>
     public stateType type;
 
+    /// <summary>
+    /// List of <see cref="TransitionGUI"/> that are connected to this <see cref="StateNode"/>
+    /// </summary>
     public List<TransitionGUI> nodeTransitions = new List<TransitionGUI>();
 
     /// <summary>
-    /// The InitStateNode
+    /// The Initializer for the <seealso cref="StateNode"/>
     /// </summary>
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
@@ -30,13 +34,26 @@ public class StateNode : BaseNode
         }
         else
         {
-            nodeName = parent.elementNamer.GenerateUniqueName(identificator, "New State ");
+            nodeName = parent.elementNamer.AddName(identificator, "New State ");
             windowRect = new Rect(posx, posy, width, height);
         }
 
         type = (stateType)typeNumber;
     }
 
+    /// <summary>
+    /// Draws all the elements inside the <see cref="StateNode"/>
+    /// </summary>
+    public override void DrawWindow()
+    {
+        nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+    }
+
+    /// <summary>
+    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="StateNode"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     public override XMLElement ToXMLElement(params object[] args)
     {
         XMLElement result;
@@ -63,7 +80,7 @@ public class StateNode : BaseNode
     }
 
     /// <summary>
-    /// Gets the type of the element properly written
+    /// Returns the <see cref="stateType"/> properly written
     /// </summary>
     /// <returns></returns>
     public override string GetTypeString()
@@ -75,7 +92,7 @@ public class StateNode : BaseNode
     }
 
     /// <summary>
-    /// Removes the references to the transitions that were connected to the deleted node
+    /// Removes the references to all <see cref="TransitionGUI"/> that were connected to the <paramref name="deletedNode"/>
     /// </summary>
     /// <param name="deletedNode"></param>
     public void NodeDeleted(StateNode deletedNode)

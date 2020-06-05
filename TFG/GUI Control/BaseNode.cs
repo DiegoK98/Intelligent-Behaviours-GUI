@@ -6,20 +6,28 @@ using System;
 
 public abstract class BaseNode : GUIElement
 {
+    /// <summary>
+    /// Name of the <see cref="BaseNode"/>
+    /// </summary>
     public string nodeName = "";
 
-    public Rect windowRect;
-
-    public static int width = 140;
-
-    public static int height = 63;
-
-    public int NProperty = 0;
-
-    public bool isRandomSequence { get; set; } = false;
+    /// <summary>
+    /// The <see cref="ClickableElement"/> that is contained in this node
+    /// </summary>
+    public ClickableElement subElem;
 
     /// <summary>
-    /// The InitBaseNode
+    /// Width of the <see cref="GUIElement.windowRect"/>
+    /// </summary>
+    public static int width = 140;
+
+    /// <summary>
+    /// Height of the <see cref="GUIElement.windowRect"/>
+    /// </summary>
+    public static int height = 63;
+
+    /// <summary>
+    /// The Initializer for the <seealso cref="BaseNode"/>
     /// </summary>
     public void InitBaseNode()
     {
@@ -27,7 +35,7 @@ public abstract class BaseNode : GUIElement
     }
 
     /// <summary>
-    /// The Equals
+    /// Compares this <see cref="BaseNode"/> with <paramref name="other"/>
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -44,35 +52,7 @@ public abstract class BaseNode : GUIElement
     }
 
     /// <summary>
-    /// Draws all the elements inside the Node window
+    /// Draws all the elements inside the <see cref="BaseNode"/>
     /// </summary>
-    /// <param name="parent"></param>
-    public void DrawWindow(NodeEditor parent)
-    {
-        if (this is BehaviourNode)
-        {
-            switch (((BehaviourNode)this).type)
-            {
-                case BehaviourNode.behaviourType.Sequence:
-                    nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
-                    
-                    GUILayout.BeginArea(new Rect(windowRect.width * 0.25f, windowRect.height - 20, windowRect.width * 0.5f, height * 0.3f));
-                    isRandomSequence = GUILayout.Toggle(isRandomSequence, "Random", new GUIStyle(GUI.skin.toggle) { alignment = TextAnchor.MiddleCenter });
-                    GUILayout.EndArea();
-                    break;
-                case BehaviourNode.behaviourType.Selector:
-                case BehaviourNode.behaviourType.Leaf:
-                    nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
-                    break;
-                case BehaviourNode.behaviourType.LoopN:
-                case BehaviourNode.behaviourType.DelayT:
-                    int.TryParse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out NProperty);
-                    break;
-            }
-        }
-        else
-        {
-            nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
-        }
-    }
+    public override abstract void DrawWindow();
 }

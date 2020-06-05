@@ -5,26 +5,60 @@ using UnityEngine;
 
 public class PerceptionXML
 {
+    /// <summary>
+    /// Unique identificator of the <see cref="PerceptionXML"/>
+    /// </summary>
     public string Id;
 
+    /// <summary>
+    /// Type of perception
+    /// </summary>
     public perceptionType type;
 
+    /// <summary>
+    /// Parameter for the Timer Perception
+    /// </summary>
     public int timerNumber;
 
-    public string customName;
-
+    /// <summary>
+    /// Name of the selected <see cref="FSM"/> or <see cref="BehaviourTree"/> for IsInState and BehaviourTreeStatus Perceptions
+    /// </summary>
     public string elemName;
 
+    /// <summary>
+    /// Name for the Custom Perception class
+    /// </summary>
+    public string customName;
+
+    /// <summary>
+    /// Name of the state selected for IsInState Perception
+    /// </summary>
     public string stateName;
 
+    /// <summary>
+    /// Status selected for BehaviourTreeStatus Perception
+    /// </summary>
     public ReturnValues status;
 
+    /// <summary>
+    /// True if the foldout content of the <see cref="PerceptionGUI"/> should be shown
+    /// </summary>
     public bool openFoldout;
 
+    /// <summary>
+    /// First <see cref="PerceptionXML"/> of an And Perception
+    /// </summary>
     public PerceptionXML firstChild;
 
+    /// <summary>
+    /// Second <see cref="PerceptionXML"/> of an And Perception
+    /// </summary>
     public PerceptionXML secondChild;
 
+    /// <summary>
+    /// Creates and returns a <see cref="PerceptionGUI"/> that corresponds to this <see cref="PerceptionXML"/>
+    /// </summary>
+    /// <returns></returns>
     public PerceptionGUI ToGUIElement()
     {
         PerceptionGUI result = ScriptableObject.CreateInstance<PerceptionGUI>();

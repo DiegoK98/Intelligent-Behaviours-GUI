@@ -7,26 +7,53 @@ using System.Linq;
 
 public class PerceptionGUI : GUIElement
 {
+    /// <summary>
+    /// Type of perception
+    /// </summary>
     public perceptionType type;
 
+    /// <summary>
+    /// Parameter for the Timer Perception
+    /// </summary>
     public int timerNumber;
 
+    /// <summary>
+    /// Name of the selected <see cref="FSM"/> or <see cref="BehaviourTree"/> for IsInState and BehaviourTreeStatus Perceptions
+    /// </summary>
     public string elemName;
 
+    /// <summary>
+    /// Name for the Custom Perception class
+    /// </summary>
     public string customName;
 
+    /// <summary>
+    /// Name of the state selected for IsInState Perception
+    /// </summary>
     public string stateName;
 
+    /// <summary>
+    /// Status selected for BehaviourTreeStatus Perception
+    /// </summary>
     public ReturnValues status;
 
+    /// <summary>
+    /// True if the foldout content of the <see cref="PerceptionGUI"/> should be shown
+    /// </summary>
     public bool openFoldout;
 
+    /// <summary>
+    /// First <see cref="PerceptionGUI"/> of an And Perception
+    /// </summary>
     public PerceptionGUI firstChild;
 
+    /// <summary>
+    /// Second <see cref="PerceptionGUI"/> of an And Perception
+    /// </summary>
     public PerceptionGUI secondChild;
 
     /// <summary>
-    /// The Equals
+    /// Compares this <see cref="PerceptionGUI"/> with <paramref name="other"/>
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -40,13 +67,17 @@ public class PerceptionGUI : GUIElement
         return true;
     }
 
+    /// <summary>
+    /// Returns the <see cref="perceptionType"/> properly written
+    /// </summary>
+    /// <returns></returns>
     public override string GetTypeString()
     {
         return type.ToString() + " Perception";
     }
 
     /// <summary>
-    /// The default initiator
+    /// The Initializer for the <seealso cref="PerceptionGUI"/>
     /// </summary>
     /// <param name="type"></param>
     public void InitPerceptionGUI(perceptionType type)
@@ -90,6 +121,10 @@ public class PerceptionGUI : GUIElement
         }
     }
 
+    /// <summary>
+    /// Creates and returns a <see cref="PerceptionXML"/> that corresponds to this <see cref="PerceptionGUI"/>
+    /// </summary>
+    /// <returns></returns>
     public PerceptionXML ToPerceptionXML()
     {
         PerceptionXML result = new PerceptionXML
@@ -112,7 +147,20 @@ public class PerceptionGUI : GUIElement
         return result;
     }
 
+    /// <summary>
+    /// Not implemented
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     public override XMLElement ToXMLElement(params object[] args)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Draws all the elements inside the <see cref="PerceptionGUI"/> window
+    /// </summary>
+    public override void DrawWindow()
     {
         throw new NotImplementedException();
     }

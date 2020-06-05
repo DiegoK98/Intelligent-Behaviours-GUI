@@ -11,20 +11,40 @@ public abstract class ClickableElement : GUIElement
         BT
     }
 
-    public Rect windowRect;
-
+    /// <summary>
+    /// Width of the <see cref="ClickableElement.windowRect"/>
+    /// </summary>
     public static int width = 150;
 
+    /// <summary>
+    /// Height of the <see cref="ClickableElement.windowRect"/>
+    /// </summary>
     public static int height = 70;
 
+    /// <summary>
+    /// Name of the <see cref="ClickableElement"/>
+    /// </summary>
     public string elementName = "";
 
-    public elementType type;
-
+    /// <summary>
+    /// The <see cref="ClickableElement"/> that this <see cref="ClickableElement"/> was created in, if it was. Null if it wasn't
+    /// </summary>
     public ClickableElement parent;
 
+    /// <summary>
+    /// List of <see cref="Error"/> of this <see cref="ClickableElement"/>
+    /// </summary>
+    public List<Error> errors = new List<Error>();
+
+    /// <summary>
+    /// The <see cref="UniqueNamer"/> for managing the names of the elements inside this <see cref="ClickableElement"/>
+    /// </summary>
     public UniqueNamer elementNamer;
 
+    /// <summary>
+    /// The Initializer for the <seealso cref="ClickableElement"/>
+    /// </summary>
+    /// <param name="id"></param>
     public void InitClickableElement(string id = null)
     {
         elementNamer = CreateInstance<UniqueNamer>();
@@ -35,16 +55,21 @@ public abstract class ClickableElement : GUIElement
     }
 
     /// <summary>
-    /// Draws all the elements inside the Element window
+    /// Draws all the elements inside the <see cref="ClickableElement"/> window
     /// </summary>
-    /// <param name="parent"></param>
-    public void DrawWindow()
+    public override void DrawWindow()
     {
         elementName = CleanName(EditorGUILayout.TextArea(elementName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
     }
 
     /// <summary>
-    /// Checks if a given name exists in this element
+    /// Returns the list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/> 
+    /// </summary>
+    /// <returns>The list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/></returns>
+    public abstract List<ClickableElement> GetSubElems();
+
+    /// <summary>
+    /// Checks if <paramref name="name"/> exists more than <paramref name="threshold"/> times
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
@@ -56,7 +81,6 @@ public abstract class ClickableElement : GUIElement
         {
             foreach (StateNode node in ((FSM)this).states)
             {
-
                 if (node.nodeName == name)
                 {
                     repeatedNames++;
@@ -89,5 +113,22 @@ public abstract class ClickableElement : GUIElement
         return repeatedNames > threshold;
     }
 
-    public abstract List<ClickableElement> GetSubElems();
+    /// <summary>
+    /// Add an <see cref="Error"/> that is happening right now
+    /// </summary>
+    /// <param name="error"></param>
+    public void AddError(Error error)
+    {
+        if (!errors.Contains(error))
+            errors.Add(error);
+    }
+
+    /// <summary>
+    /// Remove an <see cref="Error"/> that is no longer happening
+    /// </summary>
+    /// <param name="error"></param>
+    public void RemoveError(Error error)
+    {
+        errors.Remove(error);
+    }
 }

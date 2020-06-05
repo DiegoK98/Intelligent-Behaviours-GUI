@@ -20,8 +20,8 @@ public class NodeEditorUtilities
     static readonly string subFSMEnding = "_SubFSM";
     static readonly string subBtEnding = "_SubBT";
 
-    static readonly string savesFolderName = "Intelligent Behaviours Saves";
-    static readonly string scriptsFolderName = "Intelligent Behaviours Scripts";
+    static readonly string savesFolderName = "Saves (Intelligent Behaviours)";
+    static readonly string scriptsFolderName = "Scripts (Intelligent Behaviours)";
 
     static UniqueNamer uniqueNamer;
 
@@ -415,7 +415,7 @@ public class NodeEditorUtilities
         }
 
         uniqueNamer.AddName(perception.identificator, transitionName + "_" + typeName + "Perception");
-        res += "Perception " + uniqueNamer.GetName(perception.identificator) + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
+        res += "Perception " + typeName + "Perception" + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
 
         return res;
     }
@@ -548,7 +548,7 @@ public class NodeEditorUtilities
                     result += "SelectorNode " + nodeName + " = " + machineName + ".CreateSelectorNode(\"" + node.nodeName + "\");\n" + tab + tab;
                     break;
                 case BehaviourNode.behaviourType.Sequence:
-                    result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", " + (node.isRandomSequence ? "true" : "false") + ");\n" + tab + tab;
+                    result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", " + (node.isRandom ? "true" : "false") + ");\n" + tab + tab;
                     break;
                 case BehaviourNode.behaviourType.Leaf:
                     if (node.subElem is FSM)
@@ -572,7 +572,7 @@ public class NodeEditorUtilities
         // Decorator nodes
         // We check every node from the root so it is written in order in the generated code
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRootNode))
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRoot))
         {
             RecursiveDecorators(ref result, machineName, elem, node);
         }
@@ -746,7 +746,7 @@ public class NodeEditorUtilities
 
         foreach (BehaviourNode node in ((BehaviourTree)elem).nodes)
         {
-            if (node.isRootNode)
+            if (node.isRoot)
                 result += machineName + ".SetRootNode(" + CleanName(node.nodeName) + ");";
         }
 

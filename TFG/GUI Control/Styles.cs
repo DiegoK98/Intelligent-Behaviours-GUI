@@ -71,20 +71,4 @@ public static class Styles
             textColor = Color.red
         }
     };
-
-    // Useless
-    private static Texture2D MakeBackground(Color col)
-    {
-        Color[] pix = new Color[2 * 2];
-        for (int i = 0; i < pix.Length; ++i)
-        {
-            pix[i] = col;
-        }
-
-        Texture2D result = new Texture2D(2, 2);
-        result.SetPixels(pix);
-        result.Apply();
-
-        return result;
-    }
 }

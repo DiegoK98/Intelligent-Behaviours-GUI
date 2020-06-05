@@ -6,36 +6,87 @@ using UnityEngine;
 
 public class XMLElement
 {
-    /// General properties
+    // General properties
+
+    /// <summary>
+    /// Unique identificator
+    /// </summary>
     public string Id { get; set; }
 
+    /// <summary>
+    /// The type of element
+    /// </summary>
     public string elemType { get; set; }
 
+    /// <summary>
+    /// Auxiliar type used for when using only <see cref="elemType"/> is not enough
+    /// </summary>
     public string secondType { get; set; } = "";
 
+    /// <summary>
+    /// Name of the element
+    /// </summary>
     public string name { get; set; }
 
+    /// <summary>
+    /// X position of the element window
+    /// </summary>
     public float windowPosX { get; set; }
 
+    /// <summary>
+    /// Y position of the element window
+    /// </summary>
     public float windowPosY { get; set; }
 
-    /// Behaviour Nodes properties
-    public bool isRandomSequence { get; set; }
+    // Clickable Elements properties
 
-    public int NProperty { get; set; }
-
-    /// Transitions properties
-    public string fromId { get; set; }
-
-    public string toId { get; set; }
-
-    public PerceptionXML perception { get; set; }
-
-    /// Lists
+    /// <summary>
+    /// List of nodes of the <see cref="ClickableElement"/>
+    /// </summary>
     public List<XMLElement> nodes { get; set; }
 
+    /// <summary>
+    /// List of transitions of the <see cref="FSM"/>
+    /// </summary>
     public List<XMLElement> transitions { get; set; }
 
+    // Behaviour Nodes properties
+
+    /// <summary>
+    /// Parameter for Sequence Nodes
+    /// </summary>
+    public bool isRandom { get; set; }
+
+    /// <summary>
+    /// Parameter for DelayT and LoopN Nodes
+    /// </summary>
+    public int NProperty { get; set; }
+
+    // Transitions properties
+
+    /// <summary>
+    /// Identificator of the <see cref="TransitionGUI.fromNode"/>
+    /// </summary>
+    public string fromId { get; set; }
+
+    /// <summary>
+    /// Identificator of the <see cref="TransitionGUI.toNode"/>
+    /// </summary>
+    public string toId { get; set; }
+
+    /// <summary>
+    /// The <see cref="PerceptionXML"/> of this <see cref="TransitionGUI"/>'s perception
+    /// </summary>
+    public PerceptionXML perception { get; set; }
+
+    // Conversion Methods
+
+    /// <summary>
+    /// Creates and returns the <see cref="TransitionGUI"/> corresponding to this <see cref="XMLElement"/>
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    /// <returns></returns>
     public TransitionGUI ToTransitionGUI(BaseNode from, BaseNode to)
     {
         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
@@ -51,6 +102,10 @@ public class XMLElement
         return transition;
     }
 
+    /// <summary>
+    /// Creates and returns the <see cref="StateNode"/> corresponding to this <see cref="XMLElement"/>
+    /// </summary>
+    /// <returns></returns>
     public StateNode ToStateNode()
     {
         StateNode node = ScriptableObject.CreateInstance<StateNode>();
@@ -62,13 +117,18 @@ public class XMLElement
         return node;
     }
 
+    /// <summary>
+    /// Creates and returns the <see cref="FSM"/> corresponding to this <see cref="XMLElement"/>
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="selectedNode"></param>
+    /// <returns></returns>
     public FSM ToFSM(ClickableElement parent, BaseNode selectedNode = null)
     {
         FSM fsm = ScriptableObject.CreateInstance<FSM>();
         fsm.identificator = this.Id;
         fsm.elementName = this.name;
         fsm.windowRect = new Rect(this.windowPosX, this.windowPosY, FSM.width, FSM.height);
-        fsm.type = ClickableElement.elementType.FSM;
         fsm.parent = parent;
 
         foreach (XMLElement node in this.nodes)
@@ -143,6 +203,13 @@ public class XMLElement
         return fsm;
     }
 
+    /// <summary>
+    /// Creates and returns the <see cref="BehaviourTree"/> corresponding to this <see cref="XMLElement"/>
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="selectedNode"></param>
+    /// <param name="sender"></param>
+    /// <returns></returns>
     public BehaviourTree ToBehaviourTree(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
     {
         BehaviourTree bt = ScriptableObject.CreateInstance<BehaviourTree>();
@@ -204,6 +271,12 @@ public class XMLElement
         return bt;
     }
 
+    /// <summary>
+    /// Creates the <see cref="BehaviourNode"/> corresponding to this <see cref="XMLElement"/>
+    /// </summary>
+    /// <param name="selectedNode"></param>
+    /// <param name="currentTree"></param>
+    /// <param name="currentElement"></param>
     private void ToBehaviourNode(BaseNode selectedNode, BehaviourTree currentTree, ClickableElement currentElement)
     {
         switch (this.elemType)
@@ -218,7 +291,7 @@ public class XMLElement
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
                 nodeBT.InitBehaviourNode(currentTree, (int)Enum.Parse(typeof(BehaviourNode.behaviourType), this.secondType), this.windowPosX, this.windowPosY);
                 nodeBT.nodeName = this.name;
-                nodeBT.isRandomSequence = this.isRandomSequence;
+                nodeBT.isRandom = this.isRandom;
                 nodeBT.NProperty = this.NProperty;
 
                 currentTree.nodes.Add(nodeBT);
@@ -232,7 +305,7 @@ public class XMLElement
                 }
                 else
                 {
-                    nodeBT.isRootNode = true;
+                    nodeBT.isRoot = true;
                 }
 
                 foreach (XMLElement childState in this.nodes)

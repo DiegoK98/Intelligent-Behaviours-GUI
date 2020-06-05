@@ -5,13 +5,25 @@ using UnityEngine;
 
 public class FSM : ClickableElement
 {
+    /// <summary>
+    /// The Entry State
+    /// </summary>
     private StateNode EntryState;
 
+    /// <summary>
+    /// List of <see cref="StateNode"/> that form this <see cref="FSM"/>
+    /// </summary>
     public List<StateNode> states = new List<StateNode>();
 
+    /// <summary>
+    /// List of <see cref="TransitionGUI"/> that connect the <see cref="states"/>
+    /// </summary>
     public List<TransitionGUI> transitions = new List<TransitionGUI>();
 
-    public bool hasEntryState
+    /// <summary>
+    /// Returns true if this <see cref="FSM"/> has an <see cref="EntryState"/>
+    /// </summary>
+    public bool HasEntryState
     {
         get
         {
@@ -20,9 +32,9 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// The FSM
+    /// The Initializer for the <seealso cref="FSM"/>
     /// </summary>
-    /// <param name="node"></param>
+    /// <param name="editor"></param>
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
@@ -32,10 +44,9 @@ public class FSM : ClickableElement
 
         this.parent = parent;
         if (parent != null)
-            elementName = parent.elementNamer.GenerateUniqueName(identificator, "New FSM ");
+            elementName = parent.elementNamer.AddName(identificator, "New FSM ");
         else
-            elementName = editor.editorNamer.GenerateUniqueName(identificator, "New FSM ");
-        type = elementType.FSM;
+            elementName = editor.editorNamer.AddName(identificator, "New FSM ");
         windowRect = new Rect(posx, posy, width, height);
 
         // Create the entry state
@@ -46,6 +57,11 @@ public class FSM : ClickableElement
             AddEntryState(entryNode);
     }
 
+    /// <summary>
+    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="FSM"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     public override XMLElement ToXMLElement(params object[] args)
     {
         XMLElement result = new XMLElement
@@ -69,7 +85,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Gets the type of the element properly written
+    /// Returns the type properly written
     /// </summary>
     /// <returns></returns>
     public override string GetTypeString()
@@ -78,7 +94,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// The Equals
+    /// Compares this <see cref="FSM"/> with <paramref name="other"/>
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
@@ -95,7 +111,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Add a Node as an EntryState
+    /// Add <paramref name="node"/> as an <see cref="EntryState"/>
     /// </summary>
     /// <param name="node"></param>
     public void AddEntryState(StateNode node)
@@ -106,7 +122,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Convert a Node to Entry State
+    /// Convert <paramref name="node"/> to <see cref="EntryState"/>
     /// </summary>
     /// <param name="node"></param>
     public void SetAsEntry(StateNode node)
@@ -121,7 +137,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Check if a given Node is the EntryState
+    /// Check if <paramref name="node"/> is the <see cref="EntryState"/>
     /// </summary>
     /// <param name="node"></param>
     /// <returns></returns>
@@ -131,7 +147,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Draws all transitions curves for the FSM
+    /// Draws all <see cref="transitions"/> curves for the <see cref="FSM"/>
     /// </summary>
     public void DrawCurves()
     {
@@ -155,7 +171,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Delete a given Node and its transitions
+    /// Delete <paramref name="node"/> and all <see cref="TransitionGUI"/> connected to it
     /// </summary>
     /// <param name="node"></param>
     public void DeleteNode(StateNode node)
@@ -180,25 +196,25 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Delete a given Transition
+    /// Delete <paramref name="transition"/>
     /// </summary>
-    /// <param name="deletedTrans"></param>
-    public void DeleteTransition(TransitionGUI deletedTrans)
+    /// <param name="transition"></param>
+    public void DeleteTransition(TransitionGUI transition)
     {
-        transitions.Remove(deletedTrans);
+        transitions.Remove(transition);
 
         foreach (StateNode n in states)
         {
-            n.nodeTransitions.Remove(deletedTrans);
+            n.nodeTransitions.Remove(transition);
         }
 
         CheckConnected();
 
-        elementNamer.RemoveName(deletedTrans.identificator);
+        elementNamer.RemoveName(transition.identificator);
     }
 
     /// <summary>
-    /// Recalculate every node's state of connection to the Entry State
+    /// Recalculate every <see cref="StateNode"/>'s state of connection to the <see cref="EntryState"/>
     /// </summary>
     /// <param name="baseNode"></param>
     public void CheckConnected(StateNode baseNode = null)
@@ -231,7 +247,7 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Add a transition to the FSM
+    /// Add <paramref name="newTransition"/> to the <see cref="FSM"/>
     /// </summary>
     /// <param name="newTransition"></param>
     public void AddTransition(TransitionGUI newTransition)
@@ -244,6 +260,10 @@ public class FSM : ClickableElement
         CheckConnected();
     }
 
+    /// <summary>
+    /// Returns the list of <see cref="ClickableElement"/> that exist inside each <see cref="StateNode"/> of this <see cref="FSM"/> 
+    /// </summary>
+    /// <returns>The list of <see cref="ClickableElement"/> that exist inside each <see cref="StateNode"/> of this <see cref="FSM"/></returns>
     public override List<ClickableElement> GetSubElems()
     {
         List<ClickableElement> result = new List<ClickableElement>();

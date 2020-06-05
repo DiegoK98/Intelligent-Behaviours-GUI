@@ -33,7 +33,7 @@ public enum perceptionType
 public class Enums
 {
     /// <summary>
-    /// Transforms the error given into a pre-defined message
+    /// Transforms the <paramref name="error"/> into a pre-defined message
     /// </summary>
     /// <param name="error"></param>
     /// <returns></returns>

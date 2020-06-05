@@ -20,14 +20,28 @@ public class BehaviourNode : BaseNode
         Conditional
     }
 
-    public ClickableElement subElem;
-
+    /// <summary>
+    /// The type of <see cref="BehaviourNode"/>
+    /// </summary>
     public behaviourType type;
 
-    public bool isRootNode { get; set; } = false;
+    /// <summary>
+    /// Only used for Decorator Nodes that are <see cref="behaviourType.LoopN"/> or <see cref="behaviourType.DelayT"/>
+    /// </summary>
+    public int NProperty = 0;
 
     /// <summary>
-    /// Gets the type of the element properly written
+    /// True if this <see cref="BehaviourNode"/> is the root of the <see cref="BehaviourTree"/>
+    /// </summary>
+    public bool isRoot = false;
+
+    /// <summary>
+    /// Parameter for Sequence Nodes
+    /// </summary>
+    public bool isRandom = false;
+
+    /// <summary>
+    /// Returns the <see cref="behaviourType"/> properly written
     /// </summary>
     /// <returns></returns>
     public override string GetTypeString()
@@ -39,11 +53,13 @@ public class BehaviourNode : BaseNode
     }
 
     /// <summary>
-    /// The InitBehaviourNode
+    /// The Initializer for the <seealso cref="BehaviourNode"/>
     /// </summary>
+    /// <param name="parent"></param>
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
+    /// <param name="subElem"></param>
     public void InitBehaviourNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode();
@@ -58,11 +74,41 @@ public class BehaviourNode : BaseNode
         }
         else
         {
-            nodeName = parent.elementNamer.GenerateUniqueName(identificator, "New " + type + " Node ");
+            nodeName = parent.elementNamer.AddName(identificator, "New " + type + " Node ");
             windowRect = new Rect(posx, posy, width, height);
         }
     }
 
+    /// <summary>
+    /// Draws all the elements inside the <see cref="BehaviourNode"/>
+    /// </summary>
+    public override void DrawWindow()
+    {
+        switch (type)
+        {
+            case behaviourType.Sequence:
+                nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+
+                GUILayout.BeginArea(new Rect(windowRect.width * 0.25f, windowRect.height - 20, windowRect.width * 0.5f, height * 0.3f));
+                isRandom = GUILayout.Toggle(isRandom, "Random", new GUIStyle(GUI.skin.toggle) { alignment = TextAnchor.MiddleCenter });
+                GUILayout.EndArea();
+                break;
+            case behaviourType.Selector:
+            case behaviourType.Leaf:
+                nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+                break;
+            case behaviourType.LoopN:
+            case behaviourType.DelayT:
+                int.TryParse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out NProperty);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="BehaviourNode"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns>The <see cref="XMLElement"/> corresponding to this <see cref="BehaviourNode"/></returns>
     public override XMLElement ToXMLElement(params object[] args)
     {
         BehaviourTree parentTree = (BehaviourTree)args[0];
@@ -80,7 +126,7 @@ public class BehaviourNode : BaseNode
                 elemType = this.GetType().ToString(),
                 windowPosX = this.windowRect.x,
                 windowPosY = this.windowRect.y,
-                isRandomSequence = this.isRandomSequence,
+                isRandom = this.isRandom,
                 NProperty = this.NProperty,
 
                 nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>

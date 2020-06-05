@@ -7,25 +7,41 @@ public class PopupWindow : EditorWindow
     enum typeOfPopup
     {
         Delete,
-        Export
+        FailedExport
     }
 
+    /// <summary>
+    /// Type of popup
+    /// </summary>
     static typeOfPopup PopupType;
 
+    /// <summary>
+    /// Type of the <see cref="ClickableElement"/> that will be deleted
+    /// </summary>
     static string typeOfElem;
 
+    /// <summary>
+    /// The <see cref="NodeEditor"/> window that is calling for this <see cref="PopupWindow"/> to be shown
+    /// </summary>
     static NodeEditor senderEditor;
 
+    /// <summary>
+    /// The <see cref="GUIElement"/> that will be deleted
+    /// </summary>
     static GUIElement elem;
 
-    static string repeatedName;
-
+    /// <summary>
+    /// Width of the <see cref="PopupWindow"/>
+    /// </summary>
     static int width = 300;
 
+    /// <summary>
+    /// Height of the <see cref="PopupWindow"/>
+    /// </summary>
     static int height = 150;
 
     /// <summary>
-    /// Initializer for the popup when deleting an element
+    /// Initializer for the <see cref="PopupWindow"/> when deleting a <see cref="GUIElement"/>
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="focusElem"></param>
@@ -45,7 +61,7 @@ public class PopupWindow : EditorWindow
     }
 
     /// <summary>
-    /// Initializer for the popup when exporting an element
+    /// Initializer for the <see cref="PopupWindow"/> when failed at exporting a <see cref="ClickableElement"/>
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="focusElem"></param>
@@ -54,7 +70,7 @@ public class PopupWindow : EditorWindow
     {
         senderEditor = sender;
 
-        PopupType = typeOfPopup.Export;
+        PopupType = typeOfPopup.FailedExport;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
         window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
@@ -62,7 +78,7 @@ public class PopupWindow : EditorWindow
     }
 
     /// <summary>
-    /// The OnGUI
+    /// Called once every frame
     /// </summary>
     void OnGUI()
     {
@@ -71,7 +87,7 @@ public class PopupWindow : EditorWindow
             case typeOfPopup.Delete:
                 ShowDeletePopup();
                 break;
-            case typeOfPopup.Export:
+            case typeOfPopup.FailedExport:
                 ShowExportPopup();
                 break;
         }
@@ -93,14 +109,14 @@ public class PopupWindow : EditorWindow
     }
 
     /// <summary>
-    /// Shows the popup asking if you're sure you wanna delete an element
+    /// Shows the <see cref="PopupWindow"/> asking if you're sure you wanna delete the <see cref="elem"/>
     /// </summary>
     private void ShowDeletePopup()
     {
         EditorGUILayout.LabelField("Do you want to delete this " + typeOfElem + "?", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
         if (senderEditor.currentElem is BehaviourTree)
         {
-            int numberOfSons = ((BehaviourTree)senderEditor.currentElem).ChildrenCount(elem);
+            int numberOfSons = ((BehaviourTree)senderEditor.currentElem).ChildrenCount((BehaviourNode)elem);
             if (numberOfSons > 0)
             {
                 EditorGUILayout.LabelField(numberOfSons + " child nodes will be deleted as well", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
@@ -123,6 +139,9 @@ public class PopupWindow : EditorWindow
         }
     }
 
+    /// <summary>
+    /// Shows the <see cref="PopupWindow"/> telling you that you should fix all errors before exporting the <see cref="ClickableElement"/>
+    /// </summary>
     private void ShowExportPopup()
     {
         EditorGUILayout.LabelField("Fix all the errors", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
@@ -135,9 +154,6 @@ public class PopupWindow : EditorWindow
         }
     }
 
-    /// <summary>
-    /// The OnLostFocus
-    /// </summary>
     private void OnLostFocus()
     {
         this.Close();
