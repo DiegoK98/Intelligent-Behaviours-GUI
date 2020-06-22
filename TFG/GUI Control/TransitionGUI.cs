@@ -196,8 +196,11 @@ public class TransitionGUI : GUIElement
                         }
                         break;
                     case perceptionType.Value:
-                        heightAcc += 20;
-                        GUILayout.Label("Not implemented yet", Styles.WarningLabel, GUILayout.Height(20));
+                        heightAcc += 40;
+                        GUILayout.Label("You will have to\nwrite the lambda function\nfor this in code", new GUIStyle(Styles.SubTitleText)
+                        {
+                            fontStyle = FontStyle.Italic
+                        }, GUILayout.Height(50));
                         break;
                     case perceptionType.IsInState:
                         heightAcc += 30;

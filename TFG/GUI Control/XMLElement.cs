@@ -289,7 +289,7 @@ public class XMLElement
                 break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
-                nodeBT.InitBehaviourNode(currentTree, (int)Enum.Parse(typeof(BehaviourNode.behaviourType), this.secondType), this.windowPosX, this.windowPosY);
+                nodeBT.InitBehaviourNode(currentTree, (int)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY);
                 nodeBT.nodeName = this.name;
                 nodeBT.isRandom = this.isRandom;
                 nodeBT.NProperty = this.NProperty;

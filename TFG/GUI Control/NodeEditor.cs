@@ -181,6 +181,7 @@ public class NodeEditor : EditorWindow
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
                         }
@@ -239,6 +240,7 @@ public class NodeEditor : EditorWindow
                                     menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Conditional"));
                                     menu.AddDisabledItem(new GUIContent("Add FSM"));
                                     menu.AddDisabledItem(new GUIContent("Add BT"));
+                                    menu.AddDisabledItem(new GUIContent("Add Utility System"));
                                 }
                                 else
                                 {
@@ -254,6 +256,7 @@ public class NodeEditor : EditorWindow
                                     menu.AddItem(new GUIContent("Decorator Nodes/Add Conditional"), false, ContextCallback, new string[] { "conditional", selectIndex.ToString() });
                                     menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                                     menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                                    menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                                 }
 
                                 menu.AddSeparator("");
@@ -271,12 +274,34 @@ public class NodeEditor : EditorWindow
                             menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
                         }
                     }
+                    else if (currentElem is UtilitySystem)
+                    {
+                        if (!clickedOnWindow && !clickedOnTransition)
+                        {
+
+                            menu.AddItem(new GUIContent("Add Variable"), false, ContextCallback, new string[] { "Variable", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add Action"), false, ContextCallback, new string[] { "Action", selectIndex.ToString() });
+                            menu.AddSeparator("");
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
+                        }
+                        else if (clickedOnWindow)
+                        {
+                            if (((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
+                            {
+                                menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, ((UtilitySystem)currentElem).nodes[selectIndex].subElem);
+                                menu.AddItem(new GUIContent("Export Code"), false, ExportCode, ((UtilitySystem)currentElem).nodes[selectIndex].subElem);
+                            }
+
+                            menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
+                        }
+                    }
                     else if (currentElem is null)
                     {
                         if (!clickedOnElement)
                         {
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
 
@@ -348,6 +373,17 @@ public class NodeEditor : EditorWindow
                         e.Use();
                     }
                 }
+                else if (clickedOnWindow && currentElem is UtilitySystem)
+                {
+                    ((UtilitySystem)currentElem).nodes[selectIndex].isFocused = true;
+                    focusedObj = ((UtilitySystem)currentElem).nodes[selectIndex];
+
+                    if (Event.current.clickCount == 2 && ((UtilityNode)focusedObj).subElem != null)
+                    {
+                        currentElem = ((UtilityNode)focusedObj).subElem;
+                        e.Use();
+                    }
+                }
                 else
                 {
                     focusedObj = null;
@@ -400,7 +436,7 @@ public class NodeEditor : EditorWindow
                     }
                     if (makeConnectionMode)
                     {
-                        if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == BehaviourNode.behaviourType.Leaf))
+                        if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == behaviourType.Leaf))
                         {
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
                             transition.InitTransitionGUI(currentElem, ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
@@ -554,7 +590,7 @@ public class NodeEditor : EditorWindow
             for (int i = 0; i < ((BehaviourTree)currentElem).nodes.Count; i++)
             {
                 string displayName = "";
-                if (((BehaviourTree)currentElem).nodes[i].type > BehaviourNode.behaviourType.Selector)
+                if (((BehaviourTree)currentElem).nodes[i].type > behaviourType.Selector)
                     displayName = ((BehaviourTree)currentElem).nodes[i].GetTypeString();
                 displayName += ((BehaviourTree)currentElem).nodes[i].subElem?.errors.Count > 0 ? "(" + ((BehaviourTree)currentElem).nodes[i].subElem.errors.Count + " error" + (((BehaviourTree)currentElem).nodes[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
 
@@ -563,6 +599,23 @@ public class NodeEditor : EditorWindow
                     normal = new GUIStyleState()
                     {
                         background = GetBackground(((BehaviourTree)currentElem).nodes[i])
+                    }
+                });
+            }
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            for (int i = 0; i < ((UtilitySystem)currentElem).nodes.Count; i++)
+            {
+                string displayName = ((UtilitySystem)currentElem).nodes[i].GetTypeString();
+                displayName += ((UtilitySystem)currentElem).nodes[i].subElem?.errors.Count > 0 ? "(" + ((UtilitySystem)currentElem).nodes[i].subElem.errors.Count + " error" + (((UtilitySystem)currentElem).nodes[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
+
+                ((UtilitySystem)currentElem).nodes[i].windowRect = GUI.Window(i, ((UtilitySystem)currentElem).nodes[i].windowRect, DrawNodeWindow, displayName, new GUIStyle(Styles.SubTitleText)
+                {
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(((UtilitySystem)currentElem).nodes[i])
                     }
                 });
             }
@@ -596,6 +649,19 @@ public class NodeEditor : EditorWindow
         else if (currentElem is BehaviourTree)
         {
             foreach (BaseNode node in ((BehaviourTree)currentElem).nodes)
+            {
+                if (currentElem.CheckNameExisting(node.nodeName, 1))
+                    repeatedNames = true;
+            }
+
+            if (repeatedNames)
+                currentElem.AddError(Error.RepeatedName);
+            else
+                currentElem.RemoveError(Error.RepeatedName);
+        }
+        else if (currentElem is UtilitySystem)
+        {
+            foreach (BaseNode node in ((UtilitySystem)currentElem).nodes)
             {
                 if (currentElem.CheckNameExisting(node.nodeName, 1))
                     repeatedNames = true;
@@ -678,10 +744,23 @@ public class NodeEditor : EditorWindow
                     if (((BehaviourTree)currentElem).connections.Exists(t => t.toNode.Equals(((BehaviourTree)currentElem).nodes[i])))
                         nodeWithAscendants = 1;
 
-                    if (((BehaviourTree)currentElem).nodes[i].type == BehaviourNode.behaviourType.Leaf)
+                    if (((BehaviourTree)currentElem).nodes[i].type == behaviourType.Leaf)
                         clickedOnLeaf = 1;
-                    else if (((BehaviourTree)currentElem).nodes[i].type >= BehaviourNode.behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(((BehaviourTree)currentElem).nodes[i])))
+                    else if (((BehaviourTree)currentElem).nodes[i].type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(((BehaviourTree)currentElem).nodes[i])))
                         decoratorWithOneChild = 1;
+                    break;
+                }
+            }
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            for (int i = 0; i < ((UtilitySystem)currentElem).nodes.Count; i++)
+            {
+                if (((UtilitySystem)currentElem).nodes[i].windowRect.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnWindow = 1;
                     break;
                 }
             }
@@ -788,6 +867,12 @@ public class NodeEditor : EditorWindow
                 col = Color.cyan;
                 break;
 
+            // US
+            case nameof(UtilitySystem):
+                originalTexture = Resources.Load<Texture2D>("BT_Rect");
+                col = Color.cyan;
+                break;
+
             // FSM Node
             case nameof(StateNode):
                 type = (int)((StateNode)elem).type;
@@ -838,7 +923,7 @@ public class NodeEditor : EditorWindow
                 }
                 break;
 
-            // BehaviourTree Node
+            // BehaviourNode
             case nameof(BehaviourNode):
                 type = (int)((BehaviourNode)elem).type;
 
@@ -871,6 +956,37 @@ public class NodeEditor : EditorWindow
                     case 8:
                         originalTexture = Resources.Load<Texture2D>("Decorator_Rect"); //Hacer un rombo gris
                                                                                        //col = Color.grey;
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+
+            // UtilityNode
+            case nameof(UtilityNode):
+                type = (int)((UtilityNode)elem).type;
+
+                switch (type)
+                {
+                    case 0:
+                        originalTexture = Resources.Load<Texture2D>("Selector_Rect");
+                        col = new Color(1, 0.5f, 0, 1); //orange
+                        break;
+                    case 1:
+                        originalTexture = Resources.Load<Texture2D>("Selector_Rect");
+                        col = new Color(1, 0.5f, 0, 1); //orange
+                        break;
+                    case 2:
+                        if (((UtilityNode)elem).subElem == null) //Es un nodo normal
+                        {
+                            originalTexture = Resources.Load<Texture2D>("Leaf_Rect");
+                        }
+                        else //Es un subelemento
+                        {
+                            originalTexture = Resources.Load<Texture2D>("Leaf_Sub_Rect");
+                        }
+                        col = new Color(0, 0.75f, 0, 1); //dark green
                         break;
                     default:
                         col = Color.white;
@@ -915,7 +1031,7 @@ public class NodeEditor : EditorWindow
 
             if (makeConnectionMode)
             {
-                if (((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)elem) || selectednode.Equals(elem) || ((BehaviourNode)elem).type == BehaviourNode.behaviourType.Leaf || ((BehaviourNode)elem).type >= BehaviourNode.behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(elem)))
+                if (((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)elem) || selectednode.Equals(elem) || ((BehaviourNode)elem).type == behaviourType.Leaf || ((BehaviourNode)elem).type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(elem)))
                 {
                     //Make it look transparent when not connectable to connect mode
                     for (int i = 0; i < pixels.Length; i++)
@@ -956,6 +1072,12 @@ public class NodeEditor : EditorWindow
             ((BehaviourTree)currentElem).nodes[id].DrawWindow();
             if (((BehaviourTree)currentElem).nodes[id].subElem != null)
                 ((BehaviourTree)currentElem).nodes[id].subElem.elementName = ((BehaviourTree)currentElem).nodes[id].nodeName;
+        }
+        if (currentElem is UtilitySystem)
+        {
+            ((UtilitySystem)currentElem).nodes[id].DrawWindow();
+            if (((UtilitySystem)currentElem).nodes[id].subElem != null)
+                ((UtilitySystem)currentElem).nodes[id].subElem.elementName = ((UtilitySystem)currentElem).nodes[id].nodeName;
         }
 
         GUI.DragWindow();
@@ -999,6 +1121,9 @@ public class NodeEditor : EditorWindow
             case "BT":
                 CreateBT(index, mousePos.x, mousePos.y);
                 break;
+            case "US":
+                CreateUS(index, mousePos.x, mousePos.y);
+                break;
             case "Node":
                 CreateNode(mousePos.x, mousePos.y);
                 break;
@@ -1028,6 +1153,12 @@ public class NodeEditor : EditorWindow
                 break;
             case "conditional":
                 CreateLeafNode(8, index);
+                break;
+            case "Variable":
+                CreateVariable(index, mousePos.x, mousePos.y);
+                break;
+            case "Action":
+                CreateAction(index, mousePos.x, mousePos.y);
                 break;
             case "makeTransition":
                 MakeTransition(index);
@@ -1129,6 +1260,14 @@ public class NodeEditor : EditorWindow
 
                 focusedObj = null;
                 break;
+
+            case nameof(UtilityNode):
+                UtilityNode utilityNode = (UtilityNode)elem;
+                ((UtilitySystem)currentElem).DeleteNode(utilityNode);
+
+                focusedObj = null;
+                break;
+
             case nameof(TransitionGUI):
                 TransitionGUI transition = (TransitionGUI)elem;
                 ((FSM)currentElem).DeleteTransition(transition);
@@ -1150,6 +1289,14 @@ public class NodeEditor : EditorWindow
                 Elements.Remove(bt);
 
                 editorNamer.RemoveName(bt.identificator);
+
+                focusedObj = null;
+                break;
+            case nameof(UtilitySystem):
+                UtilitySystem us = (UtilitySystem)elem;
+                Elements.Remove(us);
+
+                editorNamer.RemoveName(us.identificator);
 
                 focusedObj = null;
                 break;
@@ -1357,6 +1504,53 @@ public class NodeEditor : EditorWindow
     }
 
     /// <summary>
+    /// Creates a <see cref="UtilitySystem"/>
+    /// </summary>
+    /// <param name="nodeIndex"></param>
+    /// <param name="posX"></param>
+    /// <param name="posY"></param>
+    private void CreateUS(int nodeIndex, float posX, float posY)
+    {
+        UtilitySystem newBT = CreateInstance<UtilitySystem>();
+        newBT.InitUtilitySystem(this, currentElem, posX, posY);
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            newBT.elementName = name;
+        }
+
+        if (currentElem is null)
+        {
+            Elements.Add(newBT);
+        }
+
+        if (currentElem is FSM)
+        {
+            StateNode node = CreateInstance<StateNode>();
+            node.InitStateNode(currentElem, 2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
+
+            if (!((FSM)currentElem).HasEntryState)
+            {
+                ((FSM)currentElem).AddEntryState(node);
+            }
+            else
+            {
+                ((FSM)currentElem).states.Add(node);
+            }
+        }
+
+        if (currentElem is BehaviourTree)
+        {
+            BehaviourNode node = CreateInstance<BehaviourNode>();
+            node.InitBehaviourNode(currentElem, 2, newBT.windowRect.x, newBT.windowRect.y, newBT);
+
+            selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
+            toCreateNode = node;
+            makeBehaviourMode = true;
+        }
+    }
+
+    /// <summary>
     /// Creates a <see cref="StateNode"/>
     /// </summary>
     /// <param name="posX"></param>
@@ -1439,6 +1633,52 @@ public class NodeEditor : EditorWindow
         selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
         toCreateNode = node;
         makeBehaviourMode = true;
+    }
+
+    /// <summary>
+    /// Creates a <see cref="UtilityNode"/> of type Variable
+    /// </summary>
+    /// <param name="nodeIndex"></param>
+    /// <param name="posX"></param>
+    /// <param name="posY"></param>
+    private void CreateVariable(int nodeIndex, float posX = 50, float posY = 50)
+    {
+        UtilityNode node = CreateInstance<UtilityNode>();
+        node.InitUtilityNode(currentElem, 0, posX, posY);
+
+        if (nodeIndex > -1)
+        {
+            //selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
+            //toCreateNode = node;
+            //makeBehaviourMode = true;
+        }
+        else
+        {
+            ((UtilitySystem)currentElem).nodes.Add(node);
+        }
+    }
+
+    /// <summary>
+    /// Creates a <see cref="UtilityNode"/> of type Action
+    /// </summary>
+    /// <param name="nodeIndex"></param>
+    /// <param name="posX"></param>
+    /// <param name="posY"></param>
+    private void CreateAction(int nodeIndex, float posX = 50, float posY = 50)
+    {
+        UtilityNode node = CreateInstance<UtilityNode>();
+        node.InitUtilityNode(currentElem, 2, posX, posY);
+
+        if (nodeIndex > -1)
+        {
+            //selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
+            //toCreateNode = node;
+            //makeBehaviourMode = true;
+        }
+        else
+        {
+            ((UtilitySystem)currentElem).nodes.Add(node);
+        }
     }
 
     /// <summary>

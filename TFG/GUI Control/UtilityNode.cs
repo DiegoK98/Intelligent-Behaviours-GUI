@@ -5,43 +5,36 @@ using UnityEditor;
 using System;
 using System.Linq;
 
-public enum behaviourType
+public enum utilityType
 {
-    Sequence,
-    Selector,
-    Leaf,
-    LoopN,
-    LoopUntilFail,
-    Inverter,
-    DelayT,
-    Succeeder,
-    Conditional
+    Variable,
+    Fusion,
+    Action,
+
+    // Curves
+    LinearCurve,
+    ExpCurve,
 }
 
-public class BehaviourNode : BaseNode
+public class UtilityNode : BaseNode
 {
     /// <summary>
-    /// The type of <see cref="BehaviourNode"/>
+    /// The type of <see cref="UtilityNode"/>
     /// </summary>
-    public behaviourType type;
+    public utilityType type;
 
     /// <summary>
-    /// Only used for Decorator Nodes that are <see cref="behaviourType.LoopN"/> or <see cref="behaviourType.DelayT"/>
+    /// Min value for the Variable nodes
     /// </summary>
-    public int NProperty = 0;
+    public float variableMin;
 
     /// <summary>
-    /// True if this <see cref="BehaviourNode"/> is the root of the <see cref="BehaviourTree"/>
+    /// Max value for the Variable nodes
     /// </summary>
-    public bool isRoot = false;
+    public float variableMax;
 
     /// <summary>
-    /// Parameter for Sequence Nodes
-    /// </summary>
-    public bool isRandom = false;
-
-    /// <summary>
-    /// Returns the <see cref="behaviourType"/> properly written
+    /// Returns the <see cref="utilityType"/> properly written
     /// </summary>
     /// <returns></returns>
     public override string GetTypeString()
@@ -53,18 +46,18 @@ public class BehaviourNode : BaseNode
     }
 
     /// <summary>
-    /// The Initializer for the <seealso cref="BehaviourNode"/>
+    /// The Initializer for the <seealso cref="UtilityNode"/>
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitBehaviourNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
+    public void InitUtilityNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode();
 
-        type = (behaviourType)typeNumber;
+        type = (utilityType)typeNumber;
 
         if (subElem != null)
         {
@@ -80,32 +73,41 @@ public class BehaviourNode : BaseNode
     }
 
     /// <summary>
-    /// Draws all the elements inside the <see cref="BehaviourNode"/>
+    /// Draws all the elements inside the <see cref="UtilityNode"/>
     /// </summary>
     public override void DrawWindow()
     {
         switch (type)
         {
-            case behaviourType.Sequence:
+            case utilityType.Variable:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+                GUILayout.Space(15);
+                GUILayout.BeginHorizontal();
 
-                GUILayout.BeginArea(new Rect(windowRect.width * 0.25f, windowRect.height - 20, windowRect.width * 0.5f, height * 0.3f));
-                isRandom = GUILayout.Toggle(isRandom, "Random", new GUIStyle(GUI.skin.toggle) { alignment = TextAnchor.MiddleCenter });
-                GUILayout.EndArea();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Min:", Styles.SubTitleText, GUILayout.Width(40), GUILayout.Height(25));
+                float.TryParse(EditorGUILayout.TextArea(variableMin.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out variableMin);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Max:", Styles.SubTitleText, GUILayout.Width(40), GUILayout.Height(25));
+                float.TryParse(EditorGUILayout.TextArea(variableMax.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out variableMax);
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndHorizontal();
                 break;
-            case behaviourType.Selector:
-            case behaviourType.Leaf:
+            case utilityType.Fusion:
+                // TODO
+                break;
+            case utilityType.Action:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
-                break;
-            case behaviourType.LoopN:
-            case behaviourType.DelayT:
-                int.TryParse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out NProperty);
                 break;
         }
     }
 
+    // TODO
     /// <summary>
-    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="BehaviourNode"/>
+    /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="UtilityNode"/>
     /// </summary>
     /// <param name="args"></param>
     /// <returns>The <see cref="XMLElement"/> corresponding to this <see cref="BehaviourNode"/></returns>
@@ -126,8 +128,8 @@ public class BehaviourNode : BaseNode
                 elemType = this.GetType().ToString(),
                 windowPosX = this.windowRect.x,
                 windowPosY = this.windowRect.y,
-                isRandom = this.isRandom,
-                NProperty = this.NProperty,
+                //isRandom = this.isRandom,
+                //NProperty = this.NProperty,
 
                 nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
                 {
