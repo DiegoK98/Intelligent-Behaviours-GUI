@@ -34,6 +34,11 @@ public class UtilityNode : BaseNode
     public float variableMax;
 
     /// <summary>
+    /// The type of fusion if this <see cref="UtilityNode"/> is of type Fusion
+    /// </summary>
+    public short fusionType = 0;
+
+    /// <summary>
     /// Returns the <see cref="utilityType"/> properly written
     /// </summary>
     /// <returns></returns>
@@ -53,11 +58,11 @@ public class UtilityNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitUtilityNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
+    public void InitUtilityNode(ClickableElement parent, utilityType type, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode();
 
-        type = (utilityType)typeNumber;
+        this.type = type;
 
         if (subElem != null)
         {
@@ -67,8 +72,19 @@ public class UtilityNode : BaseNode
         }
         else
         {
-            nodeName = parent.elementNamer.AddName(identificator, "New " + type + " Node ");
-            windowRect = new Rect(posx, posy, width, height);
+            string nameToAdd = "New " + type;
+            if (type != utilityType.Variable)
+                nameToAdd += " Node ";
+            nodeName = parent.elementNamer.AddName(identificator, nameToAdd);
+
+            if (type == utilityType.Fusion)
+            {
+                windowRect = new Rect(posx, posy, width, height * 1.7f);
+            }
+            else
+            {
+                windowRect = new Rect(posx, posy, width, height);
+            }
         }
     }
 
@@ -81,7 +97,7 @@ public class UtilityNode : BaseNode
         {
             case utilityType.Variable:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
-                GUILayout.Space(15);
+                GUILayout.Space(10);
                 GUILayout.BeginHorizontal();
 
                 GUILayout.BeginHorizontal();
@@ -97,10 +113,44 @@ public class UtilityNode : BaseNode
                 GUILayout.EndHorizontal();
                 break;
             case utilityType.Fusion:
-                // TODO
+                GUILayout.Label(GetTypeString() + " Node", Styles.SubTitleText, GUILayout.Height(25));
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(windowRect.width * 0.2f);
+                GUILayout.BeginVertical();
+                if (GUILayout.Toggle(fusionType == 0, "Weighted", EditorStyles.radioButton))
+                    fusionType = 0;
+                if (GUILayout.Toggle(fusionType == 1, "GetMin", EditorStyles.radioButton))
+                    fusionType = 1;
+                if (GUILayout.Toggle(fusionType == 2, "GetMax", EditorStyles.radioButton))
+                    fusionType = 2;
+                GUILayout.EndVertical();
+                GUILayout.EndHorizontal();
                 break;
             case utilityType.Action:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+                break;
+            case utilityType.LinearCurve:
+            case utilityType.ExpCurve:
+                GUILayout.Space(windowRect.height * 0.35f);
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(windowRect.width * 0.2f);
+                if (GUILayout.Button(GetTypeString(), EditorStyles.toolbarDropDown))
+                {
+                    GenericMenu toolsMenu = new GenericMenu();
+
+                    foreach (string name in Enum.GetNames(typeof(utilityType)).ToArray().Skip((int)utilityType.LinearCurve))
+                    {
+                        toolsMenu.AddItem(new GUIContent(name), false, () =>
+                        {
+                            type = (utilityType)Enum.Parse(typeof(utilityType), name);
+                        });
+                    }
+
+                    toolsMenu.DropDown(new Rect(0, Event.current.mousePosition.y, 0, 0));
+                    EditorGUIUtility.ExitGUI();
+                }
+                GUILayout.Space(windowRect.width * 0.2f);
+                GUILayout.EndHorizontal();
                 break;
         }
     }

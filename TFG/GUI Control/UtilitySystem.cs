@@ -124,8 +124,40 @@ public class UtilitySystem : ClickableElement
             elementNamer.RemoveName(node.subElem.identificator);
     }
 
+    /// <summary>
+    /// Checks wether <paramref name="start"/> could ever reach <paramref name="end"/> in the <see cref="UtilitySystem"/> execution
+    /// </summary>
+    /// <param name="start"></param>
+    /// <param name="end"></param>
+    /// <returns></returns>
+    public bool ConnectedCheck(UtilityNode start, UtilityNode end)
+    {
+        foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
+        {
+            if (end.Equals((UtilityNode)transition.toNode))
+            {
+                return true;
+            }
+            if (ConnectedCheck((UtilityNode)transition.toNode, end))
+                return true;
+        }
+
+        return false;
+    }
+
     public override List<ClickableElement> GetSubElems()
     {
-        throw new NotImplementedException();
+        List<ClickableElement> result = new List<ClickableElement>();
+
+        foreach (UtilityNode node in nodes)
+        {
+            if (node.subElem != null)
+            {
+                result.AddRange(node.subElem.GetSubElems());
+                result.Add(node.subElem);
+            }
+        }
+
+        return result;
     }
 }

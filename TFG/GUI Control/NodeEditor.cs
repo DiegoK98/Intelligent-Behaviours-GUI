@@ -23,14 +23,14 @@ public class NodeEditor : EditorWindow
     private BaseNode selectednode;
 
     /// <summary>
-    /// The <see cref="BehaviourNode"/> that is being created in a <see cref="BehaviourTree"/>. Used to keep track of it while in <see cref="makeBehaviourMode"/>
-    /// </summary>
-    private BehaviourNode toCreateNode;
-
-    /// <summary>
     /// The <see cref="GUIElement"/> that is currently focused by the user
     /// </summary>
     public GUIElement focusedObj;
+
+    /// <summary>
+    /// The <see cref="BaseNode"/> that is being created in a <see cref="BehaviourTree"/> or <see cref="UtilitySystem"/>. Used to keep track of it while in <see cref="makeAttachedNode"/>
+    /// </summary>
+    private BaseNode toCreateNode;
 
     /// <summary>
     /// True when the user is in the process of creating a new <see cref="TransitionGUI"/>
@@ -38,12 +38,12 @@ public class NodeEditor : EditorWindow
     private bool makeTransitionMode = false;
 
     /// <summary>
-    /// True when the user is in the process of creating a new <see cref="BehaviourNode"/> in a <see cref="BehaviourTree"/>
+    /// True when the user is in the process of creating a new <see cref="BaseNode"/> from the <see cref="selectednode"/>, so it gets attached
     /// </summary>
-    private bool makeBehaviourMode = false;
+    private bool makeAttachedNode = false;
 
     /// <summary>
-    /// True when the user is in the process of connecting a <see cref="BehaviourNode"/>
+    /// True when the user is in the process of connecting a <see cref="BaseNode"/>
     /// </summary>
     private bool makeConnectionMode = false;
 
@@ -108,12 +108,12 @@ public class NodeEditor : EditorWindow
         // Draw the curves for everything
         #region Curves Drawing
 
-        if ((makeTransitionMode || makeBehaviourMode || makeConnectionMode) && selectednode != null)
+        if ((makeTransitionMode || makeAttachedNode || makeConnectionMode) && selectednode != null)
         {
             Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
             Rect nodeRect = new Rect(selectednode.windowRect);
 
-            if (makeConnectionMode)
+            if ((currentElem is BehaviourTree && makeConnectionMode) || (currentElem is UtilitySystem && makeAttachedNode))
                 DrawNodeCurve(mouseRect, nodeRect, true);
             else
                 DrawNodeCurve(nodeRect, mouseRect, true);
@@ -147,6 +147,20 @@ public class NodeEditor : EditorWindow
             }
         }
 
+        if (currentElem is UtilitySystem)
+        {
+            ((UtilitySystem)currentElem).DrawCurves();
+
+            if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Action && !((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n))))
+            {
+                currentElem.AddError(Error.NoFactors);
+            }
+            else
+            {
+                currentElem.RemoveError(Error.NoFactors);
+            }
+        }
+
         #endregion
 
         // Controls for the events called by the mouse and keyboard
@@ -160,15 +174,18 @@ public class NodeEditor : EditorWindow
             bool clickedOnElement = Convert.ToBoolean(results[0]);
             bool clickedOnWindow = Convert.ToBoolean(results[1]);
             bool clickedOnLeaf = Convert.ToBoolean(results[2]);
-            bool decoratorWithOneChild = Convert.ToBoolean(results[3]);
-            bool nodeWithAscendants = Convert.ToBoolean(results[4]);
-            bool clickedOnTransition = Convert.ToBoolean(results[5]);
-            int selectIndex = results[6];
+            bool clickedOnVariable = Convert.ToBoolean(results[3]);
+            bool decoratorWithOneChild = Convert.ToBoolean(results[4]);
+            bool actionWithOneFactor = Convert.ToBoolean(results[5]);
+            bool curveWithOneFactor = Convert.ToBoolean(results[6]);
+            bool nodeWithAscendants = Convert.ToBoolean(results[7]);
+            bool clickedOnTransition = Convert.ToBoolean(results[8]);
+            int selectIndex = results[9];
 
             // Click derecho
             if (e.button == 1)
             {
-                if (!makeTransitionMode && !makeBehaviourMode && !makeConnectionMode)
+                if (!makeTransitionMode && !makeAttachedNode && !makeConnectionMode)
                 {
                     // Set menu items
                     GenericMenu menu = new GenericMenu();
@@ -278,15 +295,27 @@ public class NodeEditor : EditorWindow
                     {
                         if (!clickedOnWindow && !clickedOnTransition)
                         {
-
-                            menu.AddItem(new GUIContent("Add Variable"), false, ContextCallback, new string[] { "Variable", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add Action"), false, ContextCallback, new string[] { "Action", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
                         }
                         else if (clickedOnWindow)
                         {
-                            if (((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
+                            if (((UtilitySystem)currentElem).nodes[selectIndex].type != utilityType.Action)
+                            {
+                                menu.AddItem(new GUIContent("Connect Node"), false, ContextCallback, new string[] { "connectNode", selectIndex.ToString() });
+                            }
+
+                            if (!clickedOnVariable && !actionWithOneFactor && !curveWithOneFactor)
+                            {
+                                menu.AddItem(new GUIContent("Factors/Add Variable"), false, ContextCallback, new string[] { "Variable", selectIndex.ToString() });
+                                menu.AddItem(new GUIContent("Factors/Add Fusion"), false, ContextCallback, new string[] { "Fusion", selectIndex.ToString() });
+                                menu.AddItem(new GUIContent("Factors/Add Curve"), false, ContextCallback, new string[] { "Curve", selectIndex.ToString() });
+                            }
+                            else if (((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
                             {
                                 menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, ((UtilitySystem)currentElem).nodes[selectIndex].subElem);
                                 menu.AddItem(new GUIContent("Export Code"), false, ExportCode, ((UtilitySystem)currentElem).nodes[selectIndex].subElem);
@@ -324,7 +353,7 @@ public class NodeEditor : EditorWindow
                 else
                 {
                     makeTransitionMode = false;
-                    makeBehaviourMode = false;
+                    makeAttachedNode = false;
                     makeConnectionMode = false;
                 }
             }
@@ -418,7 +447,7 @@ public class NodeEditor : EditorWindow
 
                 if (currentElem is BehaviourTree)
                 {
-                    if (makeBehaviourMode)
+                    if (makeAttachedNode)
                     {
                         toCreateNode.windowRect.position = new Vector2(mousePos.x, mousePos.y);
                         ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)toCreateNode);
@@ -428,7 +457,7 @@ public class NodeEditor : EditorWindow
 
                         ((BehaviourTree)currentElem).connections.Add(transition);
 
-                        makeBehaviourMode = false;
+                        makeAttachedNode = false;
                         selectednode = null;
                         toCreateNode = null;
 
@@ -443,6 +472,40 @@ public class NodeEditor : EditorWindow
                             ((BehaviourTree)currentElem).connections.Add(transition);
 
                             ((BehaviourNode)selectednode).isRoot = false;
+                        }
+
+                        makeConnectionMode = false;
+                        selectednode = null;
+
+                        e.Use();
+                    }
+                }
+
+                if (currentElem is UtilitySystem)
+                {
+                    if (makeAttachedNode)
+                    {
+                        toCreateNode.windowRect.position = new Vector2(mousePos.x, mousePos.y);
+                        ((UtilitySystem)currentElem).nodes.Add((UtilityNode)toCreateNode);
+
+                        TransitionGUI transition = CreateInstance<TransitionGUI>();
+                        transition.InitTransitionGUI(currentElem, toCreateNode, selectednode);
+
+                        ((UtilitySystem)currentElem).connections.Add(transition);
+
+                        makeAttachedNode = false;
+                        selectednode = null;
+                        toCreateNode = null;
+
+                        e.Use();
+                    }
+                    if (makeConnectionMode)
+                    {
+                        if (clickedOnWindow && !((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, ((UtilitySystem)currentElem).nodes[selectIndex]) && !actionWithOneFactor && !curveWithOneFactor && !(((UtilitySystem)currentElem).nodes[selectIndex].type == utilityType.Variable))
+                        {
+                            TransitionGUI transition = CreateInstance<TransitionGUI>();
+                            transition.InitTransitionGUI(currentElem, selectednode, ((UtilitySystem)currentElem).nodes[selectIndex]);
+                            ((UtilitySystem)currentElem).connections.Add(transition);
                         }
 
                         makeConnectionMode = false;
@@ -474,9 +537,11 @@ public class NodeEditor : EditorWindow
                     }
                     break;
                 case KeyCode.Escape:
-                    if (makeTransitionMode)
+                    if (makeTransitionMode || makeAttachedNode || makeConnectionMode)
                     {
                         makeTransitionMode = false;
+                        makeAttachedNode = false;
+                        makeConnectionMode = false;
                         break;
                     }
                     currentElem = currentElem?.parent;
@@ -608,8 +673,12 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < ((UtilitySystem)currentElem).nodes.Count; i++)
             {
-                string displayName = ((UtilitySystem)currentElem).nodes[i].GetTypeString();
-                displayName += ((UtilitySystem)currentElem).nodes[i].subElem?.errors.Count > 0 ? "(" + ((UtilitySystem)currentElem).nodes[i].subElem.errors.Count + " error" + (((UtilitySystem)currentElem).nodes[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
+                string displayName = "";
+                if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Action)
+                {
+                    displayName = ((UtilitySystem)currentElem).nodes[i].GetTypeString();
+                    displayName += ((UtilitySystem)currentElem).nodes[i].subElem?.errors.Count > 0 ? "(" + ((UtilitySystem)currentElem).nodes[i].subElem.errors.Count + " error" + (((UtilitySystem)currentElem).nodes[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
+                }
 
                 ((UtilitySystem)currentElem).nodes[i].windowRect = GUI.Window(i, ((UtilitySystem)currentElem).nodes[i].windowRect, DrawNodeWindow, displayName, new GUIStyle(Styles.SubTitleText)
                 {
@@ -692,7 +761,10 @@ public class NodeEditor : EditorWindow
         int clickedOnElement = 0;
         int clickedOnWindow = 0;
         int clickedOnLeaf = 0;
+        int clickedOnVariable = 0;
         int decoratorWithOneChild = 0;
+        int actionWithOneFactor = 0;
+        int curveWithOneFactor = 0;
         int nodeWithAscendants = 0;
         int clickedOnTransition = 0;
         int selectIndex = -1;
@@ -741,13 +813,16 @@ public class NodeEditor : EditorWindow
                 {
                     selectIndex = i;
                     clickedOnWindow = 1;
+
                     if (((BehaviourTree)currentElem).connections.Exists(t => t.toNode.Equals(((BehaviourTree)currentElem).nodes[i])))
                         nodeWithAscendants = 1;
 
                     if (((BehaviourTree)currentElem).nodes[i].type == behaviourType.Leaf)
                         clickedOnLeaf = 1;
+
                     else if (((BehaviourTree)currentElem).nodes[i].type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(((BehaviourTree)currentElem).nodes[i])))
                         decoratorWithOneChild = 1;
+
                     break;
                 }
             }
@@ -761,6 +836,16 @@ public class NodeEditor : EditorWindow
                 {
                     selectIndex = i;
                     clickedOnWindow = 1;
+
+                    if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Variable)
+                        clickedOnVariable = 1;
+
+                    else if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
+                        actionWithOneFactor = 1;
+
+                    else if (((UtilitySystem)currentElem).nodes[i].type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
+                        curveWithOneFactor = 1;
+
                     break;
                 }
             }
@@ -771,7 +856,10 @@ public class NodeEditor : EditorWindow
             clickedOnElement,
             clickedOnWindow,
             clickedOnLeaf,
+            clickedOnVariable,
             decoratorWithOneChild,
+            actionWithOneFactor,
+            curveWithOneFactor,
             nodeWithAscendants,
             clickedOnTransition,
             selectIndex
@@ -1031,12 +1119,29 @@ public class NodeEditor : EditorWindow
 
             if (makeConnectionMode)
             {
-                if (((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)elem) || selectednode.Equals(elem) || ((BehaviourNode)elem).type == behaviourType.Leaf || ((BehaviourNode)elem).type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(elem)))
+                if (currentElem is BehaviourTree)
                 {
-                    //Make it look transparent when not connectable to connect mode
-                    for (int i = 0; i < pixels.Length; i++)
+                    if (((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)elem) || selectednode.Equals(elem) || ((BehaviourNode)elem).type == behaviourType.Leaf || ((BehaviourNode)elem).type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(elem)))
                     {
-                        pixels[i].a = (byte)(pixels[i].a * 64 / 255);
+                        //Make it look transparent when not connectable to connect mode
+                        for (int i = 0; i < pixels.Length; i++)
+                        {
+                            pixels[i].a = (byte)(pixels[i].a * 64 / 255);
+                        }
+                    }
+                }
+                if (currentElem is UtilitySystem)
+                {
+                    if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) || 
+                        selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable || 
+                        ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)) ||
+                        ((UtilityNode)elem).type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
+                    {
+                        //Make it look transparent when not connectable to connect mode
+                        for (int i = 0; i < pixels.Length; i++)
+                        {
+                            pixels[i].a = (byte)(pixels[i].a * 64 / 255);
+                        }
                     }
                 }
             }
@@ -1157,8 +1262,14 @@ public class NodeEditor : EditorWindow
             case "Variable":
                 CreateVariable(index, mousePos.x, mousePos.y);
                 break;
+            case "Fusion":
+                CreateFusion(index, mousePos.x, mousePos.y);
+                break;
             case "Action":
-                CreateAction(index, mousePos.x, mousePos.y);
+                CreateAction(mousePos.x, mousePos.y);
+                break;
+            case "Curve":
+                CreateCurve(index, mousePos.x, mousePos.y);
                 break;
             case "makeTransition":
                 MakeTransition(index);
@@ -1452,7 +1563,15 @@ public class NodeEditor : EditorWindow
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
-            makeBehaviourMode = true;
+            makeAttachedNode = true;
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            UtilityNode node = CreateInstance<UtilityNode>();
+            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newFSM);
+
+            ((UtilitySystem)currentElem).nodes.Add(node);
         }
     }
 
@@ -1499,7 +1618,15 @@ public class NodeEditor : EditorWindow
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
-            makeBehaviourMode = true;
+            makeAttachedNode = true;
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            UtilityNode node = CreateInstance<UtilityNode>();
+            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newBT);
+
+            ((UtilitySystem)currentElem).nodes.Add(node);
         }
     }
 
@@ -1511,23 +1638,23 @@ public class NodeEditor : EditorWindow
     /// <param name="posY"></param>
     private void CreateUS(int nodeIndex, float posX, float posY)
     {
-        UtilitySystem newBT = CreateInstance<UtilitySystem>();
-        newBT.InitUtilitySystem(this, currentElem, posX, posY);
+        UtilitySystem newUS = CreateInstance<UtilitySystem>();
+        newUS.InitUtilitySystem(this, currentElem, posX, posY);
 
         if (!string.IsNullOrEmpty(name))
         {
-            newBT.elementName = name;
+            newUS.elementName = name;
         }
 
         if (currentElem is null)
         {
-            Elements.Add(newBT);
+            Elements.Add(newUS);
         }
 
         if (currentElem is FSM)
         {
             StateNode node = CreateInstance<StateNode>();
-            node.InitStateNode(currentElem, 2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
+            node.InitStateNode(currentElem, 2, newUS.windowRect.position.x, newUS.windowRect.position.y, newUS);
 
             if (!((FSM)currentElem).HasEntryState)
             {
@@ -1542,11 +1669,19 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             BehaviourNode node = CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(currentElem, 2, newBT.windowRect.x, newBT.windowRect.y, newBT);
+            node.InitBehaviourNode(currentElem, 2, newUS.windowRect.x, newUS.windowRect.y, newUS);
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
-            makeBehaviourMode = true;
+            makeAttachedNode = true;
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            UtilityNode node = CreateInstance<UtilityNode>();
+            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newUS);
+
+            ((UtilitySystem)currentElem).nodes.Add(node);
         }
     }
 
@@ -1585,7 +1720,7 @@ public class NodeEditor : EditorWindow
         {
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
-            makeBehaviourMode = true;
+            makeAttachedNode = true;
         }
         else
         {
@@ -1609,7 +1744,7 @@ public class NodeEditor : EditorWindow
         {
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
-            makeBehaviourMode = true;
+            makeAttachedNode = true;
         }
         else
         {
@@ -1632,7 +1767,7 @@ public class NodeEditor : EditorWindow
 
         selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
         toCreateNode = node;
-        makeBehaviourMode = true;
+        makeAttachedNode = true;
     }
 
     /// <summary>
@@ -1644,18 +1779,27 @@ public class NodeEditor : EditorWindow
     private void CreateVariable(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, 0, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Variable, posX, posY);
 
-        if (nodeIndex > -1)
-        {
-            //selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
-            //toCreateNode = node;
-            //makeBehaviourMode = true;
-        }
-        else
-        {
-            ((UtilitySystem)currentElem).nodes.Add(node);
-        }
+        selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
+        toCreateNode = node;
+        makeAttachedNode = true;
+    }
+
+    /// <summary>
+    /// Creates a <see cref="UtilityNode"/> of type Fusion
+    /// </summary>
+    /// <param name="nodeIndex"></param>
+    /// <param name="posX"></param>
+    /// <param name="posY"></param>
+    private void CreateFusion(int nodeIndex, float posX = 50, float posY = 50)
+    {
+        UtilityNode node = CreateInstance<UtilityNode>();
+        node.InitUtilityNode(currentElem, utilityType.Fusion, posX, posY);
+
+        selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
+        toCreateNode = node;
+        makeAttachedNode = true;
     }
 
     /// <summary>
@@ -1664,21 +1808,28 @@ public class NodeEditor : EditorWindow
     /// <param name="nodeIndex"></param>
     /// <param name="posX"></param>
     /// <param name="posY"></param>
-    private void CreateAction(int nodeIndex, float posX = 50, float posY = 50)
+    private void CreateAction(float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, 2, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Action, posX, posY);
 
-        if (nodeIndex > -1)
-        {
-            //selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
-            //toCreateNode = node;
-            //makeBehaviourMode = true;
-        }
-        else
-        {
-            ((UtilitySystem)currentElem).nodes.Add(node);
-        }
+        ((UtilitySystem)currentElem).nodes.Add(node);
+    }
+
+    /// <summary>
+    /// Creates a <see cref="UtilityNode"/> of type Curve
+    /// </summary>
+    /// <param name="nodeIndex"></param>
+    /// <param name="posX"></param>
+    /// <param name="posY"></param>
+    private void CreateCurve(int nodeIndex, float posX = 50, float posY = 50)
+    {
+        UtilityNode node = CreateInstance<UtilityNode>();
+        node.InitUtilityNode(currentElem, utilityType.LinearCurve, posX, posY);
+
+        selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
+        toCreateNode = node;
+        makeAttachedNode = true;
     }
 
     /// <summary>
@@ -1709,6 +1860,11 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             PopupWindow.InitDelete(this, ((BehaviourTree)currentElem).nodes[selectIndex], ((BehaviourTree)currentElem).nodes[selectIndex].GetTypeString());
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            PopupWindow.InitDelete(this, ((UtilitySystem)currentElem).nodes[selectIndex], ((UtilitySystem)currentElem).nodes[selectIndex].GetTypeString());
         }
 
         if (currentElem is null)
@@ -1754,7 +1910,10 @@ public class NodeEditor : EditorWindow
     /// <param name="nodeIndex"></param>
     private void ConnectNode(int selectIndex)
     {
-        selectednode = ((BehaviourTree)currentElem).nodes[selectIndex];
+        if (currentElem is BehaviourTree)
+            selectednode = ((BehaviourTree)currentElem).nodes[selectIndex];
+        if (currentElem is UtilitySystem)
+            selectednode = ((UtilitySystem)currentElem).nodes[selectIndex];
         makeConnectionMode = true;
     }
 
@@ -1765,14 +1924,26 @@ public class NodeEditor : EditorWindow
     {
         var maxPriorityError = "";
         var currentPriority = 0;
-        var errors = currentElem ? currentElem.errors : Elements.SelectMany(i => i.errors).ToList();
+        List<Error> errors = new List<Error>();
 
-        foreach (var error in errors)
+        if (currentElem)
         {
-            if ((int)error > currentPriority)
+            errors.AddRange(currentElem.errors);
+
+            foreach (var error in errors)
             {
-                maxPriorityError = Enums.EnumToString(error);
-                currentPriority = (int)error;
+                if ((int)error > currentPriority)
+                {
+                    maxPriorityError = Enums.EnumToString(error, currentElem);
+                    currentPriority = (int)error;
+                }
+            }
+        }
+        else
+        {
+            foreach (ClickableElement elem in Elements)
+            {
+                errors.AddRange(GetErrors(elem, ref currentPriority, ref maxPriorityError));
             }
         }
 
@@ -1783,5 +1954,28 @@ public class NodeEditor : EditorWindow
         {
             contentOffset = new Vector2(0, position.height - 20)
         });
+    }
+
+    private List<Error> GetErrors(ClickableElement elem, ref int currentPriority, ref string maxPriorityError)
+    {
+        List<Error> result = new List<Error>();
+
+        result.AddRange(elem.errors);
+
+        foreach (var error in elem.errors)
+        {
+            if ((int)error > currentPriority)
+            {
+                maxPriorityError = Enums.EnumToString(error, elem);
+                currentPriority = (int)error;
+            }
+        }
+
+        foreach (ClickableElement subElem in elem.GetSubElems())
+        {
+            result.AddRange(GetErrors(subElem, ref currentPriority, ref maxPriorityError));
+        }
+
+        return result;
     }
 }
