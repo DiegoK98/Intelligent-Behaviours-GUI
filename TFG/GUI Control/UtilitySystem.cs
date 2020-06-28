@@ -27,7 +27,9 @@ public class UtilitySystem : ClickableElement
     {
         InitClickableElement(id);
 
+        this.editor = editor;
         this.parent = parent;
+
         if (parent != null)
             elementName = parent.elementNamer.AddName(identificator, "New US ");
         else
@@ -96,7 +98,7 @@ public class UtilitySystem : ClickableElement
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem));
         }
     }
 
@@ -106,22 +108,23 @@ public class UtilitySystem : ClickableElement
     /// <param name="node"></param>
     public void DeleteNode(UtilityNode node)
     {
-        nodes.Remove(node);
-
-        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+        if (nodes.Remove(node))
         {
-            connections.Remove(transition);
-            //DeleteNode((UtilityNode)transition.toNode);
-        }
-        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
-        {
-            connections.Remove(transition);
-        }
+            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+            {
+                connections.Remove(transition);
+                //DeleteNode((UtilityNode)transition.toNode);
+            }
+            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
+            {
+                connections.Remove(transition);
+            }
 
-        if (node.subElem == null)
-            elementNamer.RemoveName(node.identificator);
-        else
-            elementNamer.RemoveName(node.subElem.identificator);
+            if (node.subElem == null)
+                elementNamer.RemoveName(node.identificator);
+            else
+                elementNamer.RemoveName(node.subElem.identificator);
+        }
     }
 
     /// <summary>

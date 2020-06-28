@@ -37,6 +37,11 @@ public abstract class ClickableElement : GUIElement
     public List<Error> errors = new List<Error>();
 
     /// <summary>
+    /// Reference for <see cref="NodeEditor"/>
+    /// </summary>
+    protected NodeEditor editor;
+
+    /// <summary>
     /// The <see cref="UniqueNamer"/> for managing the names of the elements inside this <see cref="ClickableElement"/>
     /// </summary>
     public UniqueNamer elementNamer;
@@ -45,7 +50,7 @@ public abstract class ClickableElement : GUIElement
     /// The Initializer for the <seealso cref="ClickableElement"/>
     /// </summary>
     /// <param name="id"></param>
-    public void InitClickableElement(string id = null)
+    protected void InitClickableElement(string id = null)
     {
         elementNamer = CreateInstance<UniqueNamer>();
         if (id == null)

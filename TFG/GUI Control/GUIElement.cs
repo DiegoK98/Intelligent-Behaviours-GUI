@@ -11,11 +11,6 @@ public abstract class GUIElement : ScriptableObject
     public Rect windowRect;
 
     /// <summary>
-    /// True if this <see cref="GUIElement"/> has been clicked by the user
-    /// </summary>
-    public bool isFocused = false;
-
-    /// <summary>
     /// Unique <see cref="string"/> to differentiate this <see cref="GUIElement"/> from others
     /// </summary>
     public string identificator;
@@ -24,7 +19,7 @@ public abstract class GUIElement : ScriptableObject
     /// Returns a unique <see cref="string"/>
     /// </summary>
     /// <returns></returns>
-    public string UniqueID()
+    public static string UniqueID()
     {
         return Guid.NewGuid().ToString();
     }

@@ -38,23 +38,28 @@ public class FSM : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitFSM(NodeEditor editor, ClickableElement parent, float posx, float posy)
+    public void InitFSM(NodeEditor editor, ClickableElement parent, float posx, float posy, bool isFromXML = false)
     {
         InitClickableElement();
 
+        this.editor = editor;
         this.parent = parent;
+
         if (parent != null)
             elementName = parent.elementNamer.AddName(identificator, "New FSM ");
         else
             elementName = editor.editorNamer.AddName(identificator, "New FSM ");
         windowRect = new Rect(posx, posy, width, height);
 
-        // Create the entry state
-        StateNode entryNode = CreateInstance<StateNode>();
-        entryNode.InitStateNode(this, 1, 50, 50);
+        if (!isFromXML)
+        {
+            // Create the entry state
+            StateNode entryNode = CreateInstance<StateNode>();
+            entryNode.InitStateNode(this, 1, 50, 50);
 
-        if (entryNode != null)
-            AddEntryState(entryNode);
+            if (entryNode != null)
+                AddEntryState(entryNode);
+        }
     }
 
     /// <summary>
@@ -166,7 +171,7 @@ public class FSM : ClickableElement
                 hasCouple = true;
             }
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused, hasCouple);
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), hasCouple);
         }
     }
 
@@ -176,23 +181,24 @@ public class FSM : ClickableElement
     /// <param name="node"></param>
     public void DeleteNode(StateNode node)
     {
-        states.Remove(node);
-
-        for (int i = 0; i < node.nodeTransitions.Count; i++)
+        if (states.Remove(node))
         {
-            DeleteTransition(node.nodeTransitions[i]);
-        }
+            for (int i = 0; i < node.nodeTransitions.Count; i++)
+            {
+                DeleteTransition(node.nodeTransitions[i]);
+            }
 
-        // Notify all nodes that this node has been deleted, so they can delete the necessary transition references
-        foreach (StateNode n in states)
-        {
-            n.NodeDeleted(node);
-        }
+            // Notify all nodes that this node has been deleted, so they can delete the necessary transition references
+            foreach (StateNode n in states)
+            {
+                n.NodeDeleted(node);
+            }
 
-        if (node.subElem == null)
-            elementNamer.RemoveName(node.identificator);
-        else
-            elementNamer.RemoveName(node.subElem.identificator);
+            if (node.subElem == null)
+                elementNamer.RemoveName(node.identificator);
+            else
+                elementNamer.RemoveName(node.subElem.identificator);
+        }
     }
 
     /// <summary>
@@ -201,16 +207,17 @@ public class FSM : ClickableElement
     /// <param name="transition"></param>
     public void DeleteTransition(TransitionGUI transition)
     {
-        transitions.Remove(transition);
-
-        foreach (StateNode n in states)
+        if (transitions.Remove(transition))
         {
-            n.nodeTransitions.Remove(transition);
+            foreach (StateNode n in states)
+            {
+                n.nodeTransitions.Remove(transition);
+            }
+
+            CheckConnected();
+
+            elementNamer.RemoveName(transition.identificator);
         }
-
-        CheckConnected();
-
-        elementNamer.RemoveName(transition.identificator);
     }
 
     /// <summary>

@@ -18,14 +18,24 @@ public class NodeEditor : EditorWindow
     private Vector2 mousePos;
 
     /// <summary>
-    /// Stores the <see cref="BaseNode"/> that is currently selected
+    /// Stores the <see cref="BaseNode"/> that is currently being used for <see cref="makeTransitionMode"/>, <see cref="makeAttachedNode"/> and <see cref="makeConnectionMode"/>
     /// </summary>
     private BaseNode selectednode;
 
     /// <summary>
-    /// The <see cref="GUIElement"/> that is currently focused by the user
+    /// The list of <see cref="GUIElement"/> that are currently selected by the user
     /// </summary>
-    public GUIElement focusedObj;
+    public List<GUIElement> focusedObjects = new List<GUIElement>();
+
+    /// <summary>
+    /// The list of <see cref="XMLElement"/> that will be pasted
+    /// </summary>
+    public List<XMLElement> clipboard = new List<XMLElement>();
+
+    /// <summary>
+    /// The list of <see cref="GUIElement"/> that will be deleted after pasting the cut objects
+    /// </summary>
+    public List<GUIElement> cutObjects = new List<GUIElement>();
 
     /// <summary>
     /// The <see cref="BaseNode"/> that is being created in a <see cref="BehaviourTree"/> or <see cref="UtilitySystem"/>. Used to keep track of it while in <see cref="makeAttachedNode"/>
@@ -76,6 +86,8 @@ public class NodeEditor : EditorWindow
     /// Fixed offset for the <see cref="TransitionGUI.windowRect"/> when there's two of them in the same pair of nodes
     /// </summary>
     private static float pairTransitionsOffset = 20;
+
+    private static bool CtrlDown = false;
 
     /// <summary>
     /// This will be called when the user opens the window
@@ -362,60 +374,97 @@ public class NodeEditor : EditorWindow
             else if (e.button == 0)
             {
                 GUI.FocusControl(null);
-                if (focusedObj != null) focusedObj.isFocused = false;
+                if (!CtrlDown)
+                {
+                    focusedObjects.Clear();
+                }
 
                 if (clickedOnElement)
                 {
-                    Elements[selectIndex].isFocused = true;
-                    focusedObj = Elements[selectIndex];
+                    if (focusedObjects.Contains(Elements[selectIndex]))
+                    {
+                        focusedObjects.Remove(Elements[selectIndex]);
+                    }
+                    else
+                    {
+                        focusedObjects.Add(Elements[selectIndex]);
+                    }
 
                     if (Event.current.clickCount == 2)
                     {
+                        focusedObjects.Clear();
                         currentElem = Elements[selectIndex];
                         e.Use();
                     }
                 }
-                else if (clickedOnTransition && currentElem is FSM)
+                else if (clickedOnTransition)
                 {
-                    ((FSM)currentElem).transitions[selectIndex].isFocused = true;
-                    focusedObj = ((FSM)currentElem).transitions[selectIndex];
-                }
-                else if (clickedOnWindow && currentElem is FSM)
-                {
-                    ((FSM)currentElem).states[selectIndex].isFocused = true;
-                    focusedObj = ((FSM)currentElem).states[selectIndex];
-
-                    if (Event.current.clickCount == 2 && ((StateNode)focusedObj).subElem != null)
+                    if (focusedObjects.Contains(((FSM)currentElem).transitions[selectIndex]))
                     {
-                        currentElem = ((StateNode)focusedObj).subElem;
-                        e.Use();
+                        focusedObjects.Remove(((FSM)currentElem).transitions[selectIndex]);
+                    }
+                    else
+                    {
+                        focusedObjects.Add(((FSM)currentElem).transitions[selectIndex]);
                     }
                 }
-                else if (clickedOnWindow && currentElem is BehaviourTree)
+                else if (clickedOnWindow)
                 {
-                    ((BehaviourTree)currentElem).nodes[selectIndex].isFocused = true;
-                    focusedObj = ((BehaviourTree)currentElem).nodes[selectIndex];
-
-                    if (Event.current.clickCount == 2 && ((BehaviourNode)focusedObj).subElem != null)
+                    if (currentElem is FSM)
                     {
-                        currentElem = ((BehaviourNode)focusedObj).subElem;
-                        e.Use();
+                        if (focusedObjects.Contains(((FSM)currentElem).states[selectIndex]))
+                        {
+                            focusedObjects.Remove(((FSM)currentElem).states[selectIndex]);
+                        }
+                        else
+                        {
+                            focusedObjects.Add(((FSM)currentElem).states[selectIndex]);
+                        }
+
+                        if (Event.current.clickCount == 2 && ((FSM)currentElem).states[selectIndex].subElem != null)
+                        {
+                            currentElem = ((FSM)currentElem).states[selectIndex].subElem;
+                            e.Use();
+                        }
                     }
-                }
-                else if (clickedOnWindow && currentElem is UtilitySystem)
-                {
-                    ((UtilitySystem)currentElem).nodes[selectIndex].isFocused = true;
-                    focusedObj = ((UtilitySystem)currentElem).nodes[selectIndex];
-
-                    if (Event.current.clickCount == 2 && ((UtilityNode)focusedObj).subElem != null)
+                    else if (currentElem is BehaviourTree)
                     {
-                        currentElem = ((UtilityNode)focusedObj).subElem;
-                        e.Use();
+                        if (focusedObjects.Contains(((BehaviourTree)currentElem).nodes[selectIndex]))
+                        {
+                            focusedObjects.Remove(((BehaviourTree)currentElem).nodes[selectIndex]);
+                        }
+                        else
+                        {
+                            focusedObjects.Add(((BehaviourTree)currentElem).nodes[selectIndex]);
+                        }
+
+                        if (Event.current.clickCount == 2 && ((BehaviourTree)currentElem).nodes[selectIndex].subElem != null)
+                        {
+                            currentElem = ((BehaviourTree)currentElem).nodes[selectIndex].subElem;
+                            e.Use();
+                        }
+                    }
+                    else if (currentElem is UtilitySystem)
+                    {
+                        if (focusedObjects.Contains(((UtilitySystem)currentElem).nodes[selectIndex]))
+                        {
+                            focusedObjects.Remove(((UtilitySystem)currentElem).nodes[selectIndex]);
+                        }
+                        else
+                        {
+                            focusedObjects.Add(((UtilitySystem)currentElem).nodes[selectIndex]);
+                        }
+
+                        if (Event.current.clickCount == 2 && ((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
+                        {
+                            currentElem = ((UtilitySystem)currentElem).nodes[selectIndex].subElem;
+                            e.Use();
+                        }
                     }
                 }
                 else
                 {
-                    focusedObj = null;
+                    focusedObjects.Clear();
 
                     e.Use();
                 }
@@ -530,9 +579,9 @@ public class NodeEditor : EditorWindow
                         makeTransitionMode = false;
                         break;
                     }
-                    if (focusedObj != null && GUIUtility.keyboardControl == 0)
+                    if (focusedObjects.Count > 0 && GUIUtility.keyboardControl == 0)
                     {
-                        PopupWindow.InitDelete(this, focusedObj, focusedObj.GetTypeString());
+                        PopupWindow.InitDelete(this, focusedObjects.ToArray());
                         e.Use();
                     }
                     break;
@@ -542,6 +591,7 @@ public class NodeEditor : EditorWindow
                         makeTransitionMode = false;
                         makeAttachedNode = false;
                         makeConnectionMode = false;
+                        focusedObjects.Clear();
                         break;
                     }
                     currentElem = currentElem?.parent;
@@ -554,10 +604,49 @@ public class NodeEditor : EditorWindow
                         GUI.FocusControl(null);
                         e.Use();
                     }
-                    else if (focusedObj is ClickableElement)
+                    else if (focusedObjects.Last() is ClickableElement)
                     {
-                        currentElem = (ClickableElement)focusedObj;
+                        currentElem = (ClickableElement)focusedObjects.Last();
                         e.Use();
+                    }
+                    else if (((BaseNode)focusedObjects.Last()).subElem != null)
+                    {
+                        currentElem = ((BaseNode)focusedObjects.Last()).subElem;
+                        e.Use();
+                    }
+                    focusedObjects.Clear();
+                    break;
+                case KeyCode.LeftControl:
+                case KeyCode.RightControl:
+                    CtrlDown = false;
+                    break;
+            }
+        }
+
+        if (e.type == EventType.KeyDown)
+        {
+            switch (Event.current.keyCode)
+            {
+                case KeyCode.LeftControl:
+                case KeyCode.RightControl:
+                    CtrlDown = true;
+                    break;
+                case KeyCode.C:
+                    if (CtrlDown)
+                    {
+                        Copy();
+                    }
+                    break;
+                case KeyCode.X:
+                    if (CtrlDown)
+                    {
+                        Cut();
+                    }
+                    break;
+                case KeyCode.V:
+                    if (CtrlDown)
+                    {
+                        Paste();
                     }
                     break;
             }
@@ -936,7 +1025,8 @@ public class NodeEditor : EditorWindow
     /// <returns></returns>
     private Texture2D GetBackground(GUIElement elem)
     {
-        var isFocused = elem.isFocused;
+        var isFocused = focusedObjects.Contains(elem);
+        var isCut = cutObjects.Contains(elem);
         Color col = Color.white;
         Texture2D originalTexture = null;
         int type;
@@ -957,8 +1047,8 @@ public class NodeEditor : EditorWindow
 
             // US
             case nameof(UtilitySystem):
-                originalTexture = Resources.Load<Texture2D>("BT_Rect");
-                col = Color.cyan;
+                originalTexture = Resources.Load<Texture2D>("US_Rect");
+                col = new Color(0, 0.75f, 0, 1); //dark green
                 break;
 
             // FSM Node
@@ -1058,12 +1148,12 @@ public class NodeEditor : EditorWindow
                 switch (type)
                 {
                     case 0:
-                        originalTexture = Resources.Load<Texture2D>("Selector_Rect");
+                        originalTexture = Resources.Load<Texture2D>("Variable_Rect");
                         col = new Color(1, 0.5f, 0, 1); //orange
                         break;
                     case 1:
-                        originalTexture = Resources.Load<Texture2D>("Selector_Rect");
-                        col = new Color(1, 0.5f, 0, 1); //orange
+                        originalTexture = Resources.Load<Texture2D>("Fusion_Rect");
+                        col = Color.yellow;
                         break;
                     case 2:
                         if (((UtilityNode)elem).subElem == null) //Es un nodo normal
@@ -1075,6 +1165,11 @@ public class NodeEditor : EditorWindow
                             originalTexture = Resources.Load<Texture2D>("Leaf_Sub_Rect");
                         }
                         col = new Color(0, 0.75f, 0, 1); //dark green
+                        break;
+                    case 3:
+                    case 4:
+                        originalTexture = Resources.Load<Texture2D>("Curve_Rect");
+                        col = Color.blue;
                         break;
                     default:
                         col = Color.white;
@@ -1103,6 +1198,8 @@ public class NodeEditor : EditorWindow
             //Make it look semitransparent when not selected
             if (!isFocused)
                 col.a = 0.5f;
+            if (isCut)
+                col.a = 0.2f;
 
             for (int i = 0; i < pix.Length; ++i)
             {
@@ -1132,8 +1229,8 @@ public class NodeEditor : EditorWindow
                 }
                 if (currentElem is UtilitySystem)
                 {
-                    if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) || 
-                        selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable || 
+                    if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) ||
+                        selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable ||
                         ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)) ||
                         ((UtilityNode)elem).type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
                     {
@@ -1153,6 +1250,16 @@ public class NodeEditor : EditorWindow
                     pixels[i].a = (byte)(pixels[i].a * 127 / 255);
                 }
             }
+
+            if (isCut)
+            {
+                //Make it look even more transparent when it's being cut
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    pixels[i].a = (byte)(pixels[i].a * 64 / 255);
+                }
+            }
+
             resultTexture.SetPixels32(pixels);
             resultTexture.Apply();
         }
@@ -1362,28 +1469,28 @@ public class NodeEditor : EditorWindow
                 StateNode stateNode = (StateNode)elem;
                 ((FSM)currentElem).DeleteNode(stateNode);
 
-                focusedObj = null;
+                focusedObjects.Remove(stateNode);
                 break;
 
             case nameof(BehaviourNode):
                 BehaviourNode behaviourNode = (BehaviourNode)elem;
                 ((BehaviourTree)currentElem).DeleteNode(behaviourNode);
 
-                focusedObj = null;
+                focusedObjects.Remove(behaviourNode);
                 break;
 
             case nameof(UtilityNode):
                 UtilityNode utilityNode = (UtilityNode)elem;
                 ((UtilitySystem)currentElem).DeleteNode(utilityNode);
 
-                focusedObj = null;
+                focusedObjects.Remove(utilityNode);
                 break;
 
             case nameof(TransitionGUI):
                 TransitionGUI transition = (TransitionGUI)elem;
                 ((FSM)currentElem).DeleteTransition(transition);
 
-                focusedObj = null;
+                focusedObjects.Remove(transition);
                 break;
 
             case nameof(FSM):
@@ -1392,7 +1499,7 @@ public class NodeEditor : EditorWindow
 
                 editorNamer.RemoveName(fsm.identificator);
 
-                focusedObj = null;
+                focusedObjects.Remove(fsm);
                 break;
 
             case nameof(BehaviourTree):
@@ -1401,7 +1508,7 @@ public class NodeEditor : EditorWindow
 
                 editorNamer.RemoveName(bt.identificator);
 
-                focusedObj = null;
+                focusedObjects.Remove(bt);
                 break;
             case nameof(UtilitySystem):
                 UtilitySystem us = (UtilitySystem)elem;
@@ -1409,7 +1516,7 @@ public class NodeEditor : EditorWindow
 
                 editorNamer.RemoveName(us.identificator);
 
-                focusedObj = null;
+                focusedObjects.Remove(us);
                 break;
         }
     }
@@ -1854,22 +1961,22 @@ public class NodeEditor : EditorWindow
     {
         if (currentElem is FSM)
         {
-            PopupWindow.InitDelete(this, ((FSM)currentElem).states[selectIndex], ((FSM)currentElem).states[selectIndex].GetTypeString());
+            PopupWindow.InitDelete(this, ((FSM)currentElem).states[selectIndex]);
         }
 
         if (currentElem is BehaviourTree)
         {
-            PopupWindow.InitDelete(this, ((BehaviourTree)currentElem).nodes[selectIndex], ((BehaviourTree)currentElem).nodes[selectIndex].GetTypeString());
+            PopupWindow.InitDelete(this, ((BehaviourTree)currentElem).nodes[selectIndex]);
         }
 
         if (currentElem is UtilitySystem)
         {
-            PopupWindow.InitDelete(this, ((UtilitySystem)currentElem).nodes[selectIndex], ((UtilitySystem)currentElem).nodes[selectIndex].GetTypeString());
+            PopupWindow.InitDelete(this, ((UtilitySystem)currentElem).nodes[selectIndex]);
         }
 
         if (currentElem is null)
         {
-            PopupWindow.InitDelete(this, Elements[selectIndex], Elements[selectIndex].GetTypeString());
+            PopupWindow.InitDelete(this, Elements[selectIndex]);
         }
     }
 
@@ -1878,7 +1985,7 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void DeleteTransition(int selectIndex)
     {
-        PopupWindow.InitDelete(this, ((FSM)currentElem).transitions[selectIndex], ((FSM)currentElem).transitions[selectIndex].GetTypeString());
+        PopupWindow.InitDelete(this, ((FSM)currentElem).transitions[selectIndex]);
     }
 
     /// <summary>
@@ -1977,5 +2084,184 @@ public class NodeEditor : EditorWindow
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Takes all the copied elements and gives them a new identificator
+    /// </summary>
+    /// <param name="elements"></param>
+    private void ReIdentifyElements(List<XMLElement> elements)
+    {
+        Dictionary<string, string> oldIDs = new Dictionary<string, string>();
+
+        foreach (XMLElement elem in elements.Where(e => e.elemType != nameof(TransitionGUI)))
+        {
+            string oldID = elem.Id;
+            elem.Id = GUIElement.UniqueID();
+            oldIDs.Add(oldID, elem.Id);
+
+            if(elem.elemType == nameof(FSM))
+            {
+                ReIdentifyElements(elem.nodes);
+            }
+        }
+
+        foreach (XMLElement elem in elements.Where(e => e.elemType == nameof(TransitionGUI)))
+        {
+            elem.fromId = oldIDs.Where(o => o.Key == elem.fromId).FirstOrDefault().Value;
+            elem.toId = oldIDs.Where(o => o.Key == elem.toId).FirstOrDefault().Value;
+            elem.Id = GUIElement.UniqueID();
+        }
+    }
+
+    private void Copy()
+    {
+        clipboard = focusedObjects.Select(o => o.ToXMLElement(currentElem)).ToList();
+        cutObjects.Clear();
+    }
+
+    private void Cut()
+    {
+        clipboard = focusedObjects.Select(o => o.ToXMLElement(currentElem)).ToList();
+        cutObjects = new List<GUIElement>(focusedObjects);
+    }
+
+    private void Paste()
+    {
+        ReIdentifyElements(clipboard);
+
+        if (currentElem is null)
+        {
+            if (clipboard.Any(e => !(e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            {
+                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+            }
+            else
+            {
+                foreach (XMLElement elem in clipboard)
+                {
+                    if (elem.elemType == nameof(FSM))
+                    {
+                        FSM newFSM = elem.ToFSM(currentElem, null, this);
+                        Elements.Add(newFSM);
+                    }
+                    if (elem.elemType == nameof(BehaviourTree))
+                    {
+                        BehaviourTree newBT = elem.ToBehaviourTree(currentElem, null, this);
+                        Elements.Add(newBT);
+                    }
+                    if (elem.elemType == nameof(UtilitySystem))
+                    {
+                        //UtilitySystem newBT = elem.ToBehaviourTree(currentElem);
+                        //Elements.Add(newBT);
+                    }
+                }
+            }
+        }
+
+        if (currentElem is FSM)
+        {
+            if (clipboard.Any(e => !(e.elemType == nameof(StateNode) || e.elemType == nameof(TransitionGUI) || e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            {
+                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+            }
+            else
+            {
+                foreach (XMLElement elem in clipboard.Where(e => e.elemType != nameof(TransitionGUI)))
+                {
+                    if (elem.elemType == nameof(StateNode))
+                    {
+                        StateNode newState = elem.ToStateNode();
+
+                        if (elem.secondType.Equals(stateType.Entry.ToString()))
+                        {
+                            ((FSM)currentElem).AddEntryState(newState);
+                        }
+                        else
+                        {
+                            ((FSM)currentElem).states.Add(newState);
+                        }
+                    }
+                    if (elem.elemType == nameof(FSM))
+                    {
+                        elem.ToFSM(currentElem, null, this);
+                    }
+                    if (elem.elemType == nameof(BehaviourTree))
+                    {
+                        elem.ToBehaviourTree(currentElem, null, this);
+                    }
+                    if (elem.elemType == nameof(UtilitySystem))
+                    {
+                        //elem.ToBehaviourTree(currentElem);
+                    }
+                }
+
+                foreach (XMLElement elem in clipboard.Where(e => e.elemType == nameof(TransitionGUI)))
+                {
+                    BaseNode node1 = ((FSM)currentElem).states.Where(n => n.identificator == elem.fromId).FirstOrDefault();
+                    BaseNode node2 = ((FSM)currentElem).states.Where(n => n.identificator == elem.toId).FirstOrDefault();
+
+                    if (node1 != null && node2 != null)
+                        ((FSM)currentElem).AddTransition(elem.ToTransitionGUI(node1, node2));
+                }
+            }
+        }
+
+        if (currentElem is BehaviourTree)
+        {
+            if (clipboard.Any(e => !(e.elemType == nameof(BehaviourNode) || e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            {
+                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+            }
+            else
+            {
+                foreach (XMLElement elem in clipboard)
+                {
+                    if (elem.elemType == nameof(BehaviourNode))
+                    {
+                        elem.ToBehaviourNode(null, (BehaviourTree)currentElem, currentElem.parent, this);
+                    }
+                    if (elem.elemType == nameof(FSM))
+                    {
+                        elem.ToFSM(currentElem, null, this);
+                    }
+                    if (elem.elemType == nameof(BehaviourTree))
+                    {
+                        elem.ToBehaviourTree(currentElem, null, this);
+                    }
+                    if (elem.elemType == nameof(UtilitySystem))
+                    {
+                        //newBT = elem.ToBehaviourTree(currentElem);
+                    }
+                }
+            }
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            if (clipboard.Any(e => !(e.elemType == nameof(UtilityNode) || e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            {
+                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+            }
+            else
+            {
+                foreach (XMLElement elem in clipboard)
+                {
+                    // TODO
+                }
+            }
+        }
+
+        if (cutObjects.Count > 0)
+        {
+            foreach (GUIElement elem in cutObjects)
+            {
+                Delete(elem);
+            }
+
+            clipboard.Clear();
+        }
+
+        cutObjects.Clear();
     }
 }

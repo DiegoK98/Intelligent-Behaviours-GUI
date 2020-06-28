@@ -123,23 +123,22 @@ public class XMLElement
     /// <param name="parent"></param>
     /// <param name="selectedNode"></param>
     /// <returns></returns>
-    public FSM ToFSM(ClickableElement parent, BaseNode selectedNode = null)
+    public FSM ToFSM(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
     {
         FSM fsm = ScriptableObject.CreateInstance<FSM>();
+        fsm.InitFSM(sender, parent, this.windowPosX, this.windowPosY, true);
         fsm.identificator = this.Id;
         fsm.elementName = this.name;
-        fsm.windowRect = new Rect(this.windowPosX, this.windowPosY, FSM.width, FSM.height);
-        fsm.parent = parent;
 
         foreach (XMLElement node in this.nodes)
         {
             switch (node.elemType)
             {
                 case nameof(FSM):
-                    node.ToFSM(fsm);
+                    node.ToFSM(fsm, null, sender);
                     break;
                 case nameof(BehaviourTree):
-                    node.ToBehaviourTree(fsm);
+                    node.ToBehaviourTree(fsm, null, sender);
                     break;
                 case nameof(StateNode):
                     StateNode state = node.ToStateNode();
@@ -163,7 +162,8 @@ public class XMLElement
         {
             BaseNode node1 = fsm.states.Where(n => n.identificator == trans.fromId).FirstOrDefault();
             BaseNode node2 = fsm.states.Where(n => n.identificator == trans.toId).FirstOrDefault();
-            fsm.AddTransition(trans.ToTransitionGUI(node1, node2));
+            if (node1 != null && node2 != null)
+                fsm.AddTransition(trans.ToTransitionGUI(node1, node2));
         }
 
         if (parent is FSM)
@@ -214,19 +214,21 @@ public class XMLElement
     {
         BehaviourTree bt = ScriptableObject.CreateInstance<BehaviourTree>();
         bt.InitBehaviourTree(sender, parent, this.windowPosX, this.windowPosY);
+        bt.identificator = this.Id;
+        bt.elementName = this.name;
 
         foreach (XMLElement node in this.nodes)
         {
             switch (node.elemType)
             {
                 case nameof(FSM):
-                    node.ToFSM(bt);
+                    node.ToFSM(bt, null, sender);
                     break;
                 case nameof(BehaviourTree):
-                    node.ToBehaviourTree(bt);
+                    node.ToBehaviourTree(bt, null, sender);
                     break;
                 case nameof(BehaviourNode):
-                    node.ToBehaviourNode(null, bt, parent);
+                    node.ToBehaviourNode(null, bt, parent, sender);
                     break;
                 default:
                     Debug.LogError("Wrong content in saved data");
@@ -277,15 +279,15 @@ public class XMLElement
     /// <param name="selectedNode"></param>
     /// <param name="currentTree"></param>
     /// <param name="currentElement"></param>
-    private void ToBehaviourNode(BaseNode selectedNode, BehaviourTree currentTree, ClickableElement currentElement)
+    public void ToBehaviourNode(BaseNode selectedNode, BehaviourTree currentTree, ClickableElement currentElement, NodeEditor sender = null)
     {
         switch (this.elemType)
         {
             case nameof(FSM):
-                this.ToFSM(currentElement, selectedNode);
+                this.ToFSM(currentElement, selectedNode, sender);
                 break;
             case nameof(BehaviourTree):
-                this.ToBehaviourTree(currentElement, selectedNode);
+                this.ToBehaviourTree(currentElement, selectedNode, sender);
                 break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
@@ -310,7 +312,7 @@ public class XMLElement
 
                 foreach (XMLElement childState in this.nodes)
                 {
-                    childState.ToBehaviourNode(nodeBT, currentTree, currentTree);
+                    childState.ToBehaviourNode(nodeBT, currentTree, currentTree, sender);
                 }
                 break;
             default:

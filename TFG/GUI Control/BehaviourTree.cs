@@ -27,7 +27,9 @@ public class BehaviourTree : ClickableElement
     {
         InitClickableElement(id);
 
+        this.editor = editor;
         this.parent = parent;
+
         if (parent != null)
             elementName = parent.elementNamer.AddName(identificator, "New BT ");
         else
@@ -95,7 +97,7 @@ public class BehaviourTree : ClickableElement
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, elem.isFocused);
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem));
         }
     }
 
@@ -105,22 +107,23 @@ public class BehaviourTree : ClickableElement
     /// <param name="node"></param>
     public void DeleteNode(BehaviourNode node)
     {
-        nodes.Remove(node);
-
-        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+        if (nodes.Remove(node))
         {
-            connections.Remove(transition);
-            DeleteNode((BehaviourNode)transition.toNode);
-        }
-        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
-        {
-            connections.Remove(transition);
-        }
+            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+            {
+                connections.Remove(transition);
+                DeleteNode((BehaviourNode)transition.toNode);
+            }
+            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
+            {
+                connections.Remove(transition);
+            }
 
-        if (node.subElem == null)
-            elementNamer.RemoveName(node.identificator);
-        else
-            elementNamer.RemoveName(node.subElem.identificator);
+            if (node.subElem == null)
+                elementNamer.RemoveName(node.identificator);
+            else
+                elementNamer.RemoveName(node.subElem.identificator);
+        }
     }
 
     /// <summary>
@@ -129,9 +132,8 @@ public class BehaviourTree : ClickableElement
     /// <param name="connection"></param>
     public void DeleteConnection(TransitionGUI connection)
     {
-        connections.Remove(connection);
-
-        elementNamer.RemoveName(connection.identificator);
+        if (connections.Remove(connection))
+            elementNamer.RemoveName(connection.identificator);
     }
 
     /// <summary>

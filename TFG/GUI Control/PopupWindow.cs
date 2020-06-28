@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System;
+using System.Collections.Generic;
 
 public class PopupWindow : EditorWindow
 {
@@ -26,9 +27,9 @@ public class PopupWindow : EditorWindow
     static NodeEditor senderEditor;
 
     /// <summary>
-    /// The <see cref="GUIElement"/> that will be deleted
+    /// The List of <see cref="GUIElement"/> that will be deleted
     /// </summary>
-    static GUIElement elem;
+    static List<GUIElement> elems;
 
     /// <summary>
     /// Width of the <see cref="PopupWindow"/>
@@ -44,16 +45,16 @@ public class PopupWindow : EditorWindow
     /// Initializer for the <see cref="PopupWindow"/> when deleting a <see cref="GUIElement"/>
     /// </summary>
     /// <param name="sender"></param>
-    /// <param name="focusElem"></param>
+    /// <param name="focusedElems"></param>
     /// <param name="type"></param>
-    public static void InitDelete(NodeEditor sender, GUIElement focusElem, string type)
+    public static void InitDelete(NodeEditor sender, params GUIElement[] focusedElems)
     {
         senderEditor = sender;
 
         PopupType = typeOfPopup.Delete;
 
-        elem = focusElem;
-        typeOfElem = type;
+        elems = new List<GUIElement>(focusedElems);
+        typeOfElem = elems[0].GetTypeString();
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
         window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
@@ -101,7 +102,8 @@ public class PopupWindow : EditorWindow
                     break;
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
-                    senderEditor.Delete(elem);
+                    foreach (GUIElement elem in elems)
+                        senderEditor.Delete(elem);
                     this.Close();
                     break;
             }
@@ -109,17 +111,25 @@ public class PopupWindow : EditorWindow
     }
 
     /// <summary>
-    /// Shows the <see cref="PopupWindow"/> asking if you're sure you wanna delete the <see cref="elem"/>
+    /// Shows the <see cref="PopupWindow"/> asking if you're sure you wanna delete the <see cref="elems"/>
     /// </summary>
     private void ShowDeletePopup()
     {
-        EditorGUILayout.LabelField("Do you want to delete this " + typeOfElem + "?", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+        string text = elems.Count == 1 ? "Do you want to delete this " + typeOfElem + "?" : "Do you want to delete these elements?";
+
+        EditorGUILayout.LabelField(text, EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
         if (senderEditor.currentElem is BehaviourTree)
         {
-            int numberOfSons = ((BehaviourTree)senderEditor.currentElem).ChildrenCount((BehaviourNode)elem);
+            int numberOfSons = 0;
+
+            foreach(GUIElement elem in elems)
+            {
+                numberOfSons += ((BehaviourTree)senderEditor.currentElem).ChildrenCount((BehaviourNode)elem);
+            }
+
             if (numberOfSons > 0)
             {
-                EditorGUILayout.LabelField(numberOfSons + " child nodes will be deleted as well", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+                EditorGUILayout.LabelField(numberOfSons + " child nodes will also be deleted", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
                 GUILayout.Space(20);
             }
         }
@@ -130,7 +140,8 @@ public class PopupWindow : EditorWindow
 
         if (GUILayout.Button("Delete", Styles.DeleteStyle))
         {
-            senderEditor.Delete(elem);
+            foreach (GUIElement elem in elems)
+                senderEditor.Delete(elem);
             this.Close();
         }
         if (GUILayout.Button("Cancel"))
