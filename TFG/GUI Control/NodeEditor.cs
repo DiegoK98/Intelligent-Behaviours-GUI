@@ -199,6 +199,11 @@ public class NodeEditor : EditorWindow
             {
                 if (!makeTransitionMode && !makeAttachedNode && !makeConnectionMode)
                 {
+                    if (!clickedOnElement && !clickedOnWindow && !clickedOnTransition)
+                    {
+                        focusedObjects.Clear();
+                    }
+
                     // Set menu items
                     GenericMenu menu = new GenericMenu();
 
@@ -345,9 +350,6 @@ public class NodeEditor : EditorWindow
                             menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
-
-                            menu.ShowAsContext();
-                            e.Use();
                         }
                         else
                         {
@@ -356,6 +358,20 @@ public class NodeEditor : EditorWindow
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Delete Element"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
                         }
+                    }
+
+                    if(focusedObjects.Count > 0)
+                    {
+                        menu.AddItem(new GUIContent("Cut"), false, Cut);
+                        menu.AddItem(new GUIContent("Copy"), false, Copy);
+                    }
+
+                    if (clipboard.Count > 0) {
+                        menu.AddItem(new GUIContent("Paste"), false, Paste);
+                    }
+                    else
+                    {
+                        menu.AddDisabledItem(new GUIContent("Paste"));
                     }
 
                     menu.ShowAsContext();
