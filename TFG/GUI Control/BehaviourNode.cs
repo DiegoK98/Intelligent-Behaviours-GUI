@@ -62,7 +62,7 @@ public class BehaviourNode : BaseNode
     /// <param name="subElem"></param>
     public void InitBehaviourNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
-        InitBaseNode();
+        InitBaseNode(parent);
 
         type = (behaviourType)typeNumber;
 

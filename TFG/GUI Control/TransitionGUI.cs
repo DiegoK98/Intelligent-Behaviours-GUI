@@ -48,6 +48,11 @@ public class TransitionGUI : GUIElement
     public PerceptionGUI rootPerception;
 
     /// <summary>
+    /// Weight value for <see cref="toNode"/> is a Weighted Fusion node
+    /// </summary>
+    public float weight = 1.0f;
+
+    /// <summary>
     /// The Initializer for the <seealso cref="TransitionGUI"/>
     /// </summary>
     /// <param name="name"></param>
@@ -106,27 +111,53 @@ public class TransitionGUI : GUIElement
     /// <param name="parent"></param>
     public void DrawBox(NodeEditor sender)
     {
-        int heightAcc = 0;
-        int widthAcc = 0;
-
-        transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
-
-        // Narrower area than the main rect
-        Rect areaRect = new Rect(baseWidth * 0.1f, 40, width * 0.8f, height);
-
-        GUILayout.BeginArea(areaRect);
-        try
+        if (sender.currentElem is FSM)
         {
-            PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception, sender);
-        }
-        finally
-        {
-            GUILayout.EndArea();
-        }
+            int heightAcc = 0;
+            int widthAcc = 0;
 
-        // Increase the size depending on the open foldouts
-        height = baseHeight + heightAcc;
-        width = baseWidth + widthAcc;
+            transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
+
+            // Narrower area than the main rect
+            Rect areaRect = new Rect(baseWidth * 0.1f, 40, width * 0.8f, height);
+
+            GUILayout.BeginArea(areaRect);
+            try
+            {
+                PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception, sender);
+            }
+            finally
+            {
+                GUILayout.EndArea();
+            }
+
+            // Increase the size depending on the open foldouts
+            height = baseHeight + heightAcc;
+            width = baseWidth + widthAcc;
+        }
+        else if (sender.currentElem is UtilitySystem)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            GUILayout.Label("W:", Styles.CenteredTitleText, GUILayout.Width(20), GUILayout.Height(25));
+
+            // Check if the user changes the textArea
+            EditorGUI.BeginChangeCheck();
+            float.TryParse(EditorGUILayout.TextArea(weight.ToString(), Styles.CenteredTitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out weight);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (weight < 0)
+                    weight = 0;
+                if (weight > 1)
+                    weight = 1;
+
+                //((UtilityNode)toNode).WeightsUpdate(this.identificator);
+
+                weight = (float)decimal.Round((decimal)weight, 2);
+            }
+
+            GUILayout.EndHorizontal();
+        }
     }
 
     /// <summary>

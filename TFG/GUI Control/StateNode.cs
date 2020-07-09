@@ -24,7 +24,7 @@ public class StateNode : BaseNode
     /// <param name="posy"></param>
     public void InitStateNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
     {
-        InitBaseNode();
+        InitBaseNode(parent);
 
         if (subElem != null)
         {

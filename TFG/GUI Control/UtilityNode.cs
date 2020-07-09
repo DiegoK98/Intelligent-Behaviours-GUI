@@ -16,6 +16,13 @@ public enum utilityType
     ExpCurve,
 }
 
+public enum fusionType
+{
+    Weighted,
+    GetMax,
+    GetMin
+}
+
 public class UtilityNode : BaseNode
 {
     /// <summary>
@@ -36,7 +43,7 @@ public class UtilityNode : BaseNode
     /// <summary>
     /// The type of fusion if this <see cref="UtilityNode"/> is of type Fusion
     /// </summary>
-    public short fusionType = 0;
+    public fusionType fusionType;
 
     /// <summary>
     /// Returns the <see cref="utilityType"/> properly written
@@ -60,7 +67,7 @@ public class UtilityNode : BaseNode
     /// <param name="subElem"></param>
     public void InitUtilityNode(ClickableElement parent, utilityType type, float posx, float posy, ClickableElement subElem = null)
     {
-        InitBaseNode();
+        InitBaseNode(parent);
 
         this.type = type;
 
@@ -117,14 +124,19 @@ public class UtilityNode : BaseNode
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(windowRect.width * 0.2f);
                 GUILayout.BeginVertical();
-                if (GUILayout.Toggle(fusionType == 0, "Weighted", EditorStyles.radioButton))
-                    fusionType = 0;
-                if (GUILayout.Toggle(fusionType == 1, "GetMin", EditorStyles.radioButton))
-                    fusionType = 1;
-                if (GUILayout.Toggle(fusionType == 2, "GetMax", EditorStyles.radioButton))
-                    fusionType = 2;
+                if (GUILayout.Toggle(fusionType == fusionType.Weighted, fusionType.Weighted.ToString(), EditorStyles.radioButton))
+                    fusionType = fusionType.Weighted;
+                if (GUILayout.Toggle(fusionType == fusionType.GetMax, fusionType.GetMax.ToString(), EditorStyles.radioButton))
+                    fusionType = fusionType.GetMax;
+                if (GUILayout.Toggle(fusionType == fusionType.GetMin, fusionType.GetMin.ToString(), EditorStyles.radioButton))
+                    fusionType = fusionType.GetMin;
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
+
+                //if (fusionType == fusionType.Weighted)
+                //{
+                //    WeightsUpdate();
+                //}
                 break;
             case utilityType.Action:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
@@ -192,5 +204,24 @@ public class UtilityNode : BaseNode
         result.secondType = this.type.ToString();
 
         return result;
+    }
+
+    /// <summary>
+    /// Updates the value of the weights accordingly
+    /// </summary>
+    public void WeightsUpdate(string id)
+    {
+        List<TransitionGUI> weightedTransitions = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).ToList();
+        float sumOfWeights = weightedTransitions.Sum(t => t.weight);
+
+        if (sumOfWeights != 1)
+        {
+            foreach (TransitionGUI transition in weightedTransitions.Where(t => t.identificator != id))
+            {
+                transition.weight += (1 - sumOfWeights) * transition.weight / weightedTransitions.Where(t => t.identificator != id).Sum(t => t.weight);
+
+                transition.weight = (float)decimal.Round((decimal)transition.weight, 2);
+            }
+        }
     }
 }

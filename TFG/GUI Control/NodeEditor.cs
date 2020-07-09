@@ -360,13 +360,14 @@ public class NodeEditor : EditorWindow
                         }
                     }
 
-                    if(focusedObjects.Count > 0)
+                    if (focusedObjects.Count > 0)
                     {
                         menu.AddItem(new GUIContent("Cut"), false, Cut);
                         menu.AddItem(new GUIContent("Copy"), false, Copy);
                     }
 
-                    if (clipboard.Count > 0) {
+                    if (clipboard.Count > 0)
+                    {
                         menu.AddItem(new GUIContent("Paste"), false, Paste);
                     }
                     else
@@ -415,13 +416,27 @@ public class NodeEditor : EditorWindow
                 }
                 else if (clickedOnTransition)
                 {
-                    if (focusedObjects.Contains(((FSM)currentElem).transitions[selectIndex]))
+                    if (currentElem is FSM)
                     {
-                        focusedObjects.Remove(((FSM)currentElem).transitions[selectIndex]);
+                        if (focusedObjects.Contains(((FSM)currentElem).transitions[selectIndex]))
+                        {
+                            focusedObjects.Remove(((FSM)currentElem).transitions[selectIndex]);
+                        }
+                        else
+                        {
+                            focusedObjects.Add(((FSM)currentElem).transitions[selectIndex]);
+                        }
                     }
-                    else
+                    if (currentElem is UtilitySystem)
                     {
-                        focusedObjects.Add(((FSM)currentElem).transitions[selectIndex]);
+                        if (focusedObjects.Contains(((UtilitySystem)currentElem).connections[selectIndex]))
+                        {
+                            focusedObjects.Remove(((UtilitySystem)currentElem).connections[selectIndex]);
+                        }
+                        else
+                        {
+                            focusedObjects.Add(((UtilitySystem)currentElem).connections[selectIndex]);
+                        }
                     }
                 }
                 else if (clickedOnWindow)
@@ -620,14 +635,14 @@ public class NodeEditor : EditorWindow
                         GUI.FocusControl(null);
                         e.Use();
                     }
-                    else if (focusedObjects.Last() is ClickableElement)
+                    else if (focusedObjects.LastOrDefault() is ClickableElement)
                     {
-                        currentElem = (ClickableElement)focusedObjects.Last();
+                        currentElem = (ClickableElement)focusedObjects.LastOrDefault();
                         e.Use();
                     }
-                    else if (((BaseNode)focusedObjects.Last()).subElem != null)
+                    else if (((BaseNode)focusedObjects.LastOrDefault())?.subElem != null)
                     {
-                        currentElem = ((BaseNode)focusedObjects.Last()).subElem;
+                        currentElem = ((BaseNode)focusedObjects.LastOrDefault()).subElem;
                         e.Use();
                     }
                     focusedObjects.Clear();
@@ -793,6 +808,25 @@ public class NodeEditor : EditorWindow
                     }
                 });
             }
+
+            foreach (TransitionGUI elem in ((UtilitySystem)currentElem).connections.Where(t => ((UtilityNode)t.toNode).type == utilityType.Fusion && ((UtilityNode)t.toNode).fusionType == fusionType.Weighted))
+            {
+                if (elem.fromNode is null || elem.toNode is null)
+                    break;
+
+                Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
+                                          elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
+                Rect transitionRect = new Rect(pos.x, pos.y - 30, 70, 25);
+
+                elem.windowRect = GUI.Window(((UtilitySystem)currentElem).connections.IndexOf(elem) + ((UtilitySystem)currentElem).nodes.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(elem)
+                    }
+                });
+            }
         }
 
         EndWindows();
@@ -951,6 +985,16 @@ public class NodeEditor : EditorWindow
                     else if (((UtilitySystem)currentElem).nodes[i].type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
                         curveWithOneFactor = 1;
 
+                    break;
+                }
+            }
+
+            for (int i = 0; i < ((UtilitySystem)currentElem).connections.Count; i++)
+            {
+                if (((UtilitySystem)currentElem).connections[i].windowRect.Contains(mousePos))
+                {
+                    selectIndex = i;
+                    clickedOnTransition = 1;
                     break;
                 }
             }
@@ -1245,10 +1289,21 @@ public class NodeEditor : EditorWindow
                 }
                 if (currentElem is UtilitySystem)
                 {
-                    if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) ||
-                        selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable ||
-                        ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)) ||
-                        ((UtilityNode)elem).type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
+                    if (elem is UtilityNode)
+                    {
+                        if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) ||
+                            selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable ||
+                            ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)) ||
+                            ((UtilityNode)elem).type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
+                        {
+                            //Make it look transparent when not connectable to connect mode
+                            for (int i = 0; i < pixels.Length; i++)
+                            {
+                                pixels[i].a = (byte)(pixels[i].a * 64 / 255);
+                            }
+                        }
+                    }
+                    else
                     {
                         //Make it look transparent when not connectable to connect mode
                         for (int i = 0; i < pixels.Length; i++)
@@ -1327,7 +1382,15 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawTransitionBox(int id)
     {
-        ((FSM)currentElem).transitions[id - ((FSM)currentElem).states.Count].DrawBox(this);
+        if (currentElem is FSM)
+        {
+            ((FSM)currentElem).transitions[id - ((FSM)currentElem).states.Count].DrawBox(this);
+        }
+        if (currentElem is UtilitySystem)
+        {
+            ((UtilitySystem)currentElem).connections[id - ((UtilitySystem)currentElem).nodes.Count].DrawBox(this);
+        }
+
         GUI.DragWindow();
     }
 
@@ -2116,7 +2179,7 @@ public class NodeEditor : EditorWindow
             elem.Id = GUIElement.UniqueID();
             oldIDs.Add(oldID, elem.Id);
 
-            if(elem.elemType == nameof(FSM))
+            if (elem.elemType == nameof(FSM))
             {
                 ReIdentifyElements(elem.nodes);
             }

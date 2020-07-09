@@ -10,6 +10,12 @@ public static class Styles
         fontSize = 13
     };
 
+    public static GUIStyle CenteredTitleText = new GUIStyle()
+    {
+        alignment = TextAnchor.MiddleCenter,
+        fontSize = 13
+    };
+
     public static GUIStyle SubTitleText = new GUIStyle()
     {
         alignment = TextAnchor.MiddleCenter,
