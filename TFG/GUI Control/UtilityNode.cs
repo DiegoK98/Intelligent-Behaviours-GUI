@@ -10,10 +10,7 @@ public enum utilityType
     Variable,
     Fusion,
     Action,
-
-    // Curves
-    LinearCurve,
-    ExpCurve,
+    Curve
 }
 
 public enum fusionType
@@ -21,6 +18,12 @@ public enum fusionType
     Weighted,
     GetMax,
     GetMin
+}
+
+public enum curveType
+{
+    Linear,
+    Exponential
 }
 
 public class UtilityNode : BaseNode
@@ -31,6 +34,16 @@ public class UtilityNode : BaseNode
     public utilityType type;
 
     /// <summary>
+    /// The type of fusion if this <see cref="UtilityNode"/> is of type Fusion
+    /// </summary>
+    public fusionType fusionType;
+
+    /// <summary>
+    /// The type of curve if this <see cref="UtilityNode"/> is of type Curve
+    /// </summary>
+    public curveType curveType;
+
+    /// <summary>
     /// Min value for the Variable nodes
     /// </summary>
     public float variableMin;
@@ -39,11 +52,6 @@ public class UtilityNode : BaseNode
     /// Max value for the Variable nodes
     /// </summary>
     public float variableMax;
-
-    /// <summary>
-    /// The type of fusion if this <see cref="UtilityNode"/> is of type Fusion
-    /// </summary>
-    public fusionType fusionType;
 
     /// <summary>
     /// Returns the <see cref="utilityType"/> properly written
@@ -120,7 +128,7 @@ public class UtilityNode : BaseNode
                 GUILayout.EndHorizontal();
                 break;
             case utilityType.Fusion:
-                GUILayout.Label(GetTypeString() + " Node", Styles.SubTitleText, GUILayout.Height(25));
+                nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(windowRect.width * 0.2f);
                 GUILayout.BeginVertical();
@@ -132,29 +140,23 @@ public class UtilityNode : BaseNode
                     fusionType = fusionType.GetMin;
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
-
-                //if (fusionType == fusionType.Weighted)
-                //{
-                //    WeightsUpdate();
-                //}
                 break;
             case utilityType.Action:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                 break;
-            case utilityType.LinearCurve:
-            case utilityType.ExpCurve:
-                GUILayout.Space(windowRect.height * 0.35f);
+            case utilityType.Curve:
+                nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(windowRect.width * 0.2f);
-                if (GUILayout.Button(GetTypeString(), EditorStyles.toolbarDropDown))
+                if (GUILayout.Button(curveType.ToString(), EditorStyles.toolbarDropDown))
                 {
                     GenericMenu toolsMenu = new GenericMenu();
 
-                    foreach (string name in Enum.GetNames(typeof(utilityType)).ToArray().Skip((int)utilityType.LinearCurve))
+                    foreach (string name in Enum.GetNames(typeof(curveType)).ToArray())
                     {
                         toolsMenu.AddItem(new GUIContent(name), false, () =>
                         {
-                            type = (utilityType)Enum.Parse(typeof(utilityType), name);
+                            curveType = (curveType)Enum.Parse(typeof(curveType), name);
                         });
                     }
 
@@ -223,5 +225,17 @@ public class UtilityNode : BaseNode
                 transition.weight = (float)decimal.Round((decimal)transition.weight, 2);
             }
         }
+    }
+
+    // TODO Ordenar la lista para que cuadre con la lista de factors asociada
+    /// <summary>
+    /// Returns a list of all the weights associated with this Fusion node
+    /// </summary>
+    /// <returns></returns>
+    public List<float> GetWeightsAndFactors()
+    {
+        List<float> weights = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).Select(t => t.weight).ToList();
+
+        return weights;
     }
 }

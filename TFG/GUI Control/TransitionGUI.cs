@@ -146,14 +146,14 @@ public class TransitionGUI : GUIElement
             float.TryParse(EditorGUILayout.TextArea(weight.ToString(), Styles.CenteredTitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out weight);
             if (EditorGUI.EndChangeCheck())
             {
-                if (weight < 0)
-                    weight = 0;
-                if (weight > 1)
-                    weight = 1;
+                //if (weight < 0)
+                //    weight = 0;
+                //if (weight > 1)
+                //    weight = 1;
 
                 //((UtilityNode)toNode).WeightsUpdate(this.identificator);
 
-                weight = (float)decimal.Round((decimal)weight, 2);
+                //weight = (float)decimal.Round((decimal)weight, 2);
             }
 
             GUILayout.EndHorizontal();

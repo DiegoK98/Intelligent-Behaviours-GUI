@@ -37,6 +37,11 @@ public abstract class ClickableElement : GUIElement
     public List<Error> errors = new List<Error>();
 
     /// <summary>
+    /// List of <see cref="Warning"/> of this <see cref="ClickableElement"/>
+    /// </summary>
+    public List<Warning> warnings = new List<Warning>();
+
+    /// <summary>
     /// Reference for <see cref="NodeEditor"/>
     /// </summary>
     protected NodeEditor editor;
@@ -119,6 +124,48 @@ public abstract class ClickableElement : GUIElement
     }
 
     /// <summary>
+    /// Returns this <see cref="ClickableElement"/>'s errors and all of its children's
+    /// </summary>
+    /// <returns></returns>
+    public List<KeyValuePair<ClickableElement, Error>> GetErrors()
+    {
+        List<KeyValuePair<ClickableElement, Error>> result = new List<KeyValuePair<ClickableElement, Error>>();
+
+        foreach (Error error in errors)
+        {
+            result.Add(new KeyValuePair<ClickableElement, Error>(this, error));
+        }
+
+        foreach (ClickableElement subElem in GetSubElems())
+        {
+            result.AddRange(subElem.GetErrors());
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Returns this <see cref="ClickableElement"/>'s warnings and all of its children's
+    /// </summary>
+    /// <returns></returns>
+    public List<KeyValuePair<ClickableElement, Warning>> GetWarnings()
+    {
+        List<KeyValuePair<ClickableElement, Warning>> result = new List<KeyValuePair<ClickableElement, Warning>>();
+
+        foreach (Warning warning in warnings)
+        {
+            result.Add(new KeyValuePair<ClickableElement, Warning>(this, warning));
+        }
+
+        foreach (ClickableElement subElem in GetSubElems())
+        {
+            result.AddRange(subElem.GetWarnings());
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Add an <see cref="Error"/> that is happening right now
     /// </summary>
     /// <param name="error"></param>
@@ -135,5 +182,24 @@ public abstract class ClickableElement : GUIElement
     public void RemoveError(Error error)
     {
         errors.Remove(error);
+    }
+
+    /// <summary>
+    /// Add an <see cref="Warning"/> that is happening right now
+    /// </summary>
+    /// <param name="error"></param>
+    public void AddWarning(Warning warning)
+    {
+        if (!warnings.Contains(warning))
+            warnings.Add(warning);
+    }
+
+    /// <summary>
+    /// Remove an <see cref="Warning"/> that is no longer happening
+    /// </summary>
+    /// <param name="error"></param>
+    public void RemoveWarning(Warning warning)
+    {
+        warnings.Remove(warning);
     }
 }

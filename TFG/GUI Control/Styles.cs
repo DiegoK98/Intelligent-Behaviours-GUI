@@ -24,10 +24,7 @@ public static class Styles
 
     public static GUIStyle ErrorPrompt = new GUIStyle()
     {
-        normal = new GUIStyleState()
-        {
-            textColor = Color.red
-        }
+        fontStyle = FontStyle.Bold
     };
 
     public static GUIStyle OptionsButton = new GUIStyle()

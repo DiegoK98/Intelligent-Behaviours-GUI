@@ -115,7 +115,7 @@ public class NodeEditor : EditorWindow
         ShowTopBar();
         if (currentElem != null)
             ShowOptions();
-        ShowErrorByPriority();
+        ShowErrorsAndWarnings();
 
         // Draw the curves for everything
         #region Curves Drawing
@@ -170,6 +170,15 @@ public class NodeEditor : EditorWindow
             else
             {
                 currentElem.RemoveError(Error.NoFactors);
+            }
+
+            if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Fusion && n.fusionType == fusionType.Weighted && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n) && t.weight == 0)))
+            {
+                currentElem.AddWarning(Warning.WeightZero);
+            }
+            else
+            {
+                currentElem.RemoveWarning(Warning.WeightZero);
             }
         }
 
@@ -694,7 +703,28 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < Elements.Count; i++)
             {
-                string errorAbb = Elements[i].errors.Count > 0 ? "(" + Elements[i].errors.Count + " error" + (Elements[i].errors.Count > 1 ? "s)" : ")") : "";
+                // Write how many errors are in this element
+                string errorAbb = "";
+                int errorCount = Elements[i].GetErrors().Count;
+                int warningCount = Elements[i].GetWarnings().Count;
+
+                if (errorCount + warningCount > 0)
+                {
+                    errorAbb += "\n (";
+
+                    if (errorCount > 0)
+                    {
+                        errorAbb += errorCount + " error/s";
+                    }
+                    if (warningCount > 0)
+                    {
+                        if (errorCount > 0)
+                            errorAbb += ", ";
+                        errorAbb += warningCount + " warning/s";
+                    }
+
+                    errorAbb += ")";
+                }
 
                 Elements[i].windowRect = GUI.Window(i, Elements[i].windowRect, DrawElementWindow, Elements[i].GetTypeString() + errorAbb, new GUIStyle(Styles.SubTitleText)
                 {
@@ -710,7 +740,28 @@ public class NodeEditor : EditorWindow
         {
             for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
             {
-                string errorAbb = ((FSM)currentElem).states[i].subElem?.errors.Count > 0 ? "(" + ((FSM)currentElem).states[i].subElem.errors.Count + " error" + (((FSM)currentElem).states[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
+                // Write how many errors are in this element
+                string errorAbb = "";
+                int errorCount = ((FSM)currentElem).states[i].subElem ? ((FSM)currentElem).states[i].subElem.GetErrors().Count : 0;
+                int warningCount = ((FSM)currentElem).states[i].subElem ? ((FSM)currentElem).states[i].subElem.GetWarnings().Count : 0;
+
+                if (errorCount + warningCount > 0)
+                {
+                    errorAbb += "\n (";
+
+                    if (errorCount > 0)
+                    {
+                        errorAbb += errorCount + " error/s";
+                    }
+                    if (warningCount > 0)
+                    {
+                        if (errorCount > 0)
+                            errorAbb += ", ";
+                        errorAbb += warningCount + " warning/s";
+                    }
+
+                    errorAbb += ")";
+                }
 
                 ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].GetTypeString() + errorAbb, new GUIStyle(Styles.SubTitleText)
                 {
@@ -777,7 +828,28 @@ public class NodeEditor : EditorWindow
                 string displayName = "";
                 if (((BehaviourTree)currentElem).nodes[i].type > behaviourType.Selector)
                     displayName = ((BehaviourTree)currentElem).nodes[i].GetTypeString();
-                displayName += ((BehaviourTree)currentElem).nodes[i].subElem?.errors.Count > 0 ? "(" + ((BehaviourTree)currentElem).nodes[i].subElem.errors.Count + " error" + (((BehaviourTree)currentElem).nodes[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
+
+                // Write how many errors are in this element
+                int errorCount = ((BehaviourTree)currentElem).nodes[i].subElem ? ((BehaviourTree)currentElem).nodes[i].subElem.GetErrors().Count : 0;
+                int warningCount = ((BehaviourTree)currentElem).nodes[i].subElem ? ((BehaviourTree)currentElem).nodes[i].subElem.GetWarnings().Count : 0;
+
+                if (errorCount + warningCount > 0)
+                {
+                    displayName += "\n (";
+
+                    if (errorCount > 0)
+                    {
+                        displayName += errorCount + " error/s";
+                    }
+                    if (warningCount > 0)
+                    {
+                        if (errorCount > 0)
+                            displayName += ", ";
+                        displayName += warningCount + " warning/s";
+                    }
+
+                    displayName += ")";
+                }
 
                 ((BehaviourTree)currentElem).nodes[i].windowRect = GUI.Window(i, ((BehaviourTree)currentElem).nodes[i].windowRect, DrawNodeWindow, displayName, new GUIStyle(Styles.SubTitleText)
                 {
@@ -797,7 +869,28 @@ public class NodeEditor : EditorWindow
                 if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Action)
                 {
                     displayName = ((UtilitySystem)currentElem).nodes[i].GetTypeString();
-                    displayName += ((UtilitySystem)currentElem).nodes[i].subElem?.errors.Count > 0 ? "(" + ((UtilitySystem)currentElem).nodes[i].subElem.errors.Count + " error" + (((UtilitySystem)currentElem).nodes[i].subElem.errors.Count > 1 ? "s)" : ")") : "";
+
+                    // Write how many errors are in this element
+                    int errorCount = ((UtilitySystem)currentElem).nodes[i].subElem ? ((UtilitySystem)currentElem).nodes[i].subElem.GetErrors().Count : 0;
+                    int warningCount = ((UtilitySystem)currentElem).nodes[i].subElem ? ((UtilitySystem)currentElem).nodes[i].subElem.GetWarnings().Count : 0;
+
+                    if (errorCount + warningCount > 0)
+                    {
+                        displayName += "\n (";
+
+                        if (errorCount > 0)
+                        {
+                            displayName += errorCount + " error/s";
+                        }
+                        if (warningCount > 0)
+                        {
+                            if (errorCount > 0)
+                                displayName += ", ";
+                            displayName += warningCount + " warning/s";
+                        }
+
+                        displayName += ")";
+                    }
                 }
 
                 ((UtilitySystem)currentElem).nodes[i].windowRect = GUI.Window(i, ((UtilitySystem)currentElem).nodes[i].windowRect, DrawNodeWindow, displayName, new GUIStyle(Styles.SubTitleText)
@@ -982,7 +1075,7 @@ public class NodeEditor : EditorWindow
                     else if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
                         actionWithOneFactor = 1;
 
-                    else if (((UtilitySystem)currentElem).nodes[i].type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
+                    else if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Curve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
                         curveWithOneFactor = 1;
 
                     break;
@@ -1294,7 +1387,7 @@ public class NodeEditor : EditorWindow
                         if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) ||
                             selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable ||
                             ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)) ||
-                            ((UtilityNode)elem).type >= utilityType.LinearCurve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
+                            ((UtilityNode)elem).type == utilityType.Curve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
                         {
                             //Make it look transparent when not connectable to connect mode
                             for (int i = 0; i < pixels.Length; i++)
@@ -1483,7 +1576,7 @@ public class NodeEditor : EditorWindow
     /// </summary>
     void ExportCode(object elem)
     {
-        if (((ClickableElement)elem).errors.Count == 0)
+        if (((ClickableElement)elem).GetErrors().Count == 0)
         {
             NodeEditorUtilities.GenerateElemScript((ClickableElement)elem);
         }
@@ -2011,7 +2104,7 @@ public class NodeEditor : EditorWindow
     private void CreateCurve(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, utilityType.LinearCurve, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Curve, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2106,63 +2199,101 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Shows the errors that currently exist on the bottom left corner of the window
     /// </summary>
-    private void ShowErrorByPriority()
+    private void ShowErrorsAndWarnings()
     {
-        var maxPriorityError = "";
-        var currentPriority = 0;
-        List<Error> errors = new List<Error>();
+        string maxPriorityErrorOrWarning = "";
+        int currentPriority = 0;
+        bool errorShown = false;
+        GUIStyle style = Styles.ErrorPrompt;
 
+        // We use a list of KeyValuePairs so we can have duplicate keys
+        List<KeyValuePair<ClickableElement, Error>> errors = new List<KeyValuePair<ClickableElement, Error>>();
+        List<KeyValuePair<ClickableElement, Warning>> warnings = new List<KeyValuePair<ClickableElement, Warning>>();
+
+        // Add the errors and warnings to the lists
         if (currentElem)
         {
-            errors.AddRange(currentElem.errors);
-
-            foreach (var error in errors)
-            {
-                if ((int)error > currentPriority)
-                {
-                    maxPriorityError = Enums.EnumToString(error, currentElem);
-                    currentPriority = (int)error;
-                }
-            }
+            errors.AddRange(currentElem.GetErrors());
+            warnings.AddRange(currentElem.GetWarnings());
         }
         else
         {
             foreach (ClickableElement elem in Elements)
             {
-                errors.AddRange(GetErrors(elem, ref currentPriority, ref maxPriorityError));
+                errors.AddRange(elem.GetErrors());
+                warnings.AddRange(elem.GetWarnings());
             }
         }
 
-        if (errors.Count > 1)
-            maxPriorityError += " (and " + (errors.Count - 1) + " more errors)";
-
-        EditorGUILayout.LabelField(maxPriorityError, new GUIStyle(Styles.ErrorPrompt)
+        // Select the highest priority warning to show
+        foreach (var warning in warnings)
         {
-            contentOffset = new Vector2(0, position.height - 20)
-        });
+            if ((int)warning.Value > currentPriority)
+            {
+                maxPriorityErrorOrWarning = Enums.WarningToString(warning.Value, warning.Key);
+                currentPriority = (int)warning.Value;
+            }
+        }
+
+        currentPriority = 0;
+
+        // Select the highest priority error to show overriding the warning selected before. If there is no errors, the selected warning will remain
+        foreach (var error in errors)
+        {
+            if ((int)error.Value > currentPriority)
+            {
+                errorShown = true;
+                maxPriorityErrorOrWarning = Enums.ErrorToString(error.Value, error.Key);
+                currentPriority = (int)error.Value;
+            }
+        }
+
+        // Write the "(...)" part at the end of the prompt
+        if (errors.Count + warnings.Count > 1)
+        {
+            maxPriorityErrorOrWarning += " (";
+
+            if (errors.Count > (errorShown ? 1 : 0))
+            {
+                maxPriorityErrorOrWarning += "+" + (errors.Count - (errorShown ? 1 : 0)) + " error/s";
+            }
+            if (warnings.Count > (errorShown ? 0 : 1))
+            {
+                if (errors.Count > 1)
+                    maxPriorityErrorOrWarning += ", ";
+                maxPriorityErrorOrWarning += "+" + (warnings.Count - (errorShown ? 0 : 1)) + " warning/s";
+            }
+
+            maxPriorityErrorOrWarning += ")";
+        }
+
+        if (!string.IsNullOrEmpty(maxPriorityErrorOrWarning))
+        {
+            // If the shown prompt is an error, make the text background look red, if not, orange
+            if (errorShown)
+                style.normal.background = GetLabelBackground(new Color(1, 0, 0, 0.6f));
+            else
+                style.normal.background = GetLabelBackground(new Color(1, 0.8f, 0, 0.6f));
+            style.contentOffset = new Vector2(5, 5);
+            EditorGUI.LabelField(new Rect(new Vector2(0, position.height - 25), maxSize), maxPriorityErrorOrWarning, style);
+        }
     }
 
-    private List<Error> GetErrors(ClickableElement elem, ref int currentPriority, ref string maxPriorityError)
+    public Texture2D GetLabelBackground(Color color)
     {
-        List<Error> result = new List<Error>();
+        // Grey colored background for the label
+        Texture2D backgroundTex = new Texture2D(2, 2);
+        Color[] pix = new Color[2 * 2];
 
-        result.AddRange(elem.errors);
-
-        foreach (var error in elem.errors)
+        for (int i = 0; i < pix.Length; ++i)
         {
-            if ((int)error > currentPriority)
-            {
-                maxPriorityError = Enums.EnumToString(error, elem);
-                currentPriority = (int)error;
-            }
+            pix[i] = color; // grey with 0.2 alpha
         }
 
-        foreach (ClickableElement subElem in elem.GetSubElems())
-        {
-            result.AddRange(GetErrors(subElem, ref currentPriority, ref maxPriorityError));
-        }
+        backgroundTex.SetPixels(pix);
+        backgroundTex.Apply();
 
-        return result;
+        return backgroundTex;
     }
 
     /// <summary>

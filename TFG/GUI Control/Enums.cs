@@ -12,6 +12,11 @@ public enum Error
     RepeatedName = 2
 }
 
+public enum Warning
+{
+    WeightZero = 1
+}
+
 public enum stateType
 {
     Default,
@@ -38,9 +43,9 @@ public class Enums
     /// </summary>
     /// <param name="error"></param>
     /// <returns></returns>
-    public static string EnumToString(Error error, ClickableElement current)
+    public static string ErrorToString(Error error, ClickableElement current)
     {
-        string prompt = current ? "Error at " + current.elementName + ": " : "Error at unknown";
+        string prompt = "Error at " + (current ? current.elementName : "unknown") + ": ";
 
         switch (error)
         {
@@ -57,7 +62,30 @@ public class Enums
                 prompt += "You can't have an Action without any Factors";
                 break;
             default:
-                prompt += "Unexpected error :(";
+                prompt += "Unknown error :(";
+                break;
+        }
+
+        return prompt;
+    }
+
+    /// <summary>
+    /// Transforms the <paramref name="warning"/> into a pre-defined message
+    /// </summary>
+    /// <param name="warning"></param>
+    /// <param name="current"></param>
+    /// <returns></returns>
+    public static string WarningToString(Warning warning, ClickableElement current)
+    {
+        string prompt = "Warning at " + (current ? current.elementName : "unknown") + ": ";
+
+        switch (warning)
+        {
+            case Warning.WeightZero:
+                prompt += "Having a Factor with a weight value of zero means it will be ignored";
+                break;
+            default:
+                prompt += "Unknown warning :(";
                 break;
         }
 
