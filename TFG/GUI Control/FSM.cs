@@ -169,7 +169,8 @@ public class FSM : ClickableElement
     public void SetAsEntry(StateNode node)
     {
         //Previous Entry Node set to Unconnected
-        EntryState.type = stateType.Unconnected;
+        if (EntryState)
+            EntryState.type = stateType.Unconnected;
 
         node.type = stateType.Entry;
         EntryState = node;

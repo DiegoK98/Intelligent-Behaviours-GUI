@@ -38,6 +38,11 @@ public class NodeEditor : EditorWindow
     public List<GUIElement> cutObjects = new List<GUIElement>();
 
     /// <summary>
+    /// The <see cref="ClickableElement"/> from which <see cref="cutObjects"/> were cut from
+    /// </summary>
+    public ClickableElement cutFromElement;
+
+    /// <summary>
     /// The <see cref="BaseNode"/> that is being created in a <see cref="BehaviourTree"/> or <see cref="UtilitySystem"/>. Used to keep track of it while in <see cref="makeAttachedNode"/>
     /// </summary>
     private BaseNode toCreateNode;
@@ -1638,36 +1643,41 @@ public class NodeEditor : EditorWindow
     /// Deletes the <paramref name="elem"/>
     /// </summary>
     /// <param name="elem"></param>
-    public void Delete(GUIElement elem)
+    public void Delete(GUIElement elem, ClickableElement element = null)
     {
+        if (element is null)
+        {
+            element = currentElem;
+        }
+
         switch (elem.GetType().ToString())
         {
             case nameof(StateNode):
                 StateNode stateNode = (StateNode)elem;
-                ((FSM)currentElem).DeleteNode(stateNode);
+                ((FSM)element).DeleteNode(stateNode);
 
                 focusedObjects.Remove(stateNode);
                 break;
 
             case nameof(BehaviourNode):
                 BehaviourNode behaviourNode = (BehaviourNode)elem;
-                ((BehaviourTree)currentElem).DeleteNode(behaviourNode);
+                ((BehaviourTree)element).DeleteNode(behaviourNode);
 
                 focusedObjects.Remove(behaviourNode);
                 break;
 
             case nameof(UtilityNode):
                 UtilityNode utilityNode = (UtilityNode)elem;
-                ((UtilitySystem)currentElem).DeleteNode(utilityNode);
+                ((UtilitySystem)element).DeleteNode(utilityNode);
 
                 focusedObjects.Remove(utilityNode);
                 break;
 
             case nameof(TransitionGUI):
-                if (currentElem is FSM)
+                if (element is FSM)
                 {
                     TransitionGUI transition = (TransitionGUI)elem;
-                    ((FSM)currentElem).DeleteTransition(transition);
+                    ((FSM)element).DeleteTransition(transition);
 
                     focusedObjects.Remove(transition);
                 }
@@ -2317,11 +2327,20 @@ public class NodeEditor : EditorWindow
             if (elem is BaseNode && ((BaseNode)elem).subElem != null)
             {
                 if (((BaseNode)elem).subElem is FSM)
+                {
                     ReIdentifyElements(((FSM)((BaseNode)elem).subElem).states.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((FSM)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                }
                 if (((BaseNode)elem).subElem is BehaviourTree)
+                {
                     ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).connections.Cast<GUIElement>().ToList());
+                }
                 if (((BaseNode)elem).subElem is UtilitySystem)
+                {
                     ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).connections.Cast<GUIElement>().ToList());
+                }
             }
         }
     }
@@ -2354,6 +2373,7 @@ public class NodeEditor : EditorWindow
     {
         Copy();
         cutObjects = new List<GUIElement>(focusedObjects);
+        cutFromElement = currentElem;
     }
 
     private void Paste()
@@ -2366,6 +2386,10 @@ public class NodeEditor : EditorWindow
             }
             else
             {
+                if (cutObjects.Count > 0)
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
+
                 foreach (ClickableElement elem in clipboard)
                 {
                     Elements.Add(elem);
@@ -2382,6 +2406,10 @@ public class NodeEditor : EditorWindow
             }
             else
             {
+                if (cutObjects.Count > 0)
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
+
                 foreach (GUIElement elem in clipboard)
                 {
                     if (elem is StateNode)
@@ -2416,6 +2444,10 @@ public class NodeEditor : EditorWindow
             }
             else
             {
+                if (cutObjects.Count > 0)
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
+
                 foreach (GUIElement elem in clipboard)
                 {
                     if (elem is BehaviourNode)
@@ -2440,6 +2472,10 @@ public class NodeEditor : EditorWindow
             }
             else
             {
+                if (cutObjects.Count > 0)
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
+
                 foreach (GUIElement elem in clipboard)
                 {
                     if (elem is UtilityNode)
@@ -2458,11 +2494,6 @@ public class NodeEditor : EditorWindow
 
         if (cutObjects.Count > 0)
         {
-            foreach (GUIElement elem in cutObjects)
-            {
-                Delete(elem);
-            }
-
             clipboard.Clear();
         }
 
