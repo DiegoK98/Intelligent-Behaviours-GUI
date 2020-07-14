@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class BehaviourTree : ClickableElement
@@ -57,6 +58,33 @@ public class BehaviourTree : ClickableElement
             }),
             Id = this.identificator
         };
+
+        return result;
+    }
+
+    /// <summary>
+    /// Creates a copy of this <see cref="BehaviourTree"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        ClickableElement parent = (ClickableElement)args[0];
+
+        GUIElement result = new BehaviourTree
+        {
+            identificator = this.identificator,
+            elementNamer = CreateInstance<UniqueNamer>(),
+            elementName = this.elementName,
+            parent = parent,
+            editor = this.editor,
+            windowRect = new Rect(this.windowRect)
+        };
+
+        ((BehaviourTree)result).nodes = this.nodes.Select(o => (BehaviourNode)o.CopyElement(result)).ToList();
+        ((BehaviourTree)result).connections = this.connections.Select(o => 
+        (TransitionGUI)o.CopyElement(((BehaviourTree)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
+                                     ((BehaviourTree)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
         return result;
     }

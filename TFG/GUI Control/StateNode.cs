@@ -80,6 +80,35 @@ public class StateNode : BaseNode
     }
 
     /// <summary>
+    /// Creates a copy of this <see cref="StateNode"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        ClickableElement parent = (ClickableElement)args[0];
+
+        GUIElement result;
+        if (this.subElem)
+        {
+            result = this.subElem.CopyElement(parent);
+        }
+        else
+        {
+            result = new StateNode
+            {
+                identificator = this.identificator,
+                nodeName = this.nodeName,
+                parent = parent,
+                windowRect = new Rect(this.windowRect),
+                type = this.type
+            };
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Returns the <see cref="stateType"/> properly written
     /// </summary>
     /// <returns></returns>

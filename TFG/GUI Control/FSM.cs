@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -85,6 +86,41 @@ public class FSM : ClickableElement
             }),
             Id = this.identificator
         };
+
+        return result;
+    }
+
+    /// <summary>
+    /// Creates a copy of this <see cref="FSM"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        ClickableElement parent = (ClickableElement)args[0];
+
+        GUIElement result = new FSM
+        {
+            identificator = this.identificator,
+            elementNamer = CreateInstance<UniqueNamer>(),
+            elementName = this.elementName,
+            parent = parent,
+            editor = this.editor,
+            windowRect = new Rect(this.windowRect)
+        };
+
+        ((FSM)result).states = this.states.Select(o => (StateNode)o.CopyElement(result)).ToList();
+        ((FSM)result).transitions = this.transitions.Select(o =>
+        (TransitionGUI)o.CopyElement(((FSM)result).states.Find(n => n.identificator == o.fromNode.identificator),
+                                     ((FSM)result).states.Find(n => n.identificator == o.toNode.identificator))).ToList();
+
+        foreach (StateNode elem in ((FSM)result).states)
+        {
+            if (elem.type == stateType.Entry)
+            {
+                ((FSM)result).SetAsEntry(elem);
+            }
+        }
 
         return result;
     }

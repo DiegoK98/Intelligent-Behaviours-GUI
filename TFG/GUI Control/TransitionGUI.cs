@@ -97,6 +97,49 @@ public class TransitionGUI : GUIElement
     }
 
     /// <summary>
+    /// Creates a copy of this <see cref="TransitionGUI"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        BaseNode fromNode;
+        BaseNode toNode;
+
+        if (args.Count() > 1)
+        {
+            fromNode = (BaseNode)args[0];
+            toNode = (BaseNode)args[1];
+        }
+        else
+        {
+            fromNode = this.fromNode;
+            toNode = this.toNode;
+        }
+
+        GUIElement result = new TransitionGUI
+        {
+            identificator = this.identificator,
+            transitionName = this.transitionName,
+            windowRect = new Rect(this.windowRect),
+            width = this.width,
+            height = this.height,
+            weight = this.weight,
+            fromNode = fromNode,
+            toNode = toNode,
+            rootPerception = (PerceptionGUI)rootPerception.CopyElement()
+        };
+
+        if (fromNode is StateNode && toNode is StateNode)
+        {
+            ((StateNode)fromNode).nodeTransitions.Add((TransitionGUI)result);
+            ((StateNode)toNode).nodeTransitions.Add((TransitionGUI)result);
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Gets the type of the <see cref="TransitionGUI"/> properly written
     /// </summary>
     /// <returns></returns>

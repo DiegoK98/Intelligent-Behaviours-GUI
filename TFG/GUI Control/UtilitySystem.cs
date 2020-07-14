@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class UtilitySystem : ClickableElement
@@ -58,6 +59,33 @@ public class UtilitySystem : ClickableElement
             //}),
             //Id = this.identificator
         };
+
+        return result;
+    }
+
+    /// <summary>
+    /// Creates a copy of this <see cref="UtilitySystem"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        ClickableElement parent = (ClickableElement)args[0];
+
+        GUIElement result = new UtilitySystem
+        {
+            identificator = this.identificator,
+            elementNamer = CreateInstance<UniqueNamer>(),
+            elementName = this.elementName,
+            parent = parent,
+            editor = this.editor,
+            windowRect = new Rect(this.windowRect)
+        };
+
+        ((UtilitySystem)result).nodes = this.nodes.Select(o => (UtilityNode)o.CopyElement(result)).ToList();
+        ((UtilitySystem)result).connections = this.connections.Select(o =>
+        (TransitionGUI)o.CopyElement(((UtilitySystem)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
+                                     ((UtilitySystem)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
         return result;
     }

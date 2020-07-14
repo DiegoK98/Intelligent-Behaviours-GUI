@@ -28,12 +28,12 @@ public class NodeEditor : EditorWindow
     public List<GUIElement> focusedObjects = new List<GUIElement>();
 
     /// <summary>
-    /// The list of <see cref="XMLElement"/> that will be pasted
+    /// The list of copied <see cref="GUIElement"/> that will be pasted
     /// </summary>
-    public List<XMLElement> clipboard = new List<XMLElement>();
+    public List<GUIElement> clipboard = new List<GUIElement>();
 
     /// <summary>
-    /// The list of <see cref="GUIElement"/> that will be deleted after pasting the cut objects
+    /// The list of references to every <see cref="GUIElement"/> that will be deleted after pasting the cut objects
     /// </summary>
     public List<GUIElement> cutObjects = new List<GUIElement>();
 
@@ -472,10 +472,15 @@ public class NodeEditor : EditorWindow
                         if (focusedObjects.Contains(((BehaviourTree)currentElem).nodes[selectIndex]))
                         {
                             focusedObjects.Remove(((BehaviourTree)currentElem).nodes[selectIndex]);
+                            focusedObjects.Remove(((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(((BehaviourTree)currentElem).nodes[selectIndex])).FirstOrDefault());
                         }
                         else
                         {
                             focusedObjects.Add(((BehaviourTree)currentElem).nodes[selectIndex]);
+
+                            GUIElement transToAdd = ((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(((BehaviourTree)currentElem).nodes[selectIndex])).FirstOrDefault();
+                            if (transToAdd)
+                                focusedObjects.Add(transToAdd);
                         }
 
                         if (Event.current.clickCount == 2 && ((BehaviourTree)currentElem).nodes[selectIndex].subElem != null)
@@ -1659,10 +1664,13 @@ public class NodeEditor : EditorWindow
                 break;
 
             case nameof(TransitionGUI):
-                TransitionGUI transition = (TransitionGUI)elem;
-                ((FSM)currentElem).DeleteTransition(transition);
+                if (currentElem is FSM)
+                {
+                    TransitionGUI transition = (TransitionGUI)elem;
+                    ((FSM)currentElem).DeleteTransition(transition);
 
-                focusedObjects.Remove(transition);
+                    focusedObjects.Remove(transition);
+                }
                 break;
 
             case nameof(FSM):
@@ -2300,148 +2308,125 @@ public class NodeEditor : EditorWindow
     /// Takes all the copied elements and gives them a new identificator
     /// </summary>
     /// <param name="elements"></param>
-    private void ReIdentifyElements(List<XMLElement> elements)
+    private void ReIdentifyElements(List<GUIElement> elements)
     {
-        Dictionary<string, string> oldIDs = new Dictionary<string, string>();
-
-        foreach (XMLElement elem in elements.Where(e => e.elemType != nameof(TransitionGUI)))
+        foreach (GUIElement elem in elements)
         {
-            string oldID = elem.Id;
-            elem.Id = GUIElement.UniqueID();
-            oldIDs.Add(oldID, elem.Id);
+            elem.identificator = GUIElement.UniqueID();
 
-            if (elem.elemType == nameof(FSM))
+            if (elem is BaseNode && ((BaseNode)elem).subElem != null)
             {
-                ReIdentifyElements(elem.nodes);
+                if (((BaseNode)elem).subElem is FSM)
+                    ReIdentifyElements(((FSM)((BaseNode)elem).subElem).states.Cast<GUIElement>().ToList());
+                if (((BaseNode)elem).subElem is BehaviourTree)
+                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
+                if (((BaseNode)elem).subElem is UtilitySystem)
+                    ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
             }
-        }
-
-        foreach (XMLElement elem in elements.Where(e => e.elemType == nameof(TransitionGUI)))
-        {
-            elem.fromId = oldIDs.Where(o => o.Key == elem.fromId).FirstOrDefault().Value;
-            elem.toId = oldIDs.Where(o => o.Key == elem.toId).FirstOrDefault().Value;
-            elem.Id = GUIElement.UniqueID();
         }
     }
 
     private void Copy()
     {
-        clipboard = focusedObjects.Select(o => o.ToXMLElement(currentElem)).ToList();
+        clipboard = focusedObjects.Select(o => o.CopyElement(currentElem)).ToList();
+        foreach (GUIElement elem in clipboard)
+        {
+            if (elem is TransitionGUI)
+            {
+                ((TransitionGUI)elem).fromNode = (BaseNode)clipboard.Find(n => n.identificator == ((TransitionGUI)elem).fromNode.identificator);
+                ((TransitionGUI)elem).toNode = (BaseNode)clipboard.Find(n => n.identificator == ((TransitionGUI)elem).toNode.identificator);
+
+                if (((TransitionGUI)elem).fromNode is StateNode && ((TransitionGUI)elem).toNode is StateNode)
+                {
+                    ((StateNode)((TransitionGUI)elem).fromNode).nodeTransitions.Add((TransitionGUI)elem);
+                    ((StateNode)((TransitionGUI)elem).toNode).nodeTransitions.Add((TransitionGUI)elem);
+                }
+            }
+        }
+
+        // Reidentify after to make sure any references to other GUIElements are properly copied
+        ReIdentifyElements(clipboard);
+
         cutObjects.Clear();
     }
 
     private void Cut()
     {
-        clipboard = focusedObjects.Select(o => o.ToXMLElement(currentElem)).ToList();
+        Copy();
         cutObjects = new List<GUIElement>(focusedObjects);
     }
 
     private void Paste()
     {
-        ReIdentifyElements(clipboard);
-
         if (currentElem is null)
         {
-            if (clipboard.Any(e => !(e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            if (clipboard.Any(e => !(e is ClickableElement)))
             {
-                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+                Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
             else
             {
-                foreach (XMLElement elem in clipboard)
+                foreach (ClickableElement elem in clipboard)
                 {
-                    if (elem.elemType == nameof(FSM))
-                    {
-                        FSM newFSM = elem.ToFSM(currentElem, null, this);
-                        Elements.Add(newFSM);
-                    }
-                    if (elem.elemType == nameof(BehaviourTree))
-                    {
-                        BehaviourTree newBT = elem.ToBehaviourTree(currentElem, null, this);
-                        Elements.Add(newBT);
-                    }
-                    if (elem.elemType == nameof(UtilitySystem))
-                    {
-                        //UtilitySystem newBT = elem.ToBehaviourTree(currentElem);
-                        //Elements.Add(newBT);
-                    }
+                    Elements.Add(elem);
+                    currentElem.elementNamer.AddName(elem.identificator, elem.elementName);
                 }
             }
         }
 
         if (currentElem is FSM)
         {
-            if (clipboard.Any(e => !(e.elemType == nameof(StateNode) || e.elemType == nameof(TransitionGUI) || e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            if (clipboard.Any(e => !(e is StateNode || e is TransitionGUI)))
             {
-                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+                Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
             else
             {
-                foreach (XMLElement elem in clipboard.Where(e => e.elemType != nameof(TransitionGUI)))
+                foreach (GUIElement elem in clipboard)
                 {
-                    if (elem.elemType == nameof(StateNode))
+                    if (elem is StateNode)
                     {
-                        StateNode newState = elem.ToStateNode();
+                        ((StateNode)elem).type = stateType.Unconnected;
 
-                        if (elem.secondType.Equals(stateType.Entry.ToString()))
+                        ((FSM)currentElem).states.Add((StateNode)elem);
+
+                        if (!((FSM)currentElem).HasEntryState)
                         {
-                            ((FSM)currentElem).AddEntryState(newState);
+                            ((FSM)currentElem).SetAsEntry((StateNode)elem);
                         }
-                        else
-                        {
-                            ((FSM)currentElem).states.Add(newState);
-                        }
-                    }
-                    if (elem.elemType == nameof(FSM))
-                    {
-                        elem.ToFSM(currentElem, null, this);
-                    }
-                    if (elem.elemType == nameof(BehaviourTree))
-                    {
-                        elem.ToBehaviourTree(currentElem, null, this);
-                    }
-                    if (elem.elemType == nameof(UtilitySystem))
-                    {
-                        //elem.ToBehaviourTree(currentElem);
-                    }
-                }
 
-                foreach (XMLElement elem in clipboard.Where(e => e.elemType == nameof(TransitionGUI)))
-                {
-                    BaseNode node1 = ((FSM)currentElem).states.Where(n => n.identificator == elem.fromId).FirstOrDefault();
-                    BaseNode node2 = ((FSM)currentElem).states.Where(n => n.identificator == elem.toId).FirstOrDefault();
+                        ((FSM)currentElem).CheckConnected();
 
-                    if (node1 != null && node2 != null)
-                        ((FSM)currentElem).AddTransition(elem.ToTransitionGUI(node1, node2));
+                        currentElem.elementNamer.AddName(elem.identificator, ((StateNode)elem).nodeName);
+                    }
+                    if (elem is TransitionGUI)
+                    {
+                        ((FSM)currentElem).transitions.Add((TransitionGUI)elem);
+                        currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                    }
                 }
             }
         }
 
         if (currentElem is BehaviourTree)
         {
-            if (clipboard.Any(e => !(e.elemType == nameof(BehaviourNode) || e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            if (clipboard.Any(e => !(e is BehaviourNode || e is TransitionGUI)))
             {
-                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+                Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
             else
             {
-                foreach (XMLElement elem in clipboard)
+                foreach (GUIElement elem in clipboard)
                 {
-                    if (elem.elemType == nameof(BehaviourNode))
+                    if (elem is BehaviourNode)
                     {
-                        elem.ToBehaviourNode(null, (BehaviourTree)currentElem, currentElem.parent, this);
+                        ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)elem);
+                        currentElem.elementNamer.AddName(elem.identificator, ((BehaviourNode)elem).nodeName);
                     }
-                    if (elem.elemType == nameof(FSM))
+                    if (elem is TransitionGUI)
                     {
-                        elem.ToFSM(currentElem, null, this);
-                    }
-                    if (elem.elemType == nameof(BehaviourTree))
-                    {
-                        elem.ToBehaviourTree(currentElem, null, this);
-                    }
-                    if (elem.elemType == nameof(UtilitySystem))
-                    {
-                        //newBT = elem.ToBehaviourTree(currentElem);
+                        ((BehaviourTree)currentElem).connections.Add((TransitionGUI)elem);
+                        currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
                     }
                 }
             }
@@ -2449,15 +2434,24 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
-            if (clipboard.Any(e => !(e.elemType == nameof(UtilityNode) || e.elemType == nameof(FSM) || e.elemType == nameof(BehaviourTree) || e.elemType == nameof(UtilitySystem))))
+            if (clipboard.Any(e => !(e is UtilityNode || e is TransitionGUI)))
             {
-                Debug.LogError("[ERROR] Couldn't paste this elements in this place");
+                Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
             else
             {
-                foreach (XMLElement elem in clipboard)
+                foreach (GUIElement elem in clipboard)
                 {
-                    // TODO
+                    if (elem is UtilityNode)
+                    {
+                        ((UtilitySystem)currentElem).nodes.Add((UtilityNode)elem);
+                        currentElem.elementNamer.AddName(elem.identificator, ((UtilityNode)elem).nodeName);
+                    }
+                    if (elem is TransitionGUI)
+                    {
+                        ((UtilitySystem)currentElem).connections.Add((TransitionGUI)elem);
+                        currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                    }
                 }
             }
         }

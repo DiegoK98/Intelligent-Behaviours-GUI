@@ -20,7 +20,7 @@ public class PerceptionGUI : GUIElement
     /// <summary>
     /// Name of the selected <see cref="FSM"/> or <see cref="BehaviourTree"/> for IsInState and BehaviourTreeStatus Perceptions
     /// </summary>
-    public string elemName;
+    public string elemName; // Should be a reference to a FSM of BT, not just the name, ¡¡¡¡which means to change the ToXML, the Copy, etc!!!!
 
     /// <summary>
     /// Name for the Custom Perception class
@@ -30,7 +30,7 @@ public class PerceptionGUI : GUIElement
     /// <summary>
     /// Name of the state selected for IsInState Perception
     /// </summary>
-    public string stateName;
+    public string stateName; // Should be a reference to a StateNode, not just the name, ¡¡¡¡which means to change the ToXML, the Copy, etc!!!!
 
     /// <summary>
     /// Status selected for BehaviourTreeStatus Perception
@@ -155,6 +155,35 @@ public class PerceptionGUI : GUIElement
     public override XMLElement ToXMLElement(params object[] args)
     {
         throw new NotImplementedException();
+    }
+
+    // TODO
+    /// <summary>
+    /// Creates a copy of this <see cref="PerceptionGUI"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        GUIElement result = new PerceptionGUI
+        {
+            identificator = this.identificator,
+            windowRect = new Rect(this.windowRect),
+            type = this.type,
+            timerNumber = this.timerNumber,
+            customName = this.customName,
+            elemName = this.elemName,
+            stateName = this.stateName,
+            status = this.status,
+            openFoldout = this.openFoldout
+        };
+
+        if (this.firstChild != null)
+            ((PerceptionGUI)result).firstChild = (PerceptionGUI)this.firstChild.CopyElement();
+        if (this.secondChild != null)
+            ((PerceptionGUI)result).secondChild = (PerceptionGUI)this.secondChild.CopyElement();
+
+        return result;
     }
 
     /// <summary>

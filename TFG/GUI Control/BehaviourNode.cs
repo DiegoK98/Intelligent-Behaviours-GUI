@@ -141,4 +141,36 @@ public class BehaviourNode : BaseNode
 
         return result;
     }
+
+    /// <summary>
+    /// Creates a copy of this <see cref="BehaviourNode"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        BehaviourTree parent = (BehaviourTree)args[0];
+
+        GUIElement result;
+        if (this.subElem)
+        {
+            result = this.subElem.CopyElement(parent);
+        }
+        else
+        {
+            result = new BehaviourNode
+            {
+                identificator = this.identificator,
+                nodeName = this.nodeName,
+                parent = parent,
+                type = this.type,
+                windowRect = new Rect(this.windowRect),
+                isRoot = this.isRoot,
+                isRandom = this.isRandom,
+                NProperty = this.NProperty
+            };
+        }
+
+        return result;
+    }
 }

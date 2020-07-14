@@ -43,6 +43,13 @@ public abstract class GUIElement : ScriptableObject
     public abstract XMLElement ToXMLElement(params object[] args);
 
     /// <summary>
+    /// Returns a copy of this <see cref="GUIElement"/> with a new identificator, and proper references to other <see cref="GUIElement"/>s
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public abstract GUIElement CopyElement(params object[] args);
+
+    /// <summary>
     /// Modifies <paramref name="name"/> to remove unnecesary spaces and newlines
     /// </summary>
     /// <param name="name"></param>

@@ -209,6 +209,39 @@ public class UtilityNode : BaseNode
     }
 
     /// <summary>
+    /// Creates a copy of this <see cref="UtilityNode"/>
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public override GUIElement CopyElement(params object[] args)
+    {
+        UtilitySystem parent = (UtilitySystem)args[0];
+
+        GUIElement result;
+        if (this.subElem)
+        {
+            result = this.subElem.CopyElement(parent);
+        }
+        else
+        {
+            result = new UtilityNode
+            {
+                identificator = this.identificator,
+                nodeName = this.nodeName,
+                parent = parent,
+                windowRect = new Rect(this.windowRect),
+                type = this.type,
+                fusionType = this.fusionType,
+                curveType = this.curveType,
+                variableMax = this.variableMax,
+                variableMin = this.variableMin
+            };
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Updates the value of the weights accordingly
     /// </summary>
     public void WeightsUpdate(string id)
