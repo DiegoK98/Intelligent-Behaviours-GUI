@@ -217,25 +217,22 @@ public class UtilityNode : BaseNode
     {
         UtilitySystem parent = (UtilitySystem)args[0];
 
-        GUIElement result;
+        GUIElement result = new UtilityNode
+        {
+            identificator = this.identificator,
+            nodeName = this.nodeName,
+            parent = parent,
+            windowRect = new Rect(this.windowRect),
+            type = this.type,
+            fusionType = this.fusionType,
+            curveType = this.curveType,
+            variableMax = this.variableMax,
+            variableMin = this.variableMin
+        };
+
         if (this.subElem)
         {
-            result = this.subElem.CopyElement(parent);
-        }
-        else
-        {
-            result = new UtilityNode
-            {
-                identificator = this.identificator,
-                nodeName = this.nodeName,
-                parent = parent,
-                windowRect = new Rect(this.windowRect),
-                type = this.type,
-                fusionType = this.fusionType,
-                curveType = this.curveType,
-                variableMax = this.variableMax,
-                variableMin = this.variableMin
-            };
+            ((UtilityNode)result).subElem = (ClickableElement)this.subElem.CopyElement(parent);
         }
 
         return result;

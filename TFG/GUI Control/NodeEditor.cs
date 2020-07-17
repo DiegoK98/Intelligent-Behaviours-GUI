@@ -2380,27 +2380,7 @@ public class NodeEditor : EditorWindow
     {
         if (currentElem is null)
         {
-            if (clipboard.Any(e => !(e is ClickableElement)))
-            {
-                Debug.LogError("[ERROR] Couldn't paste these elements in this place");
-            }
-            else
-            {
-                if (cutObjects.Count > 0)
-                    foreach (GUIElement elem in cutObjects)
-                        Delete(elem, cutFromElement);
-
-                foreach (ClickableElement elem in clipboard)
-                {
-                    Elements.Add(elem);
-                    currentElem.elementNamer.AddName(elem.identificator, elem.elementName);
-                }
-            }
-        }
-
-        if (currentElem is FSM)
-        {
-            if (clipboard.Any(e => !(e is StateNode || e is TransitionGUI)))
+            if (clipboard.Any(e => !(e is ClickableElement || (e is BaseNode && ((BaseNode)e).subElem != null))))
             {
                 Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
@@ -2412,25 +2392,84 @@ public class NodeEditor : EditorWindow
 
                 foreach (GUIElement elem in clipboard)
                 {
-                    if (elem is StateNode)
+                    ClickableElement clickElem;
+
+                    if (elem is ClickableElement)
                     {
-                        ((StateNode)elem).type = stateType.Unconnected;
-
-                        ((FSM)currentElem).states.Add((StateNode)elem);
-
-                        if (!((FSM)currentElem).HasEntryState)
-                        {
-                            ((FSM)currentElem).SetAsEntry((StateNode)elem);
-                        }
-
-                        ((FSM)currentElem).CheckConnected();
-
-                        currentElem.elementNamer.AddName(elem.identificator, ((StateNode)elem).nodeName);
+                        clickElem = (ClickableElement)elem;
                     }
+                    else
+                    {
+                        clickElem = ((BaseNode)elem).subElem;
+                    }
+
+                    clickElem.parent = null;
+
+                    Elements.Add(clickElem);
+                    // El currentelem null no hace el check para los names, pero deberia
+                    //currentElem.elementNamer.AddName(clickElem.identificator, clickElem.elementName);
+                }
+            }
+        }
+
+        if (currentElem is FSM)
+        {
+            if (clipboard.Any(e => !(e is StateNode || e is TransitionGUI || e is ClickableElement || (e is BaseNode && ((BaseNode)e).subElem != null))))
+            {
+                Debug.LogError("[ERROR] Couldn't paste these elements in this place");
+            }
+            else
+            {
+                if (cutObjects.Count > 0)
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
+
+                foreach (GUIElement elem in clipboard)
+                {
                     if (elem is TransitionGUI)
                     {
                         ((FSM)currentElem).transitions.Add((TransitionGUI)elem);
                         currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                    }
+                    else
+                    {
+                        StateNode newElem;
+
+                        if (elem is ClickableElement)
+                        {
+                            ((ClickableElement)elem).parent = currentElem;
+                            currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+
+                            newElem = CreateInstance<StateNode>();
+                            newElem.InitStateNode(currentElem, 2, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                        }
+                        else
+                        {
+                            if (elem is StateNode)
+                            {
+                                newElem = (StateNode)elem;
+
+                                currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
+                            }
+                            else
+                            {
+                                ((BaseNode)elem).parent = currentElem;
+
+                                newElem = CreateInstance<StateNode>();
+                                newElem.InitStateNode(currentElem, 2, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                            }
+                        }
+
+                        newElem.type = stateType.Unconnected;
+
+                        ((FSM)currentElem).states.Add(newElem);
+
+                        if (!((FSM)currentElem).HasEntryState)
+                        {
+                            ((FSM)currentElem).SetAsEntry(newElem);
+                        }
+
+                        ((FSM)currentElem).CheckConnected();
                     }
                 }
             }
@@ -2438,7 +2477,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is BehaviourTree)
         {
-            if (clipboard.Any(e => !(e is BehaviourNode || e is TransitionGUI)))
+            if (clipboard.Any(e => !(e is BehaviourNode || e is TransitionGUI || e is ClickableElement || (e is BaseNode && ((BaseNode)e).subElem != null))))
             {
                 Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
@@ -2450,15 +2489,41 @@ public class NodeEditor : EditorWindow
 
                 foreach (GUIElement elem in clipboard)
                 {
-                    if (elem is BehaviourNode)
-                    {
-                        ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)elem);
-                        currentElem.elementNamer.AddName(elem.identificator, ((BehaviourNode)elem).nodeName);
-                    }
                     if (elem is TransitionGUI)
                     {
                         ((BehaviourTree)currentElem).connections.Add((TransitionGUI)elem);
                         currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                    }
+                    else
+                    {
+                        BehaviourNode newElem;
+
+                        if (elem is ClickableElement)
+                        {
+                            ((ClickableElement)elem).parent = currentElem;
+                            currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+
+                            newElem = CreateInstance<BehaviourNode>();
+                            newElem.InitBehaviourNode(currentElem, 2, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                        }
+                        else
+                        {
+                            if (elem is BehaviourNode)
+                            {
+                                newElem = (BehaviourNode)elem;
+
+                                currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
+                            }
+                            else
+                            {
+                                ((BaseNode)elem).parent = currentElem;
+
+                                newElem = CreateInstance<BehaviourNode>();
+                                newElem.InitBehaviourNode(currentElem, 2, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                            }
+                        }
+
+                        ((BehaviourTree)currentElem).nodes.Add(newElem);
                     }
                 }
             }
@@ -2466,7 +2531,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
-            if (clipboard.Any(e => !(e is UtilityNode || e is TransitionGUI)))
+            if (clipboard.Any(e => !(e is UtilityNode || e is TransitionGUI || e is ClickableElement || (e is BaseNode && ((BaseNode)e).subElem != null))))
             {
                 Debug.LogError("[ERROR] Couldn't paste these elements in this place");
             }
@@ -2478,15 +2543,41 @@ public class NodeEditor : EditorWindow
 
                 foreach (GUIElement elem in clipboard)
                 {
-                    if (elem is UtilityNode)
-                    {
-                        ((UtilitySystem)currentElem).nodes.Add((UtilityNode)elem);
-                        currentElem.elementNamer.AddName(elem.identificator, ((UtilityNode)elem).nodeName);
-                    }
                     if (elem is TransitionGUI)
                     {
                         ((UtilitySystem)currentElem).connections.Add((TransitionGUI)elem);
                         currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                    }
+                    else
+                    {
+                        UtilityNode newElem;
+
+                        if (elem is ClickableElement)
+                        {
+                            ((ClickableElement)elem).parent = currentElem;
+                            currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+
+                            newElem = CreateInstance<UtilityNode>();
+                            newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                        }
+                        else
+                        {
+                            if (elem is UtilityNode)
+                            {
+                                newElem = (UtilityNode)elem;
+
+                                currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
+                            }
+                            else
+                            {
+                                ((BaseNode)elem).parent = currentElem;
+
+                                newElem = CreateInstance<UtilityNode>();
+                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                            }
+                        }
+
+                        ((UtilitySystem)currentElem).nodes.Add(newElem);
                     }
                 }
             }

@@ -151,24 +151,21 @@ public class BehaviourNode : BaseNode
     {
         BehaviourTree parent = (BehaviourTree)args[0];
 
-        GUIElement result;
+        GUIElement result = new BehaviourNode
+        {
+            identificator = this.identificator,
+            nodeName = this.nodeName,
+            parent = parent,
+            type = this.type,
+            windowRect = new Rect(this.windowRect),
+            isRoot = this.isRoot,
+            isRandom = this.isRandom,
+            NProperty = this.NProperty
+        };
+
         if (this.subElem)
         {
-            result = this.subElem.CopyElement(parent);
-        }
-        else
-        {
-            result = new BehaviourNode
-            {
-                identificator = this.identificator,
-                nodeName = this.nodeName,
-                parent = parent,
-                type = this.type,
-                windowRect = new Rect(this.windowRect),
-                isRoot = this.isRoot,
-                isRandom = this.isRandom,
-                NProperty = this.NProperty
-            };
+            ((BehaviourNode)result).subElem = (ClickableElement)this.subElem.CopyElement(parent);
         }
 
         return result;

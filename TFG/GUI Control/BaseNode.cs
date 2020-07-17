@@ -29,7 +29,7 @@ public abstract class BaseNode : GUIElement
     /// <summary>
     /// The <see cref="ClickableElement"/> in which this <see cref="BaseNode"/> exists
     /// </summary>
-    protected ClickableElement parent;
+    public ClickableElement parent;
 
     /// <summary>
     /// The Initializer for the <seealso cref="BaseNode"/>

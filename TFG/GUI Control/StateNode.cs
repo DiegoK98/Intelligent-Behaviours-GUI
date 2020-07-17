@@ -88,21 +88,18 @@ public class StateNode : BaseNode
     {
         ClickableElement parent = (ClickableElement)args[0];
 
-        GUIElement result;
+        GUIElement result = new StateNode
+        {
+            identificator = this.identificator,
+            nodeName = this.nodeName,
+            parent = parent,
+            windowRect = new Rect(this.windowRect),
+            type = this.type
+        };
+
         if (this.subElem)
         {
-            result = this.subElem.CopyElement(parent);
-        }
-        else
-        {
-            result = new StateNode
-            {
-                identificator = this.identificator,
-                nodeName = this.nodeName,
-                parent = parent,
-                windowRect = new Rect(this.windowRect),
-                type = this.type
-            };
+            ((StateNode)result).subElem = (ClickableElement)this.subElem.CopyElement(parent);
         }
 
         return result;
