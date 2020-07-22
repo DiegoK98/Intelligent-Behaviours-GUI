@@ -286,6 +286,7 @@ public class NodeEditor : EditorWindow
                         else if (clickedOnTransition)
                         {
                             menu.AddItem(new GUIContent("Reconnect Transition"), false, ContextCallback, new string[] { "reconnectTransition", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Flip Transition"), false, ContextCallback, new string[] { "flipTransition", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Delete Transition"), false, ContextCallback, new string[] { "deleteTransition", selectIndex.ToString() });
                         }
@@ -429,6 +430,8 @@ public class NodeEditor : EditorWindow
                 {
                     makeTransitionMode = false;
                     reconnectTransitionMode = false;
+                    cutObjects.Remove(selectedTransition);
+                    selectedTransition = null;
                     makeAttachedNode = false;
                     makeConnectionMode = false;
                 }
@@ -676,9 +679,12 @@ public class NodeEditor : EditorWindow
             switch (Event.current.keyCode)
             {
                 case KeyCode.Delete:
-                    if (makeTransitionMode)
+                    if (makeTransitionMode || reconnectTransitionMode)
                     {
                         makeTransitionMode = false;
+                        reconnectTransitionMode = false;
+                        cutObjects.Remove(selectedTransition);
+                        selectedTransition = null;
                         break;
                     }
                     if (focusedObjects.Count > 0 && GUIUtility.keyboardControl == 0)
@@ -688,12 +694,16 @@ public class NodeEditor : EditorWindow
                     }
                     break;
                 case KeyCode.Escape:
-                    if (makeTransitionMode || makeAttachedNode || makeConnectionMode)
+                    if (makeTransitionMode || reconnectTransitionMode || makeAttachedNode || makeConnectionMode)
                     {
                         makeTransitionMode = false;
                         makeAttachedNode = false;
                         makeConnectionMode = false;
                         focusedObjects.Clear();
+
+                        reconnectTransitionMode = false;
+                        cutObjects.Remove(selectedTransition);
+                        selectedTransition = null;
                         break;
                     }
                     currentElem = currentElem?.parent;
@@ -1630,6 +1640,9 @@ public class NodeEditor : EditorWindow
             case "reconnectTransition":
                 ReconnectTransition(index);
                 break;
+            case "flipTransition":
+                FlipTransition(index);
+                break;
             case "deleteNode":
                 DeleteNode(index);
                 break;
@@ -2222,6 +2235,35 @@ public class NodeEditor : EditorWindow
         if (currentElem is FSM)
         {
             selectedTransition = ((FSM)currentElem).transitions[selectIndex];
+        }
+    }
+
+    /// <summary>
+    /// Flip the transition (fromNode is toNode and viceversa)
+    /// </summary>
+    /// <param name="selectIndex"></param>
+    private void FlipTransition(int selectIndex)
+    {
+        if (currentElem is FSM)
+        {
+            TransitionGUI transition = ((FSM)currentElem).transitions[selectIndex];
+
+            TransitionGUI coupleTransition = ((FSM)currentElem).transitions.Find(t => t.fromNode.Equals(transition.toNode) && t.toNode.Equals(transition.fromNode));
+
+            if (coupleTransition != null)
+            {
+                BaseNode tempNode1 = coupleTransition.fromNode;
+
+                coupleTransition.fromNode = coupleTransition.toNode;
+                coupleTransition.toNode = tempNode1;
+            }
+
+            BaseNode tempNode2 = transition.fromNode;
+
+            transition.fromNode = transition.toNode;
+            transition.toNode = tempNode2;
+
+            ((FSM)currentElem).CheckConnected();
         }
     }
 
