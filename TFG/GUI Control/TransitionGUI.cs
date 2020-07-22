@@ -23,6 +23,16 @@ public class TransitionGUI : GUIElement
     public BaseNode toNode;
 
     /// <summary>
+    /// Rect from which to draw the curve
+    /// </summary>
+    public Rect fromRect;
+
+    /// <summary>
+    /// Rect which the curve will be headed to
+    /// </summary>
+    public Rect toRect;
+
+    /// <summary>
     /// Initial width of the <see cref="GUIElement.windowRect"/>
     /// </summary>
     public static int baseWidth = 200;

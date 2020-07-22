@@ -23,6 +23,11 @@ public class NodeEditor : EditorWindow
     private BaseNode selectednode;
 
     /// <summary>
+    /// Stores the <see cref="TransitionGUI"/> that is currently being reconnected
+    /// </summary>
+    private TransitionGUI selectedTransition;
+
+    /// <summary>
     /// The list of <see cref="GUIElement"/> that are currently selected by the user
     /// </summary>
     public List<GUIElement> focusedObjects = new List<GUIElement>();
@@ -51,6 +56,11 @@ public class NodeEditor : EditorWindow
     /// True when the user is in the process of creating a new <see cref="TransitionGUI"/>
     /// </summary>
     private bool makeTransitionMode = false;
+
+    /// <summary>
+    /// True when the user is in the process of reconnecting a <see cref="TransitionGUI"/>
+    /// </summary>
+    private bool reconnectTransitionMode = false;
 
     /// <summary>
     /// True when the user is in the process of creating a new <see cref="BaseNode"/> from the <see cref="selectednode"/>, so it gets attached
@@ -134,6 +144,17 @@ public class NodeEditor : EditorWindow
                 DrawNodeCurve(mouseRect, nodeRect, true);
             else
                 DrawNodeCurve(nodeRect, mouseRect, true);
+        }
+
+        if (reconnectTransitionMode)
+        {
+            Rect mouseRect = new Rect(e.mousePosition.x, e.mousePosition.y, 10, 10);
+            Rect nodeRect = new Rect(selectedTransition.fromNode.windowRect);
+
+            if (!cutObjects.Contains(selectedTransition))
+                cutObjects.Add(selectedTransition);
+
+            DrawNodeCurve(nodeRect, mouseRect, true);
         }
 
         if (currentElem is FSM)
@@ -220,7 +241,7 @@ public class NodeEditor : EditorWindow
             // Click derecho
             if (e.button == 1)
             {
-                if (!makeTransitionMode && !makeAttachedNode && !makeConnectionMode)
+                if (!makeTransitionMode && !reconnectTransitionMode && !makeAttachedNode && !makeConnectionMode)
                 {
                     if (!clickedOnElement && !clickedOnWindow && !clickedOnTransition)
                     {
@@ -264,6 +285,8 @@ public class NodeEditor : EditorWindow
                         }
                         else if (clickedOnTransition)
                         {
+                            menu.AddItem(new GUIContent("Reconnect Transition"), false, ContextCallback, new string[] { "reconnectTransition", selectIndex.ToString() });
+                            menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Delete Transition"), false, ContextCallback, new string[] { "deleteTransition", selectIndex.ToString() });
                         }
                     }
@@ -405,6 +428,7 @@ public class NodeEditor : EditorWindow
                 else
                 {
                     makeTransitionMode = false;
+                    reconnectTransitionMode = false;
                     makeAttachedNode = false;
                     makeConnectionMode = false;
                 }
@@ -528,29 +552,48 @@ public class NodeEditor : EditorWindow
                     e.Use();
                 }
 
-                if (makeTransitionMode && currentElem is FSM)
+                if (currentElem is FSM)
                 {
-                    if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
+                    if (makeTransitionMode)
                     {
-                        if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
+                        if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
                         {
-                            TransitionGUI transition = CreateInstance<TransitionGUI>();
-                            transition.InitTransitionGUI(currentElem, selectednode, ((FSM)currentElem).states[selectIndex]);
+                            if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
+                            {
+                                TransitionGUI transition = CreateInstance<TransitionGUI>();
+                                transition.InitTransitionGUI(currentElem, selectednode, ((FSM)currentElem).states[selectIndex]);
 
-                            ((FSM)currentElem).AddTransition(transition);
+                                ((FSM)currentElem).AddTransition(transition);
+                            }
+
+                            makeTransitionMode = false;
+                            selectednode = null;
                         }
 
-                        makeTransitionMode = false;
-                        selectednode = null;
-                    }
+                        if (!clickedOnWindow)
+                        {
+                            makeTransitionMode = false;
+                            selectednode = null;
+                        }
 
-                    if (!clickedOnWindow)
+                        e.Use();
+                    }
+                    if (reconnectTransitionMode)
                     {
-                        makeTransitionMode = false;
-                        selectednode = null;
-                    }
+                        if (clickedOnWindow
+                            && !(((FSM)currentElem).states[selectIndex].Equals(selectedTransition.toNode) || ((FSM)currentElem).states[selectIndex].Equals(selectedTransition.fromNode))
+                            && !((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
+                        {
+                            selectedTransition.toNode = ((FSM)currentElem).states[selectIndex];
+                            ((FSM)currentElem).CheckConnected();
+                        }
 
-                    e.Use();
+                        reconnectTransitionMode = false;
+                        cutObjects.Remove(selectedTransition);
+                        selectedTransition = null;
+
+                        e.Use();
+                    }
                 }
 
                 if (currentElem is BehaviourTree)
@@ -799,6 +842,8 @@ public class NodeEditor : EditorWindow
                 if (elem.fromNode is null || elem.toNode is null)
                     break;
 
+                // If there is two transitions with the same two nodes (->)
+                //                                                     (<-)
                 if (((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
                 {
                     float ang = Vector2.SignedAngle((elem.toNode.windowRect.position - elem.fromNode.windowRect.position), Vector2.right);
@@ -1582,6 +1627,9 @@ public class NodeEditor : EditorWindow
             case "makeTransition":
                 MakeTransition(index);
                 break;
+            case "reconnectTransition":
+                ReconnectTransition(index);
+                break;
             case "deleteNode":
                 DeleteNode(index);
                 break;
@@ -2161,6 +2209,20 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is BehaviourTree)
             selectednode = ((BehaviourTree)currentElem).nodes[selectIndex];
+    }
+
+    /// <summary>
+    /// Enter <see cref="makeTransitionMode"/> like in <see cref="MakeTransition(int)"/> but with a transition selected for reconnection
+    /// </summary>
+    /// <param name="selectIndex"></param>
+    private void ReconnectTransition(int selectIndex)
+    {
+        reconnectTransitionMode = true;
+
+        if (currentElem is FSM)
+        {
+            selectedTransition = ((FSM)currentElem).transitions[selectIndex];
+        }
     }
 
     /// <summary>
