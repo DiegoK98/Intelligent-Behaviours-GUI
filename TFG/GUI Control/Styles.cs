@@ -16,10 +16,26 @@ public static class Styles
         fontSize = 13
     };
 
+    public static GUIStyle Exponent = new GUIStyle()
+    {
+        alignment = TextAnchor.UpperCenter,
+        fontSize = 13
+    };
+
     public static GUIStyle SubTitleText = new GUIStyle()
     {
         alignment = TextAnchor.MiddleCenter,
         fontSize = 10
+    };
+
+    public static GUIStyle NonEditable = new GUIStyle()
+    {
+        alignment = TextAnchor.MiddleCenter,
+        fontSize = 13,
+        normal = new GUIStyleState()
+        {
+            textColor = new Color(0, 0, 0, 0.5f)
+        }
     };
 
     public static GUIStyle ErrorPrompt = new GUIStyle()

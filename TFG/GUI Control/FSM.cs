@@ -50,6 +50,7 @@ public class FSM : ClickableElement
             elementName = parent.elementNamer.AddName(identificator, "New FSM ");
         else
             elementName = editor.editorNamer.AddName(identificator, "New FSM ");
+
         windowRect = new Rect(posx, posy, width, height);
 
         if (!isFromXML)

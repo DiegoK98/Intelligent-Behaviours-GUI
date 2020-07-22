@@ -148,6 +148,15 @@ public class NodeEditor : EditorWindow
             {
                 currentElem.RemoveError(Error.NoEntryState);
             }
+
+            if (((FSM)currentElem).states.Exists(n => n.type == stateType.Unconnected))
+            {
+                currentElem.AddWarning(Warning.UnconnectedNode);
+            }
+            else
+            {
+                currentElem.RemoveWarning(Warning.UnconnectedNode);
+            }
         }
 
         if (currentElem is BehaviourTree)
@@ -170,11 +179,11 @@ public class NodeEditor : EditorWindow
 
             if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Action && !((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n))))
             {
-                currentElem.AddError(Error.NoFactors);
+                currentElem.AddWarning(Warning.NoFactors);
             }
             else
             {
-                currentElem.RemoveError(Error.NoFactors);
+                currentElem.RemoveWarning(Warning.NoFactors);
             }
 
             if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Fusion && n.fusionType == fusionType.Weighted && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n) && t.weight == 0)))
@@ -189,7 +198,7 @@ public class NodeEditor : EditorWindow
 
         #endregion
 
-        // Controls for the events called by the mouse and keyboard
+        // Control for the events called by the mouse and keyboard
         #region Mouse Click Control
 
         if (e.type == EventType.MouseDown)
@@ -705,7 +714,7 @@ public class NodeEditor : EditorWindow
         #endregion
 
         // Draw the windows
-        #region Windows Drawing (has to be done last)
+        #region Windows Drawing (has to be done after key/mouse control)
 
         BeginWindows();
 
@@ -934,7 +943,10 @@ public class NodeEditor : EditorWindow
 
         EndWindows();
 
+        #endregion
+
         // Check if there are repeated names
+        #region Repeated Names
 
         bool repeatedNames = false;
 
@@ -1331,7 +1343,14 @@ public class NodeEditor : EditorWindow
                         break;
                     case 3:
                     case 4:
-                        originalTexture = Resources.Load<Texture2D>("Curve_Rect");
+                        if (((UtilityNode)elem).openFoldout)
+                        {
+                            originalTexture = Resources.Load<Texture2D>("Curve_Rect_Unfolded");
+                        }
+                        else
+                        {
+                            originalTexture = Resources.Load<Texture2D>("Curve_Rect_Folded");
+                        }
                         col = Color.blue;
                         break;
                     default:
@@ -1619,7 +1638,7 @@ public class NodeEditor : EditorWindow
             switch (loadedXML.elemType)
             {
                 case nameof(FSM):
-                    newElem = loadedXML.ToFSM(currentElem);
+                    newElem = loadedXML.ToFSM(currentElem, null, this);
                     newElem.windowRect.x = mousePos.x;
                     newElem.windowRect.y = mousePos.y;
                     Elements.Add(newElem);
@@ -1866,7 +1885,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is UtilitySystem)
         {
             UtilityNode node = CreateInstance<UtilityNode>();
-            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newFSM);
+            node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newFSM);
 
             ((UtilitySystem)currentElem).nodes.Add(node);
         }
@@ -1921,7 +1940,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is UtilitySystem)
         {
             UtilityNode node = CreateInstance<UtilityNode>();
-            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newBT);
+            node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newBT);
 
             ((UtilitySystem)currentElem).nodes.Add(node);
         }
@@ -1976,7 +1995,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is UtilitySystem)
         {
             UtilityNode node = CreateInstance<UtilityNode>();
-            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newUS);
+            node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newUS);
 
             ((UtilitySystem)currentElem).nodes.Add(node);
         }
@@ -2076,7 +2095,7 @@ public class NodeEditor : EditorWindow
     private void CreateVariable(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, utilityType.Variable, posX, posY);
+        node.InitUtilityNode(this, currentElem, utilityType.Variable, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2092,7 +2111,7 @@ public class NodeEditor : EditorWindow
     private void CreateFusion(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, utilityType.Fusion, posX, posY);
+        node.InitUtilityNode(this, currentElem, utilityType.Fusion, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2108,7 +2127,7 @@ public class NodeEditor : EditorWindow
     private void CreateAction(float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, utilityType.Action, posX, posY);
+        node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY);
 
         ((UtilitySystem)currentElem).nodes.Add(node);
     }
@@ -2122,7 +2141,7 @@ public class NodeEditor : EditorWindow
     private void CreateCurve(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(currentElem, utilityType.Curve, posX, posY);
+        node.InitUtilityNode(this, currentElem, utilityType.Curve, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2558,7 +2577,7 @@ public class NodeEditor : EditorWindow
                             currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                             newElem = CreateInstance<UtilityNode>();
-                            newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                            newElem.InitUtilityNode(this, currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
                         }
                         else
                         {
@@ -2573,7 +2592,7 @@ public class NodeEditor : EditorWindow
                                 ((BaseNode)elem).parent = currentElem;
 
                                 newElem = CreateInstance<UtilityNode>();
-                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                newElem.InitUtilityNode(this, currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
                             }
                         }
 

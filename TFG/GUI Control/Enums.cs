@@ -6,7 +6,6 @@ public enum Error
 {
     //The higher the number, the higher its priority
     // Number must be unique
-    NoFactors = 5,
     NoEntryState = 4,
     MoreThanOneRoot = 3,
     RepeatedName = 2
@@ -14,7 +13,9 @@ public enum Error
 
 public enum Warning
 {
-    WeightZero = 1
+    NoFactors = 3,
+    WeightZero = 2,
+    UnconnectedNode = 1
 }
 
 public enum stateType
@@ -58,9 +59,6 @@ public class Enums
             case Error.MoreThanOneRoot:
                 prompt += "You can't have a BT with more than one Root";
                 break;
-            case Error.NoFactors:
-                prompt += "You can't have an Action without any Factors";
-                break;
             default:
                 prompt += "Unknown error :(";
                 break;
@@ -81,8 +79,14 @@ public class Enums
 
         switch (warning)
         {
+            case Warning.NoFactors:
+                prompt += "You have at least one Action node without any Factors connected to it";
+                break;
             case Warning.WeightZero:
                 prompt += "Having a Factor with a weight value of zero means it will be ignored";
+                break;
+            case Warning.UnconnectedNode:
+                prompt += "At least one node is disconnected from the entry state";
                 break;
             default:
                 prompt += "Unknown warning :(";

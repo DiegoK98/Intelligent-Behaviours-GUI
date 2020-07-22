@@ -23,7 +23,8 @@ public enum fusionType
 public enum curveType
 {
     Linear,
-    Exponential
+    Exponential,
+    LinearParts
 }
 
 public class UtilityNode : BaseNode
@@ -44,6 +45,11 @@ public class UtilityNode : BaseNode
     public curveType curveType;
 
     /// <summary>
+    /// Reference to the editor
+    /// </summary>
+    public NodeEditor editor;
+
+    /// <summary>
     /// Min value for the Variable nodes
     /// </summary>
     public float variableMin;
@@ -52,6 +58,31 @@ public class UtilityNode : BaseNode
     /// Max value for the Variable nodes
     /// </summary>
     public float variableMax;
+
+    /// <summary>
+    /// Slope value for the Curve nodes
+    /// </summary>
+    public float slope = 1;
+
+    /// <summary>
+    /// Exponent value for the Curve nodes
+    /// </summary>
+    public float exp = 1;
+
+    /// <summary>
+    /// Displacement on X value for the Curve nodes
+    /// </summary>
+    public float displX;
+
+    /// <summary>
+    /// Displacement on Y value for the Curve nodes
+    /// </summary>
+    public float displY;
+
+    /// <summary>
+    /// Boolean for keeping in memory if the curve visualizer foldout is open
+    /// </summary>
+    public bool openFoldout;
 
     /// <summary>
     /// Returns the <see cref="utilityType"/> properly written
@@ -73,11 +104,12 @@ public class UtilityNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitUtilityNode(ClickableElement parent, utilityType type, float posx, float posy, ClickableElement subElem = null)
+    public void InitUtilityNode(NodeEditor sender, ClickableElement parent, utilityType type, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode(parent);
 
         this.type = type;
+        this.editor = sender;
 
         if (subElem != null)
         {
@@ -95,6 +127,10 @@ public class UtilityNode : BaseNode
             if (type == utilityType.Fusion)
             {
                 windowRect = new Rect(posx, posy, width, height * 1.7f);
+            }
+            else if (type == utilityType.Curve)
+            {
+                windowRect = new Rect(posx, posy, width, height * 1.5f);
             }
             else
             {
@@ -116,12 +152,12 @@ public class UtilityNode : BaseNode
                 GUILayout.BeginHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Min:", Styles.SubTitleText, GUILayout.Width(40), GUILayout.Height(25));
+                GUILayout.Label("Min:", Styles.NonEditable, GUILayout.Width(40), GUILayout.Height(25));
                 float.TryParse(EditorGUILayout.TextArea(variableMin.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out variableMin);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Max:", Styles.SubTitleText, GUILayout.Width(40), GUILayout.Height(25));
+                GUILayout.Label("Max:", Styles.NonEditable, GUILayout.Width(40), GUILayout.Height(25));
                 float.TryParse(EditorGUILayout.TextArea(variableMax.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out variableMax);
                 GUILayout.EndHorizontal();
 
@@ -146,6 +182,8 @@ public class UtilityNode : BaseNode
                 break;
             case utilityType.Curve:
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
+
+                // Type of curve selector
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(windowRect.width * 0.2f);
                 if (GUILayout.Button(curveType.ToString(), EditorStyles.toolbarDropDown))
@@ -165,8 +203,128 @@ public class UtilityNode : BaseNode
                 }
                 GUILayout.Space(windowRect.width * 0.2f);
                 GUILayout.EndHorizontal();
+
+                // Parameters
+                switch (curveType)
+                {
+                    case curveType.Linear:
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Space(windowRect.width * 0.2f);
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("y = ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
+                        float.TryParse(EditorGUILayout.TextArea(slope.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out slope);
+                        GUILayout.Space(2);
+                        GUILayout.Label("x + ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
+                        float.TryParse(EditorGUILayout.TextArea(displX.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displX);
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(windowRect.width * 0.2f);
+                        GUILayout.EndHorizontal();
+                        break;
+                    case curveType.Exponential:
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Space(windowRect.width * 0.2f);
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("y = (x - ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
+                        GUILayout.Space(15);
+                        float.TryParse(EditorGUILayout.TextArea(displY.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displY);
+                        GUILayout.Label(")", Styles.NonEditable, GUILayout.Width(10), GUILayout.Height(25));
+                        float.TryParse(EditorGUILayout.TextArea(exp.ToString(), Styles.Exponent, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out exp);
+                        GUILayout.Space(2);
+                        GUILayout.Label(" + ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
+                        float.TryParse(EditorGUILayout.TextArea(displX.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displX);
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(windowRect.width * 0.2f);
+                        GUILayout.EndHorizontal();
+                        break;
+                    case curveType.LinearParts:
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Not implemented yet", Styles.WarningLabel);
+                        GUILayout.EndHorizontal();
+                        break;
+                }
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(10);
+                GUILayout.BeginVertical();
+                try
+                {
+                    openFoldout = EditorGUILayout.Foldout(openFoldout, "Visualize curve");
+
+                    if (openFoldout)
+                    {
+                        windowRect.height = height * 2.5f;
+
+                        Rect rect = new Rect(windowRect.width * 0.2f, windowRect.height * 0.6f, windowRect.width * 0.6f, 50);
+                        EditorGUI.DrawRect(rect, new Color(0, 0, 1, 0.25f));
+
+                        float yMin = -1;
+                        float yMax = 1;
+                        float step = 1 / editor.position.width;
+                        float topThreshold = 1;
+                        float bottomThreshold = -1;
+
+                        Handles.color = new Color(0.6f, 0.6f, 0.6f);
+                        DrawAxis(rect, yMin, yMax);
+
+                        Handles.color = Color.white;
+
+                        Vector3 prevPos = new Vector3(0, CurveFunc(-1), 0);
+                        for (float t = step - 1; t < 1; t += step)
+                        {
+                            Vector3 pos = new Vector3((t + 1) / 2, CurveFunc(t), 0);
+
+                            if (pos.y < topThreshold && pos.y > bottomThreshold)
+                            {
+                                Handles.DrawLine(
+                                    new Vector3(rect.xMin + prevPos.x * rect.width, rect.yMax - ((prevPos.y - yMin) / (yMax - yMin)) * rect.height, 0),
+                                    new Vector3(rect.xMin + pos.x * rect.width, rect.yMax - ((pos.y - yMin) / (yMax - yMin)) * rect.height, 0));
+                            }
+
+                            prevPos = pos;
+                        }
+                    }
+                    else
+                    {
+                        windowRect.height = height * 1.5f;
+                    }
+                }
+                finally
+                {
+                    GUILayout.EndHorizontal();
+                    GUILayout.EndVertical();
+                }
+
                 break;
         }
+    }
+
+    private float CurveFunc(float t)
+    {
+        switch (curveType)
+        {
+            case curveType.Linear:
+                return slope * t + displX;
+            case curveType.Exponential:
+                return Mathf.Pow(t - displY, exp) + displX;
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>
+    /// Draws the axis in the center of the rect
+    /// </summary>
+    /// <param name="rect"></param>
+    /// <param name="yMin"></param>
+    /// <param name="yMax"></param>
+    private void DrawAxis(Rect rect, float yMin, float yMax)
+    {
+        Handles.DrawLine(
+            new Vector3(rect.xMin + 0 * rect.width, rect.yMax - ((0 - yMin) / (yMax - yMin)) * rect.height, 0), 
+            new Vector3(rect.xMin + 1 * rect.width, rect.yMax - ((0 - yMin) / (yMax - yMin)) * rect.height, 0));
+        Handles.DrawLine(
+            new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax - ((-1 - yMin) / (yMax - yMin)) * rect.height, 0),
+            new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax - ((1 - yMin) / (yMax - yMin)) * rect.height, 0));
     }
 
     // TODO
