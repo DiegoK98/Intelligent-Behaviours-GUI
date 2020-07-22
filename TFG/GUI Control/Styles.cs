@@ -63,26 +63,6 @@ public static class Styles
         alignment = TextAnchor.MiddleLeft
     };
 
-    public static GUIStyle DeleteStyle = new GUIStyle(GUI.skin.button)
-    {
-        active = new GUIStyleState()
-        {
-            textColor = Color.red
-        },
-        focused = new GUIStyleState()
-        {
-            textColor = Color.red
-        },
-        hover = new GUIStyleState()
-        {
-            textColor = Color.red
-        },
-        normal = new GUIStyleState()
-        {
-            textColor = Color.red
-        },
-    };
-
     public static GUIStyle WarningLabel = new GUIStyle(GUI.skin.label)
     {
         normal = new GUIStyleState()

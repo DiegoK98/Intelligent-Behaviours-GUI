@@ -380,6 +380,7 @@ public class UtilityNode : BaseNode
             identificator = this.identificator,
             nodeName = this.nodeName,
             parent = parent,
+            editor = editor,
             windowRect = new Rect(this.windowRect),
             type = this.type,
             fusionType = this.fusionType,

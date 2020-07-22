@@ -58,8 +58,9 @@ public class PopupWindow : EditorWindow
         typeOfElem = elems[0].GetTypeString();
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
-        window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
-        window.ShowPopup();
+        window.ShowModalUtility();
+
+        window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
     }
 
     /// <summary>
@@ -139,12 +140,14 @@ public class PopupWindow : EditorWindow
             GUILayout.Space(30);
         }
 
-        if (GUILayout.Button("Delete", Styles.DeleteStyle))
+        GUI.backgroundColor = Color.red;
+        if (GUILayout.Button("Delete"))
         {
             foreach (GUIElement elem in elems)
                 senderEditor.Delete(elem);
             this.Close();
         }
+        GUI.backgroundColor = Color.grey;
         if (GUILayout.Button("Cancel"))
         {
             this.Close();
