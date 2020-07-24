@@ -124,7 +124,7 @@ public class PopupWindow : EditorWindow
         {
             int numberOfSons = 0;
 
-            foreach(GUIElement elem in elems.Where(e => e is BehaviourNode))
+            foreach (GUIElement elem in elems.Where(e => e is BehaviourNode))
             {
                 numberOfSons += ((BehaviourTree)senderEditor.currentElem).ChildrenCount((BehaviourNode)elem);
             }

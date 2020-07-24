@@ -110,6 +110,8 @@ public class NodeEditor : EditorWindow
     [MenuItem("Window/" + editorTitle)]
     static void ShowEditor()
     {
+        NodeEditorUtilities.ClearUndoSteps();
+
         // Close any previous window
         GetWindow<PopupWindow>().Close();
         GetWindow<NodeEditor>().Close();
@@ -254,14 +256,13 @@ public class NodeEditor : EditorWindow
                     if (currentElem is FSM)
                     {
                         if (!clickedOnWindow && !clickedOnTransition)
-                        {
-                            menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
+                        {                            menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
                         }
                         else if (clickedOnWindow)
                         {
@@ -301,7 +302,7 @@ public class NodeEditor : EditorWindow
                                 menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
                                 menu.AddSeparator("");
                             }
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
                         }
                         else if (clickedOnWindow)
                         {
@@ -364,7 +365,7 @@ public class NodeEditor : EditorWindow
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
                         }
                         else if (clickedOnWindow)
                         {
@@ -396,7 +397,7 @@ public class NodeEditor : EditorWindow
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadElem);
+                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
                         }
                         else
                         {
@@ -461,6 +462,7 @@ public class NodeEditor : EditorWindow
                     {
                         focusedObjects.Clear();
                         currentElem = Elements[selectIndex];
+                        NodeEditorUtilities.ClearUndoSteps(currentElem);
                         e.Use();
                     }
                 }
@@ -505,6 +507,7 @@ public class NodeEditor : EditorWindow
                         if (Event.current.clickCount == 2 && ((FSM)currentElem).states[selectIndex].subElem != null)
                         {
                             currentElem = ((FSM)currentElem).states[selectIndex].subElem;
+                            NodeEditorUtilities.ClearUndoSteps(currentElem);
                             e.Use();
                         }
                     }
@@ -527,6 +530,7 @@ public class NodeEditor : EditorWindow
                         if (Event.current.clickCount == 2 && ((BehaviourTree)currentElem).nodes[selectIndex].subElem != null)
                         {
                             currentElem = ((BehaviourTree)currentElem).nodes[selectIndex].subElem;
+                            NodeEditorUtilities.ClearUndoSteps(currentElem);
                             e.Use();
                         }
                     }
@@ -544,6 +548,7 @@ public class NodeEditor : EditorWindow
                         if (Event.current.clickCount == 2 && ((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
                         {
                             currentElem = ((UtilitySystem)currentElem).nodes[selectIndex].subElem;
+                            NodeEditorUtilities.ClearUndoSteps(currentElem);
                             e.Use();
                         }
                     }
@@ -563,6 +568,8 @@ public class NodeEditor : EditorWindow
                         {
                             if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
                             {
+                                NodeEditorUtilities.GenerateUndoStep(currentElem);
+
                                 TransitionGUI transition = CreateInstance<TransitionGUI>();
                                 transition.InitTransitionGUI(currentElem, selectednode, ((FSM)currentElem).states[selectIndex]);
 
@@ -587,6 +594,8 @@ public class NodeEditor : EditorWindow
                             && !(((FSM)currentElem).states[selectIndex].Equals(selectedTransition.toNode) || ((FSM)currentElem).states[selectIndex].Equals(selectedTransition.fromNode))
                             && !((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
                         {
+                            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
                             selectedTransition.toNode = ((FSM)currentElem).states[selectIndex];
                             ((FSM)currentElem).CheckConnected();
                         }
@@ -603,6 +612,8 @@ public class NodeEditor : EditorWindow
                 {
                     if (makeAttachedNode)
                     {
+                        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
                         toCreateNode.windowRect.position = new Vector2(mousePos.x, mousePos.y);
                         ((BehaviourTree)currentElem).nodes.Add((BehaviourNode)toCreateNode);
 
@@ -621,6 +632,8 @@ public class NodeEditor : EditorWindow
                     {
                         if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == behaviourType.Leaf))
                         {
+                            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
                             transition.InitTransitionGUI(currentElem, ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
                             ((BehaviourTree)currentElem).connections.Add(transition);
@@ -639,6 +652,8 @@ public class NodeEditor : EditorWindow
                 {
                     if (makeAttachedNode)
                     {
+                        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
                         toCreateNode.windowRect.position = new Vector2(mousePos.x, mousePos.y);
                         ((UtilitySystem)currentElem).nodes.Add((UtilityNode)toCreateNode);
 
@@ -657,6 +672,8 @@ public class NodeEditor : EditorWindow
                     {
                         if (clickedOnWindow && !((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, ((UtilitySystem)currentElem).nodes[selectIndex]) && !actionWithOneFactor && !curveWithOneFactor && !(((UtilitySystem)currentElem).nodes[selectIndex].type == utilityType.Variable))
                         {
+                            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
                             transition.InitTransitionGUI(currentElem, selectednode, ((UtilitySystem)currentElem).nodes[selectIndex]);
                             ((UtilitySystem)currentElem).connections.Add(transition);
@@ -707,6 +724,7 @@ public class NodeEditor : EditorWindow
                         break;
                     }
                     currentElem = currentElem?.parent;
+                    NodeEditorUtilities.ClearUndoSteps(currentElem);
                     e.Use();
                     break;
                 case KeyCode.Return:
@@ -727,6 +745,7 @@ public class NodeEditor : EditorWindow
                         e.Use();
                     }
                     focusedObjects.Clear();
+                    NodeEditorUtilities.ClearUndoSteps(currentElem);
                     break;
                 case KeyCode.LeftControl:
                 case KeyCode.RightControl:
@@ -759,6 +778,13 @@ public class NodeEditor : EditorWindow
                     if (CtrlDown)
                     {
                         Paste();
+                    }
+                    break;
+                case KeyCode.Z:
+                    if (CtrlDown)
+                    {
+                        Undo();
+                        e.Use();
                     }
                     break;
             }
@@ -1058,6 +1084,7 @@ public class NodeEditor : EditorWindow
 
     private void OnDestroy()
     {
+        NodeEditorUtilities.ClearUndoSteps();
         GetWindow<PopupWindow>().Close();
     }
 
@@ -1215,6 +1242,8 @@ public class NodeEditor : EditorWindow
             // Set menu items
             GenericMenu menu = new GenericMenu();
 
+            menu.AddItem(new GUIContent("Undo"), false, Undo);
+            menu.AddSeparator("");
             menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, currentElem);
             menu.AddItem(new GUIContent("Export Code"), false, ExportCode, currentElem);
 
@@ -1687,44 +1716,65 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Opens the explorer to select a file, and loads it
     /// </summary>
-    void LoadElem()
+    void LoadSaveFile()
     {
         XMLElement loadedXML = NodeEditorUtilities.LoadSavedData();
 
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
+        LoadElem(loadedXML, currentElem);
+    }
+
+    /// <summary>
+    /// Loads the XMLElement to the <paramref name="element"/>
+    /// </summary>
+    ClickableElement LoadElem(XMLElement loadedXML, ClickableElement element, bool withMousePos = true)
+    {
         if (loadedXML != null)
         {
-            var currentBackup = currentElem;
+            var currentBackup = element;
 
             ClickableElement newElem;
             switch (loadedXML.elemType)
             {
                 case nameof(FSM):
-                    newElem = loadedXML.ToFSM(currentElem, null, this);
-                    newElem.windowRect.x = mousePos.x;
-                    newElem.windowRect.y = mousePos.y;
-                    Elements.Add(newElem);
+                    newElem = loadedXML.ToFSM(element, null, this);
                     break;
                 case nameof(BehaviourTree):
-                    newElem = loadedXML.ToBehaviourTree(currentElem, null, this);
-                    newElem.windowRect.x = mousePos.x;
-                    newElem.windowRect.y = mousePos.y;
-                    Elements.Add(newElem);
+                    newElem = loadedXML.ToBehaviourTree(element, null, this);
                     break;
                 default:
                     Debug.LogError("Wrong content in saved data");
-                    break;
+                    return null;
             }
 
-            currentElem = currentBackup;
+            if (withMousePos)
+            {
+                newElem.windowRect.x = mousePos.x;
+                newElem.windowRect.y = mousePos.y;
+            }
+            Elements.Add(newElem);
+            editorNamer.AddName(newElem.identificator, newElem.elementName);
+
+            element = currentBackup;
+
+            return newElem;
         }
+
+        return null;
     }
 
     /// <summary>
     /// Deletes the <paramref name="elem"/>
     /// </summary>
     /// <param name="elem"></param>
-    public void Delete(GUIElement elem, ClickableElement element = null)
+    public void Delete(GUIElement elem, ClickableElement element = null, bool skipUndoStep = false)
     {
+        if (!skipUndoStep)
+        {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+        }
+
         if (element is null)
         {
             element = currentElem;
@@ -1920,6 +1970,8 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             StateNode node = CreateInstance<StateNode>();
             node.InitStateNode(currentElem, 2, newFSM.windowRect.position.x, newFSM.windowRect.position.y, newFSM);
 
@@ -1945,6 +1997,8 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             UtilityNode node = CreateInstance<UtilityNode>();
             node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newFSM);
 
@@ -1975,6 +2029,8 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             StateNode node = CreateInstance<StateNode>();
             node.InitStateNode(currentElem, 2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
 
@@ -2000,6 +2056,8 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             UtilityNode node = CreateInstance<UtilityNode>();
             node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newBT);
 
@@ -2030,6 +2088,8 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             StateNode node = CreateInstance<StateNode>();
             node.InitStateNode(currentElem, 2, newUS.windowRect.position.x, newUS.windowRect.position.y, newUS);
 
@@ -2055,6 +2115,8 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             UtilityNode node = CreateInstance<UtilityNode>();
             node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newUS);
 
@@ -2069,6 +2131,8 @@ public class NodeEditor : EditorWindow
     /// <param name="posY"></param>
     private void CreateNode(float posX, float posY)
     {
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
         StateNode node = CreateInstance<StateNode>();
         node.InitStateNode(currentElem, 2, posX, posY);
 
@@ -2101,6 +2165,8 @@ public class NodeEditor : EditorWindow
         }
         else
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             node.isRoot = true;
             ((BehaviourTree)currentElem).nodes.Add(node);
         }
@@ -2125,6 +2191,8 @@ public class NodeEditor : EditorWindow
         }
         else
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             node.isRoot = true;
             ((BehaviourTree)currentElem).nodes.Add(node);
         }
@@ -2187,6 +2255,8 @@ public class NodeEditor : EditorWindow
     /// <param name="posY"></param>
     private void CreateAction(float posX = 50, float posY = 50)
     {
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
         UtilityNode node = CreateInstance<UtilityNode>();
         node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY);
 
@@ -2246,6 +2316,8 @@ public class NodeEditor : EditorWindow
     {
         if (currentElem is FSM)
         {
+            NodeEditorUtilities.GenerateUndoStep(currentElem);
+
             TransitionGUI transition = ((FSM)currentElem).transitions[selectIndex];
 
             TransitionGUI coupleTransition = ((FSM)currentElem).transitions.Find(t => t.fromNode.Equals(transition.toNode) && t.toNode.Equals(transition.fromNode));
@@ -2306,6 +2378,8 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void ConvertToEntry(int selectIndex)
     {
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
         ((FSM)currentElem).SetAsEntry(((FSM)currentElem).states[selectIndex]);
     }
 
@@ -2314,6 +2388,8 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void DisconnectNode(int selectIndex)
     {
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
         BehaviourNode selNode = ((BehaviourTree)currentElem).nodes[selectIndex];
 
         foreach (TransitionGUI tr in ((BehaviourTree)currentElem).connections.FindAll(t => t.toNode.Equals(selNode)))
@@ -2712,5 +2788,16 @@ public class NodeEditor : EditorWindow
         }
 
         cutObjects.Clear();
+
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+    }
+
+    private void Undo()
+    {
+        if (NodeEditorUtilities.stepsSaved > 0)
+        {
+            Delete(currentElem, currentElem.parent, true);
+            currentElem = LoadElem(NodeEditorUtilities.LoadLastStep(), currentElem.parent, false);
+        }
     }
 }

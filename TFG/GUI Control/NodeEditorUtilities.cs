@@ -102,9 +102,32 @@ public class NodeEditorUtilities
     static readonly string scriptsFolderName = "Scripts (Intelligent Behaviours)";
 
     /// <summary>
+    /// Name for the undo steps folder
+    /// </summary>
+    static readonly string undoStepsFolder = "UndoSteps";
+
+    /// <summary>
     /// The <see cref="UniqueNamer"/> for managing the names of the variables of the perceptions
     /// </summary>
     static UniqueNamer uniqueNamer;
+
+    /// <summary>
+    /// Maximum number of steps decided by the user in settings
+    /// </summary>
+    static int maxUndoSteps = 100;
+
+    /// <summary>
+    /// Number of XML files in the undo steps folder
+    /// </summary>
+    public static int stepsSaved
+    {
+        get
+        {
+            string path = Application.dataPath + "/" + undoStepsFolder;
+            string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
+            return files.Count();
+        }
+    }
 
     /// <summary>
     /// Generates a new C# script for an <paramref name="elem"/>
@@ -168,6 +191,46 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
+    /// Generates a new XML file for an <paramref name="elem"/> adding it to the undo steps
+    /// </summary>
+    /// <param name="elem"></param>
+    public static void GenerateUndoStep(ClickableElement elem)
+    {
+        if (elem is null) // For now
+            return;
+
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder("Assets/" + undoStepsFolder))
+            AssetDatabase.CreateFolder("Assets", undoStepsFolder);
+
+        // Generate the path
+        string path = Application.dataPath + "/" + undoStepsFolder;
+        string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
+        int numOfStepsSaved = files.Count();
+        string fullPath = path + "/current_step" + numOfStepsSaved + ".xml";
+
+        // If the max number of undo steps has been reached overwrite the oldest xml file
+        if (numOfStepsSaved >= maxUndoSteps)
+        {
+            Dictionary<string, DateTime> dates = new Dictionary<string, DateTime>();
+
+            foreach (string filePath in files)
+            {
+                dates.Add(filePath, Directory.GetCreationTime(filePath));
+            }
+
+            // Select the oldest one and get its path, so it gets overwriten
+            var oldest = dates.OrderBy(x => x.Value).FirstOrDefault();
+            fullPath = oldest.Key;
+        }
+
+        if (!string.IsNullOrEmpty(fullPath))
+        {
+            CreateXMLFromElem(fullPath, elem);
+        }
+    }
+
+    /// <summary>
     /// Shows the File Panel, and returns the <see cref="XMLElement"/> corresponding to the XML file that the user selects
     /// </summary>
     /// <returns></returns>
@@ -179,6 +242,58 @@ public class NodeEditorUtilities
             return null;
 
         return LoadXML(path);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public static XMLElement LoadLastStep()
+    {
+        // Get last step path
+        string path;
+        string[] files = Directory.GetFiles(Application.dataPath + "/" + undoStepsFolder).Where(s => s.EndsWith(".xml")).ToArray();
+
+        Dictionary<string, DateTime> dates = new Dictionary<string, DateTime>();
+
+        foreach (string filePath in files)
+        {
+            dates.Add(filePath, Directory.GetCreationTime(filePath));
+        }
+
+        // Select the oldest one and get its path, so it gets overwriten
+        var last = dates.OrderByDescending(x => x.Value).FirstOrDefault();
+        path = last.Key;
+
+        //Load the XMLElement for that path
+        if (string.IsNullOrEmpty(path))
+            return null;
+
+        path = path.Replace("\\", "/");
+
+        XMLElement result = LoadXML(path);
+
+        File.Delete(path);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Deletes the directory with the undo steps files
+    /// </summary>
+    public static void ClearUndoSteps(ClickableElement newElem = null)
+    {
+        if (AssetDatabase.IsValidFolder("Assets/" + undoStepsFolder))
+        {
+            string[] files = Directory.GetFiles(Application.dataPath + "/" + undoStepsFolder);
+
+            foreach (string file in files)
+            {
+                File.Delete(file);
+            }
+        }
+        if (newElem != null)
+            GenerateUndoStep(newElem);
     }
 
     /// <summary>
@@ -285,7 +400,7 @@ public class NodeEditorUtilities
     /// </summary>
     /// <param name="fileName"></param>
     /// <returns></returns>
-    private static XMLElement LoadXML(string fileName)
+    public static XMLElement LoadXML(string fileName)
     {
         XmlSerializer serial = new XmlSerializer(typeof(XMLElement));
 
@@ -294,7 +409,10 @@ public class NodeEditorUtilities
 
         FileStream fs = new FileStream(fileName, FileMode.Open);
 
-        return (XMLElement)serial.Deserialize(fs);
+        XMLElement result = (XMLElement)serial.Deserialize(fs);
+        fs.Close();
+
+        return result;
     }
 
     /// <summary>
