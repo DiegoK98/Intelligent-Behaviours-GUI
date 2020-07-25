@@ -107,6 +107,11 @@ public class NodeEditorUtilities
     static readonly string undoStepsFolder = "UndoSteps";
 
     /// <summary>
+    /// Name for the redo steps folder
+    /// </summary>
+    static readonly string redoStepsFolder = "RedoSteps";
+
+    /// <summary>
     /// The <see cref="UniqueNamer"/> for managing the names of the variables of the perceptions
     /// </summary>
     static UniqueNamer uniqueNamer;
@@ -119,11 +124,24 @@ public class NodeEditorUtilities
     /// <summary>
     /// Number of XML files in the undo steps folder
     /// </summary>
-    public static int stepsSaved
+    public static int undoStepsSaved
     {
         get
         {
             string path = Application.dataPath + "/" + undoStepsFolder;
+            string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
+            return files.Count();
+        }
+    }
+
+    /// <summary>
+    /// Number of XML files in the redo steps folder
+    /// </summary>
+    public static int redoStepsSaved
+    {
+        get
+        {
+            string path = Application.dataPath + "/" + redoStepsFolder;
             string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
             return files.Count();
         }
@@ -191,11 +209,14 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// Generates a new XML file for an <paramref name="elem"/> adding it to the undo steps
+    /// Generates a new XML file for an <paramref name="elem"/> adding it to the undo steps or redo steps, if you set fromRedo true
     /// </summary>
     /// <param name="elem"></param>
-    public static void GenerateUndoStep(ClickableElement elem)
+    public static void GenerateUndoStep(ClickableElement elem, bool clearRedo = true)
     {
+        if (clearRedo)
+            ClearRedoSteps();
+
         if (elem is null) // For now
             return;
 
@@ -205,6 +226,46 @@ public class NodeEditorUtilities
 
         // Generate the path
         string path = Application.dataPath + "/" + undoStepsFolder;
+        string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
+        int numOfStepsSaved = files.Count();
+        string fullPath = path + "/current_step" + numOfStepsSaved + ".xml";
+
+        // If the max number of undo steps has been reached overwrite the oldest xml file
+        if (numOfStepsSaved >= maxUndoSteps)
+        {
+            Dictionary<string, DateTime> dates = new Dictionary<string, DateTime>();
+
+            foreach (string filePath in files)
+            {
+                dates.Add(filePath, Directory.GetCreationTime(filePath));
+            }
+
+            // Select the oldest one and get its path, so it gets overwriten
+            var oldest = dates.OrderBy(x => x.Value).FirstOrDefault();
+            fullPath = oldest.Key;
+        }
+
+        if (!string.IsNullOrEmpty(fullPath))
+        {
+            CreateXMLFromElem(fullPath, elem);
+        }
+    }
+
+    /// <summary>
+    /// Generates a new XML file for an <paramref name="elem"/> adding it to the redo steps
+    /// </summary>
+    /// <param name="elem"></param>
+    public static void GenerateRedoStep(ClickableElement elem)
+    {
+        if (elem is null) // For now
+            return;
+
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder("Assets/" + redoStepsFolder))
+            AssetDatabase.CreateFolder("Assets", redoStepsFolder);
+
+        // Generate the path
+        string path = Application.dataPath + "/" + redoStepsFolder;
         string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
         int numOfStepsSaved = files.Count();
         string fullPath = path + "/current_step" + numOfStepsSaved + ".xml";
@@ -245,10 +306,10 @@ public class NodeEditorUtilities
     }
 
     /// <summary>
-    /// 
+    /// Load a step from the undo steps folder
     /// </summary>
     /// <returns></returns>
-    public static XMLElement LoadLastStep()
+    public static XMLElement LoadUndoStep()
     {
         // Get last step path
         string path;
@@ -258,7 +319,41 @@ public class NodeEditorUtilities
 
         foreach (string filePath in files)
         {
-            dates.Add(filePath, Directory.GetCreationTime(filePath));
+            dates.Add(filePath, Directory.GetLastAccessTime(filePath));
+        }
+
+        // Select the oldest one and get its path, so it gets overwriten
+        var last = dates.OrderByDescending(x => x.Value).FirstOrDefault();
+        path = last.Key;
+
+        //Load the XMLElement for that path
+        if (string.IsNullOrEmpty(path))
+            return null;
+
+        path = path.Replace("\\", "/");
+
+        XMLElement result = LoadXML(path);
+
+        File.Delete(path);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Load a step from the redo steps folder
+    /// </summary>
+    /// <returns></returns>
+    public static XMLElement LoadRedoStep()
+    {
+        // Get last step path
+        string path;
+        string[] files = Directory.GetFiles(Application.dataPath + "/" + redoStepsFolder).Where(s => s.EndsWith(".xml")).ToArray();
+
+        Dictionary<string, DateTime> dates = new Dictionary<string, DateTime>();
+
+        foreach (string filePath in files)
+        {
+            dates.Add(filePath, Directory.GetLastAccessTime(filePath));
         }
 
         // Select the oldest one and get its path, so it gets overwriten
@@ -281,8 +376,10 @@ public class NodeEditorUtilities
     /// <summary>
     /// Deletes the directory with the undo steps files
     /// </summary>
-    public static void ClearUndoSteps(ClickableElement newElem = null)
+    public static void ClearUndoSteps()
     {
+        ClearRedoSteps();
+
         if (AssetDatabase.IsValidFolder("Assets/" + undoStepsFolder))
         {
             string[] files = Directory.GetFiles(Application.dataPath + "/" + undoStepsFolder);
@@ -292,8 +389,22 @@ public class NodeEditorUtilities
                 File.Delete(file);
             }
         }
-        if (newElem != null)
-            GenerateUndoStep(newElem);
+    }
+
+    /// <summary>
+    /// Deletes the directory with the redo steps files
+    /// </summary>
+    public static void ClearRedoSteps()
+    {
+        if (AssetDatabase.IsValidFolder("Assets/" + redoStepsFolder))
+        {
+            string[] files = Directory.GetFiles(Application.dataPath + "/" + redoStepsFolder);
+
+            foreach (string file in files)
+            {
+                File.Delete(file);
+            }
+        }
     }
 
     /// <summary>

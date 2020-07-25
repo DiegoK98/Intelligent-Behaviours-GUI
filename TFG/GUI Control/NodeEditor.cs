@@ -462,7 +462,7 @@ public class NodeEditor : EditorWindow
                     {
                         focusedObjects.Clear();
                         currentElem = Elements[selectIndex];
-                        NodeEditorUtilities.ClearUndoSteps(currentElem);
+                        NodeEditorUtilities.ClearUndoSteps();
                         e.Use();
                     }
                 }
@@ -507,7 +507,7 @@ public class NodeEditor : EditorWindow
                         if (Event.current.clickCount == 2 && ((FSM)currentElem).states[selectIndex].subElem != null)
                         {
                             currentElem = ((FSM)currentElem).states[selectIndex].subElem;
-                            NodeEditorUtilities.ClearUndoSteps(currentElem);
+                            NodeEditorUtilities.ClearUndoSteps();
                             e.Use();
                         }
                     }
@@ -530,7 +530,7 @@ public class NodeEditor : EditorWindow
                         if (Event.current.clickCount == 2 && ((BehaviourTree)currentElem).nodes[selectIndex].subElem != null)
                         {
                             currentElem = ((BehaviourTree)currentElem).nodes[selectIndex].subElem;
-                            NodeEditorUtilities.ClearUndoSteps(currentElem);
+                            NodeEditorUtilities.ClearUndoSteps();
                             e.Use();
                         }
                     }
@@ -548,7 +548,7 @@ public class NodeEditor : EditorWindow
                         if (Event.current.clickCount == 2 && ((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
                         {
                             currentElem = ((UtilitySystem)currentElem).nodes[selectIndex].subElem;
-                            NodeEditorUtilities.ClearUndoSteps(currentElem);
+                            NodeEditorUtilities.ClearUndoSteps();
                             e.Use();
                         }
                     }
@@ -724,7 +724,7 @@ public class NodeEditor : EditorWindow
                         break;
                     }
                     currentElem = currentElem?.parent;
-                    NodeEditorUtilities.ClearUndoSteps(currentElem);
+                    NodeEditorUtilities.ClearUndoSteps();
                     e.Use();
                     break;
                 case KeyCode.Return:
@@ -745,7 +745,7 @@ public class NodeEditor : EditorWindow
                         e.Use();
                     }
                     focusedObjects.Clear();
-                    NodeEditorUtilities.ClearUndoSteps(currentElem);
+                    NodeEditorUtilities.ClearUndoSteps();
                     break;
                 case KeyCode.LeftControl:
                 case KeyCode.RightControl:
@@ -784,6 +784,13 @@ public class NodeEditor : EditorWindow
                     if (CtrlDown)
                     {
                         Undo();
+                        e.Use();
+                    }
+                    break;
+                case KeyCode.Y:
+                    if (CtrlDown)
+                    {
+                        Redo();
                         e.Use();
                     }
                     break;
@@ -1219,17 +1226,18 @@ public class NodeEditor : EditorWindow
     {
         // Top Bar
         topBarOffset = 0;
+        float yOffset = 0;
         var name = editorTitle;
 
         if (currentElem != null)
         {
-            ShowButtonRecursive(Styles.TopBarButton, currentElem, editorTitle);
+            ShowButtonRecursive(Styles.TopBarButton, currentElem, editorTitle, yOffset);
             if (currentElem != null)
                 name = currentElem.elementName;
         }
 
         var labelWidth = 25 + name.ToCharArray().Length * 6;
-        GUI.Label(new Rect(topBarOffset, 0, labelWidth, 20), name);
+        GUI.Label(new Rect(topBarOffset, yOffset, labelWidth, 20), name);
     }
 
     /// <summary>
@@ -1237,13 +1245,21 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void ShowOptions()
     {
-        if (GUI.Button(new Rect(position.width - 60, 0, 50, 20), "...", Styles.OptionsButton))
+        if (GUI.Button(new Rect(position.width - 80, 0, 25, 20), "<-", Styles.TopBarButton))
+        {
+            Undo();
+        }
+
+        if (GUI.Button(new Rect(position.width - 55, 0, 25, 20), "->", Styles.TopBarButton))
+        {
+            Redo();
+        }
+
+        if (GUI.Button(new Rect(position.width - 30, 0, 25, 20), "...", Styles.TopBarButton))
         {
             // Set menu items
             GenericMenu menu = new GenericMenu();
 
-            menu.AddItem(new GUIContent("Undo"), false, Undo);
-            menu.AddSeparator("");
             menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, currentElem);
             menu.AddItem(new GUIContent("Export Code"), false, ExportCode, currentElem);
 
@@ -1257,20 +1273,20 @@ public class NodeEditor : EditorWindow
     /// <param name="style"></param>
     /// <param name="elem"></param>
     /// <param name="name"></param>
-    private void ShowButtonRecursive(GUIStyle style, ClickableElement elem, string name)
+    private void ShowButtonRecursive(GUIStyle style, ClickableElement elem, string name, float yOffset)
     {
         if (elem.parent != null)
         {
-            ShowButtonRecursive(style, elem.parent, name);
+            ShowButtonRecursive(style, elem.parent, name, yOffset);
             name = elem.parent.elementName;
         }
         var buttonWidth = 25 + name.ToCharArray().Length * 6;
-        if (GUI.Button(new Rect(topBarOffset, 0, buttonWidth, 20), name, style))
+        if (GUI.Button(new Rect(topBarOffset, yOffset, buttonWidth, 20), name, style))
         {
             currentElem = elem.parent;
         }
         topBarOffset += buttonWidth;
-        GUI.Label(new Rect(topBarOffset, 0, 15, 20), ">", new GUIStyle(GUI.skin.label)
+        GUI.Label(new Rect(topBarOffset, yOffset, 15, 20), ">", new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.UpperLeft
         });
@@ -2794,10 +2810,21 @@ public class NodeEditor : EditorWindow
 
     private void Undo()
     {
-        if (NodeEditorUtilities.stepsSaved > 0)
+        if (NodeEditorUtilities.undoStepsSaved > 0)
         {
+            NodeEditorUtilities.GenerateRedoStep(currentElem);
             Delete(currentElem, currentElem.parent, true);
-            currentElem = LoadElem(NodeEditorUtilities.LoadLastStep(), currentElem.parent, false);
+            currentElem = LoadElem(NodeEditorUtilities.LoadUndoStep(), currentElem.parent, false);
+        }
+    }
+
+    private void Redo()
+    {
+        if (NodeEditorUtilities.redoStepsSaved > 0)
+        {
+            NodeEditorUtilities.GenerateUndoStep(currentElem, false);
+            Delete(currentElem, currentElem.parent, true);
+            currentElem = LoadElem(NodeEditorUtilities.LoadRedoStep(), currentElem.parent, false);
         }
     }
 }
