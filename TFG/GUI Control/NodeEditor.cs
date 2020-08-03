@@ -129,9 +129,21 @@ public class NodeEditor : EditorWindow
         Event e = Event.current;
         mousePos = e.mousePosition;
 
+        // Show the top bar, undo and redo buttons (if necessary) and options menu
         ShowTopBar();
         if (currentElem != null)
-            ShowOptions();
+        {
+            if (GUI.Button(new Rect(position.width - 80, 0, 25, 20), "<-", Styles.TopBarButton))
+            {
+                Undo();
+            }
+
+            if (GUI.Button(new Rect(position.width - 55, 0, 25, 20), "->", Styles.TopBarButton))
+            {
+                Redo();
+            }
+        }
+        ShowOptions();
         ShowErrorsAndWarnings();
 
         // Draw the curves for everything
@@ -256,7 +268,8 @@ public class NodeEditor : EditorWindow
                     if (currentElem is FSM)
                     {
                         if (!clickedOnWindow && !clickedOnTransition)
-                        {                            menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
+                        {
+                            menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
                             menu.AddSeparator("");
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
@@ -1245,23 +1258,24 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void ShowOptions()
     {
-        if (GUI.Button(new Rect(position.width - 80, 0, 25, 20), "<-", Styles.TopBarButton))
-        {
-            Undo();
-        }
-
-        if (GUI.Button(new Rect(position.width - 55, 0, 25, 20), "->", Styles.TopBarButton))
-        {
-            Redo();
-        }
-
         if (GUI.Button(new Rect(position.width - 30, 0, 25, 20), "...", Styles.TopBarButton))
         {
             // Set menu items
             GenericMenu menu = new GenericMenu();
 
-            menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, currentElem);
-            menu.AddItem(new GUIContent("Export Code"), false, ExportCode, currentElem);
+            menu.AddItem(new GUIContent("Manual de usuario"), false, () => Application.OpenURL("file:///" + Application.dataPath + "/Intelligent%20Behaviours%20GUI%20Package/Guia%20de%20uso.pdf"));
+            menu.AddSeparator("");
+
+            if (currentElem != null)
+            {
+                menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, currentElem);
+                menu.AddItem(new GUIContent("Export Code"), false, ExportCode, currentElem);
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Save Element to file"), false);
+                menu.AddDisabledItem(new GUIContent("Export Code"), false);
+            }
 
             menu.ShowAsContext();
         }

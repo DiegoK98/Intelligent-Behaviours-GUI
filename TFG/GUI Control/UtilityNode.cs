@@ -167,7 +167,7 @@ public class UtilityNode : BaseNode
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(windowRect.width * 0.2f);
-                GUILayout.BeginVertical(GUILayout.Width(0));
+                GUILayout.BeginVertical(GUILayout.Width(20));
                 if (GUILayout.Toggle(fusionType == fusionType.Weighted, fusionType.Weighted.ToString(), EditorStyles.radioButton))
                     fusionType = fusionType.Weighted;
                 if (GUILayout.Toggle(fusionType == fusionType.GetMax, fusionType.GetMax.ToString(), EditorStyles.radioButton))
