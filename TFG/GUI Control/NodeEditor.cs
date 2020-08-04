@@ -135,15 +135,19 @@ public class NodeEditor : EditorWindow
         ShowTopBar();
         if (currentElem != null)
         {
+            GUI.enabled = NodeEditorUtilities.undoStepsSaved > 0;
             if (GUI.Button(new Rect(position.width - 80, 0, 25, 20), "<-", Styles.TopBarButton))
             {
                 Undo();
             }
 
+            GUI.enabled = NodeEditorUtilities.redoStepsSaved > 0;
             if (GUI.Button(new Rect(position.width - 55, 0, 25, 20), "->", Styles.TopBarButton))
             {
                 Redo();
             }
+
+            GUI.enabled = true;
         }
         ShowOptions();
         ShowErrorsAndWarnings();
