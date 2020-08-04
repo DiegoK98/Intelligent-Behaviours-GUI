@@ -129,7 +129,9 @@ public class NodeEditor : EditorWindow
         Event e = Event.current;
         mousePos = e.mousePosition;
 
-        // Show the top bar, undo and redo buttons (if necessary) and options menu
+        // Show the GUI elements that are over the windows
+        #region GUI overlay elements
+
         ShowTopBar();
         if (currentElem != null)
         {
@@ -145,6 +147,8 @@ public class NodeEditor : EditorWindow
         }
         ShowOptions();
         ShowErrorsAndWarnings();
+
+        #endregion
 
         // Draw the curves for everything
         #region Curves Drawing
@@ -775,23 +779,17 @@ public class NodeEditor : EditorWindow
                 case KeyCode.RightControl:
                     CtrlDown = true;
                     break;
+                case KeyCode.S:
+                    if (CtrlDown) SaveElem(currentElem);
+                    break;
                 case KeyCode.C:
-                    if (CtrlDown)
-                    {
-                        Copy();
-                    }
+                    if (CtrlDown) Copy();
                     break;
                 case KeyCode.X:
-                    if (CtrlDown)
-                    {
-                        Cut();
-                    }
+                    if (CtrlDown) Cut();
                     break;
                 case KeyCode.V:
-                    if (CtrlDown)
-                    {
-                        Paste();
-                    }
+                    if (CtrlDown) Paste();
                     break;
                 case KeyCode.Z:
                     if (CtrlDown)

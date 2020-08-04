@@ -257,23 +257,27 @@ public class UtilityNode : BaseNode
                         Rect rect = new Rect(windowRect.width * 0.2f, windowRect.height * 0.6f, windowRect.width * 0.6f, 50);
                         EditorGUI.DrawRect(rect, new Color(0, 0, 1, 0.25f));
 
-                        float yMin = -1;
-                        float yMax = 1;
+                        // Value that determinates the max coordinate in the 4 directions equally
+                        float regularSize = 10;
+
+                        float yMin = -regularSize;
+                        float yMax = regularSize;
+                        float xMin = -regularSize;
+                        float xMax = regularSize;
+
                         float step = 1 / editor.position.width;
-                        float topThreshold = 1;
-                        float bottomThreshold = -1;
 
                         Handles.color = new Color(0.6f, 0.6f, 0.6f);
-                        DrawAxis(rect, yMin, yMax);
+                        DrawAxis(rect);
 
                         Handles.color = Color.white;
 
-                        Vector3 prevPos = new Vector3(0, CurveFunc(-1), 0);
-                        for (float t = step - 1; t < 1; t += step)
+                        Vector3 prevPos = new Vector3(0, CurveFunc(xMin), 0);
+                        for (float t = step + xMin; t < xMax; t += step)
                         {
-                            Vector3 pos = new Vector3((t + 1) / 2, CurveFunc(t), 0);
+                            Vector3 pos = new Vector3((t + xMax) / (xMax - xMin), CurveFunc(t), 0);
 
-                            if (pos.y < topThreshold && pos.y > bottomThreshold)
+                            if (pos.y < yMax && pos.y > yMin)
                             {
                                 Handles.DrawLine(
                                     new Vector3(rect.xMin + prevPos.x * rect.width, rect.yMax - ((prevPos.y - yMin) / (yMax - yMin)) * rect.height, 0),
@@ -317,14 +321,14 @@ public class UtilityNode : BaseNode
     /// <param name="rect"></param>
     /// <param name="yMin"></param>
     /// <param name="yMax"></param>
-    private void DrawAxis(Rect rect, float yMin, float yMax)
+    private void DrawAxis(Rect rect)
     {
         Handles.DrawLine(
-            new Vector3(rect.xMin + 0 * rect.width, rect.yMax - ((0 - yMin) / (yMax - yMin)) * rect.height, 0), 
-            new Vector3(rect.xMin + 1 * rect.width, rect.yMax - ((0 - yMin) / (yMax - yMin)) * rect.height, 0));
+            new Vector3(rect.xMin, rect.yMax - 0.5f * rect.height, 0),
+            new Vector3(rect.xMin + rect.width, rect.yMax - 0.5f * rect.height, 0));
         Handles.DrawLine(
-            new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax - ((-1 - yMin) / (yMax - yMin)) * rect.height, 0),
-            new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax - ((1 - yMin) / (yMax - yMin)) * rect.height, 0));
+            new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax, 0),
+            new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax - rect.height, 0));
     }
 
     // TODO
