@@ -215,7 +215,7 @@ public class UtilityNode : BaseNode
                         float.TryParse(EditorGUILayout.TextArea(slope.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out slope);
                         GUILayout.Space(2);
                         GUILayout.Label("x + ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
-                        float.TryParse(EditorGUILayout.TextArea(displX.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displX);
+                        float.TryParse(EditorGUILayout.TextArea(displY.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displY);
                         GUILayout.EndHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
@@ -226,12 +226,12 @@ public class UtilityNode : BaseNode
                         GUILayout.BeginHorizontal();
                         GUILayout.Label("y = (x - ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
                         GUILayout.Space(15);
-                        float.TryParse(EditorGUILayout.TextArea(displY.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displY);
+                        float.TryParse(EditorGUILayout.TextArea(displX.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displX);
                         GUILayout.Label(")", Styles.NonEditable, GUILayout.Width(10), GUILayout.Height(25));
                         float.TryParse(EditorGUILayout.TextArea(exp.ToString(), Styles.Exponent, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out exp);
                         GUILayout.Space(2);
                         GUILayout.Label(" + ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
-                        float.TryParse(EditorGUILayout.TextArea(displX.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displX);
+                        float.TryParse(EditorGUILayout.TextArea(displY.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displY);
                         GUILayout.EndHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
@@ -307,9 +307,9 @@ public class UtilityNode : BaseNode
         switch (curveType)
         {
             case curveType.Linear:
-                return slope * t + displX;
+                return slope * t + displY;
             case curveType.Exponential:
-                return Mathf.Pow(t - displY, exp) + displX;
+                return Mathf.Pow(t - displX, exp) + displY;
             default:
                 return 0;
         }
@@ -425,10 +425,16 @@ public class UtilityNode : BaseNode
     /// Returns a list of all the weights associated with this Fusion node
     /// </summary>
     /// <returns></returns>
-    public List<float> GetWeightsAndFactors()
+    public List<KeyValuePair<float, UtilityNode>> GetWeightsAndFactors()
     {
-        List<float> weights = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).Select(t => t.weight).ToList();
+        List<KeyValuePair<float, UtilityNode>> weightsFactorPair = new List<KeyValuePair<float, UtilityNode>>();
+        List<TransitionGUI> transitions = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).ToList();
 
-        return weights;
+        foreach (TransitionGUI t in transitions)
+        {
+            weightsFactorPair.Add(new KeyValuePair<float, UtilityNode>(t.weight, (UtilityNode)t.fromNode));
+        }
+
+        return weightsFactorPair;
     }
 }

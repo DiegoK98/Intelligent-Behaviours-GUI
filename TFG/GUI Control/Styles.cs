@@ -56,10 +56,6 @@ public static class Styles
 
     public static GUIStyle TopBarButton = new GUIStyle(GUI.skin.button)
     {
-        hover = new GUIStyleState()
-        {
-            textColor = Color.grey
-        },
         alignment = TextAnchor.MiddleLeft
     };
 

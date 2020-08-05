@@ -70,6 +70,24 @@ public class NodeEditorUtilities
         + tab + tab + "#SETROOT#\n"
         + tab + "}";
 
+    /// <summary>
+    /// Text to add at the end of the CreateMethod of a <see cref="UtilitySystem"/>
+    /// </summary>
+    static readonly string USCreateName = "UtilitySystem";
+
+    /// <summary>
+    /// Template for the CreateMethod of a <see cref="UtilitySystem"/>
+    /// </summary>
+    static readonly string USCreateTemplate = "\n"
+        + tab + "private void Create#CREATENAME#()\n"
+        + tab + "{\n"
+        + tab + tab + "#MACHNAME# = new UtilitySystemEngine(#ISSUB#);\n"
+        + tab + tab + "\n"
+        + tab + tab + "// FACTORS\n"
+        + tab + tab + "#FACTORS#\n"
+        + tab + tab + "// ACTIONS\n"
+        + tab + tab + "#ACTIONS#\n"
+        + tab + "}";
 
     /// <summary>
     /// Text to add at the end of a FSM's name
@@ -82,6 +100,11 @@ public class NodeEditorUtilities
     static readonly string BTEnding = "_BT";
 
     /// <summary>
+    /// Text to add at the end of a US's name
+    /// </summary>
+    static readonly string USEnding = "_US";
+
+    /// <summary>
     /// Text to add at the end of a subFSM's name
     /// </summary>
     static readonly string subFSMEnding = "_SubFSM";
@@ -90,6 +113,11 @@ public class NodeEditorUtilities
     /// Text to add at the end of a subBT's name
     /// </summary>
     static readonly string subBTEnding = "_SubBT";
+
+    /// <summary>
+    /// Text to add at the end of a subUS's name
+    /// </summary>
+    static readonly string subUSEnding = "_SubUS";
 
     /// <summary>
     /// Name for the saves Folder
@@ -164,6 +192,9 @@ public class NodeEditorUtilities
                 break;
             case nameof(BehaviourTree):
                 path = "BT_Template.cs";
+                break;
+            case nameof(UtilitySystem):
+                path = "US_Template.cs";
                 break;
         }
         string[] guids = AssetDatabase.FindAssets(path);
@@ -245,6 +276,7 @@ public class NodeEditorUtilities
             fullPath = oldest.Key;
         }
 
+        // Finally create the XML file for the step
         if (!string.IsNullOrEmpty(fullPath))
         {
             CreateXMLFromElem(fullPath, elem);
@@ -452,6 +484,12 @@ public class NodeEditorUtilities
                         templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
                         templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
                         break;
+                    case nameof(UtilitySystem):
+                        templateText = templateText.Replace("#ENDING#", USEnding);
+                        templateText = templateText.Replace("#USCREATE#", GetCreateMethod(elem, false, ref subElems));
+                        templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
+                        templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
+                        break;
                 }
                 templateText = templateText.Replace("#ACTIONS#", GetActionMethods(elem));
 
@@ -581,18 +619,26 @@ public class NodeEditorUtilities
         string engineEnding = "";
         string createName = "";
         string templateSub = "";
-        if (elem is FSM)
+
+        switch (elem.GetType().ToString())
         {
-            engineEnding = isSub ? subFSMEnding : FSMEnding;
-            createName = FSMCreateName;
-            templateSub = FSMCreateTemplate;
+            case nameof(FSM):
+                engineEnding = isSub ? subFSMEnding : FSMEnding;
+                createName = FSMCreateName;
+                templateSub = FSMCreateTemplate;
+                break;
+            case nameof(BehaviourTree):
+                engineEnding = isSub ? subBTEnding : BTEnding;
+                createName = BTCreateName;
+                templateSub = BTCreateTemplate;
+                break;
+            case nameof(UtilitySystem):
+                engineEnding = isSub ? subUSEnding : USEnding;
+                createName = USCreateName;
+                templateSub = USCreateTemplate;
+                break;
         }
-        else if (elem is BehaviourTree)
-        {
-            engineEnding = isSub ? subBTEnding : BTEnding;
-            createName = BTCreateName;
-            templateSub = BTCreateTemplate;
-        }
+
         string machineName = className + engineEnding;
         string createdName = isSub ? machineName : createName;
         string isSubStr = isSub ? "true" : "false";
@@ -606,17 +652,22 @@ public class NodeEditorUtilities
             templateSub += "#SUBELEMCREATE#";
 
         // Fill the template with the content
-        if (elem is FSM)
+        switch (elem.GetType().ToString())
         {
-            templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding, folderPath));
-            templateSub = templateSub.Replace("#STATES#", GetStates(elem, engineEnding, ref subElems));
-            templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
-        }
-        else if (elem is BehaviourTree)
-        {
-            templateSub = templateSub.Replace("#NODES#", GetNodes(elem, engineEnding, ref subElems));
-            templateSub = templateSub.Replace("#CHILDS#", GetChilds(elem, ref subElems));
-            templateSub = templateSub.Replace("#SETROOT#", GetSetRoot(elem, engineEnding));
+            case nameof(FSM):
+                templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding, folderPath));
+                templateSub = templateSub.Replace("#STATES#", GetStates(elem, engineEnding, ref subElems));
+                templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
+                break;
+            case nameof(BehaviourTree):
+                templateSub = templateSub.Replace("#NODES#", GetNodes(elem, engineEnding, ref subElems));
+                templateSub = templateSub.Replace("#CHILDS#", GetChilds(elem, ref subElems));
+                templateSub = templateSub.Replace("#SETROOT#", GetSetRoot(elem, engineEnding));
+                break;
+            case nameof(UtilitySystem):
+                templateSub = templateSub.Replace("#FACTORS#", GetFactors(elem));
+                templateSub = templateSub.Replace("#ACTIONS#", GetActions(elem, engineEnding, ref subElems));
+                break;
         }
 
         return templateSub;
@@ -634,10 +685,7 @@ public class NodeEditorUtilities
         List<ClickableElement> subElemsCopy = new List<ClickableElement>();
         foreach (ClickableElement sub in subElems)
         {
-            if (sub is FSM)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetCreateMethod(sub, true, ref subElemsCopy, folderPath));
-            if (sub is BehaviourTree)
-                templateText = templateText.Replace("#SUBELEMCREATE#", GetCreateMethod(sub, true, ref subElemsCopy));
+            templateText = templateText.Replace("#SUBELEMCREATE#", GetCreateMethod(sub, true, ref subElemsCopy));
         }
         if (subElemsCopy.Count > 0)
         {
@@ -659,8 +707,25 @@ public class NodeEditorUtilities
 
         foreach (ClickableElement sub in subElems)
         {
-            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBTEnding : "";
-            string type = sub is FSM ? "StateMachineEngine" : sub is BehaviourTree ? "BehaviourTreeEngine" : "";
+            string engineEnding = "";
+            string type = "";
+
+            switch (sub.GetType().ToString())
+            {
+                case nameof(FSM):
+                    engineEnding = subFSMEnding;
+                    type = "StateMachineEngine";
+                    break;
+                case nameof(BehaviourTree):
+                    engineEnding = subBTEnding;
+                    type = "BehaviourTreeEngine";
+                    break;
+                case nameof(UtilitySystem):
+                    engineEnding = subUSEnding;
+                    type = "UtilitySystemEngine";
+                    break;
+            }
+
             string elemName = CleanName(sub.elementName);
             result += "private " + type + " " + elemName + engineEnding + ";\n" + tab;
         }
@@ -680,8 +745,22 @@ public class NodeEditorUtilities
 
         for (int i = subElems.Count - 1; i >= 0; i--)
         {
-            string engineEnding = subElems[i] is FSM ? subFSMEnding : subElems[i] is BehaviourTree ? subBTEnding : "";
+            string engineEnding = "";
             string elemName = CleanName(subElems[i].elementName) + engineEnding;
+
+            switch (subElems[i].GetType().ToString())
+            {
+                case nameof(FSM):
+                    engineEnding = subFSMEnding;
+                    break;
+                case nameof(BehaviourTree):
+                    engineEnding = subBTEnding;
+                    break;
+                case nameof(UtilitySystem):
+                    engineEnding = subUSEnding;
+                    break;
+            }
+
             result += "Create" + elemName + "();\n" + tab + tab;
         }
 
@@ -699,8 +778,22 @@ public class NodeEditorUtilities
 
         foreach (ClickableElement sub in subElems)
         {
-            string engineEnding = sub is FSM ? subFSMEnding : sub is BehaviourTree ? subBTEnding : "";
+            string engineEnding = "";
             string elemName = CleanName(sub.elementName);
+
+            switch (sub.GetType().ToString())
+            {
+                case nameof(FSM):
+                    engineEnding = subFSMEnding;
+                    break;
+                case nameof(BehaviourTree):
+                    engineEnding = subBTEnding;
+                    break;
+                case nameof(UtilitySystem):
+                    engineEnding = subUSEnding;
+                    break;
+            }
+
             result += "\n" + tab + tab + elemName + engineEnding + ".Update();";
         }
 
@@ -708,6 +801,7 @@ public class NodeEditorUtilities
     }
 
     #region FSM
+
     /// <summary>
     /// Writes all the <see cref="Perception"/> declaration and initialization
     /// </summary>
@@ -835,24 +929,37 @@ public class NodeEditorUtilities
         foreach (StateNode node in ((FSM)elem).states)
         {
             string nodeName = CleanName(node.nodeName);
-            if (node.subElem is FSM)
-            {
-                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subFSMEnding + ");\n" + tab + tab;
-                subElems.Add(node.subElem);
-            }
-            else if (node.subElem is BehaviourTree)
-            {
-                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subBTEnding + ");\n" + tab + tab;
-                subElems.Add(node.subElem);
 
-            }
-            else if (node.type == stateType.Entry)
+            if (node.subElem is null)
             {
-                result += "State " + nodeName + " = " + machineName + ".CreateEntryState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
+                if (node.type == stateType.Entry)
+                {
+                    result += "State " + nodeName + " = " + machineName + ".CreateEntryState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
+                }
+                else
+                {
+                    result += "State " + nodeName + " = " + machineName + ".CreateState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
+                }
             }
             else
             {
-                result += "State " + nodeName + " = " + machineName + ".CreateState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
+                string subEnding = "";
+
+                switch (node.subElem.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        subEnding = subFSMEnding;
+                        break;
+                    case nameof(BehaviourTree):
+                        subEnding = subBTEnding;
+                        break;
+                    case nameof(UtilitySystem):
+                        subEnding = subUSEnding;
+                        break;
+                }
+
+                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subEnding + ");\n" + tab + tab;
+                subElems.Add(node.subElem);
             }
         }
 
@@ -890,16 +997,23 @@ public class NodeEditorUtilities
 
             if (((StateNode)transition.fromNode).subElem != null)
             {
-                string ending;
-
-                if (((StateNode)transition.fromNode).subElem is FSM)
-                    ending = "_SubFSM";
-                else
-                    ending = "_SubBT";
-
                 string subClassName = CleanName(((StateNode)transition.fromNode).subElem.elementName);
+                string subEnding = "";
 
-                result += "\n" + tab + tab + subClassName + ending + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
+                switch (((StateNode)transition.fromNode).subElem.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        subEnding = subFSMEnding;
+                        break;
+                    case nameof(BehaviourTree):
+                        subEnding = subBTEnding;
+                        break;
+                    case nameof(UtilitySystem):
+                        subEnding = subUSEnding;
+                        break;
+                }
+
+                result += "\n" + tab + tab + subClassName + subEnding + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
             }
             else
             {
@@ -916,6 +1030,7 @@ public class NodeEditorUtilities
     #endregion
 
     #region Behaviour Tree
+
     /// <summary>
     /// Writes all the <see cref="TreeNode"/> declaration and initialization, except for Decorators
     /// </summary>
@@ -942,19 +1057,29 @@ public class NodeEditorUtilities
                     result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", " + (node.isRandom ? "true" : "false") + ");\n" + tab + tab;
                     break;
                 case behaviourType.Leaf:
-                    if (node.subElem is FSM)
+                    if (node.subElem is null)
                     {
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subFSMEnding + ");\n" + tab + tab;
-                        subElems.Add(node.subElem);
-                    }
-                    else if (node.subElem is BehaviourTree)
-                    {
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subBTEnding + ");\n" + tab + tab;
-                        subElems.Add(node.subElem);
+                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateLeafNode(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + nodeName + conditionsEnding + ");\n" + tab + tab;
                     }
                     else
                     {
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateLeafNode(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + nodeName + conditionsEnding + ");\n" + tab + tab;
+                        string subEnding = "";
+
+                        switch (node.subElem.GetType().ToString())
+                        {
+                            case nameof(FSM):
+                                subEnding = subFSMEnding;
+                                break;
+                            case nameof(BehaviourTree):
+                                subEnding = subBTEnding;
+                                break;
+                            case nameof(UtilitySystem):
+                                subEnding = subUSEnding;
+                                break;
+                        }
+
+                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subEnding + ");\n" + tab + tab;
+                        subElems.Add(node.subElem);
                     }
                     break;
             }
@@ -1165,6 +1290,165 @@ public class NodeEditorUtilities
 
     #endregion
 
+    #region Utility System
+
+    /// <summary>
+    /// Writes all the weights list declaration and initialization
+    /// </summary>
+    /// <param name="weightsList"></param>
+    /// <param name="weightsListName"></param>
+    /// <returns></returns>
+    private static string CreateWeightsList(List<float> weightsList, string weightsListName)
+    {
+        string result = string.Empty;
+
+        result += "List<float> " + weightsListName + " = new List<float>();\n" + tab + tab;
+        foreach (float weight in weightsList)
+        {
+            result += weightsListName + ".Add(" + weight + ");\n" + tab + tab;
+        }
+
+        result += "\n" + tab + tab;
+
+        return result;
+    }
+
+    /// <summary>
+    /// Writes all the Factors list declaration and initialization
+    /// </summary>
+    /// <param name="factorsList"></param>
+    /// <param name="factorsListName"></param>
+    /// <returns></returns>
+    private static string CreateFactorsList(List<UtilityNode> factorsList, string factorsListName)
+    {
+        string result = string.Empty;
+
+        result += "List<Factor> " + factorsListName + " = new List<Factor>();\n" + tab + tab;
+        foreach (UtilityNode node in factorsList)
+        {
+            result += factorsListName + ".Add(" + CleanName(node.nodeName) + ");\n" + tab + tab;
+        }
+
+        result += "\n" + tab + tab;
+
+        return result;
+    }
+
+    /// <summary>
+    /// Writes all the Factor nodes declaration and initialization
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <returns></returns>
+    private static string GetFactors(ClickableElement elem)
+    {
+        string className = CleanName(elem.elementName);
+        string result = string.Empty;
+
+        foreach (UtilityNode node in ((UtilitySystem)elem).nodes)
+        {
+            string factorName = CleanName(node.nodeName);
+
+            switch (node.type)
+            {
+                case utilityType.Variable:
+                    result += "Factor " + factorName + " = " + "new LeafVariable(() => /*Reference to desired variable*/, " + node.variableMax + ", " + node.variableMin + ");\n" + tab + tab;
+                    break;
+                case utilityType.Fusion:
+                    string factorsListName = factorName + "Factors";
+                    string weightsListName = factorName + "Weights";
+
+                    switch (node.fusionType)
+                    {
+                        case fusionType.Weighted:
+                            result += CreateFactorsList(node.GetWeightsAndFactors().Select(k => k.Value).ToList(), factorsListName);
+                            result += CreateWeightsList(node.GetWeightsAndFactors().Select(k => k.Key).ToList(), weightsListName);
+                            result += "Factor " + factorName + " = " + "new WeightedSumFusion(" + factorsListName + ", " + weightsListName + ");\n" + tab + tab;
+                            break;
+                        case fusionType.GetMax:
+                            result += CreateFactorsList(node.GetWeightsAndFactors().Select(k => k.Value).ToList(), factorsListName);
+                            result += "Factor " + factorName + " = " + "new MaxFusion(" + factorsListName + ");\n" + tab + tab;
+                            break;
+                        case fusionType.GetMin:
+                            result += CreateFactorsList(node.GetWeightsAndFactors().Select(k => k.Value).ToList(), factorsListName);
+                            result += "Factor " + factorName + " = " + "new MinFusion(" + factorsListName + ");\n" + tab + tab;
+                            break;
+                    }
+                    break;
+                case utilityType.Curve:
+                    UtilityNode prevFactor = node.GetWeightsAndFactors().Select(k => k.Value).FirstOrDefault();
+                    string prevFactorName = CleanName(prevFactor.nodeName);
+
+                    switch (node.curveType)
+                    {
+                        case curveType.Linear:
+                            result += "Factor " + factorName + " = " + "new LinearCurve(" + prevFactorName + ", " + node.slope + ", " + node.displY + ");\n" + tab + tab;
+                            break;
+                        case curveType.Exponential:
+                            result += "Factor " + factorName + " = " + "new ExpCurve(" + prevFactorName + ", " + node.exp + ", " + node.displX + ", " + node.displY + ");\n" + tab + tab;
+                            break;
+                        case curveType.LinearParts:
+                            result += "Factor " + factorName + " = " + "new LinearPartsCurve();\n" + tab + tab; // TODO
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Writes all the Action nodes declaration and initialization
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <param name="subElems"></param>
+    /// <returns></returns>
+    private static string GetActions(ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
+    {
+        string className = CleanName(elem.elementName);
+        string result = string.Empty;
+        string machineName = className + engineEnding;
+
+        foreach (UtilityNode node in ((UtilitySystem)elem).nodes.Where(n => n.type == utilityType.Action))
+        {
+            string nodeName = CleanName(node.nodeName);
+
+            UtilityNode prevFactor = node.GetWeightsAndFactors().Select(k => k.Value).FirstOrDefault();
+            string prevFactorName = CleanName(prevFactor.nodeName);
+
+            if (node.subElem is null)
+            {
+                result += "UtilityAction " + nodeName + " = " + machineName + ".CreateUtilityAction(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + prevFactorName + ");\n" + tab + tab;
+            }
+            else
+            {
+                string subEnding = "";
+
+                switch (node.subElem.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        subEnding = subFSMEnding;
+                        break;
+                    case nameof(BehaviourTree):
+                        subEnding = subBTEnding;
+                        break;
+                    case nameof(UtilitySystem):
+                        subEnding = subUSEnding;
+                        break;
+                }
+
+                result += "UtilityAction " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + prevFactorName + ", " + nodeName + subEnding + ");\n" + tab + tab;
+                subElems.Add(node.subElem);
+            }
+        }
+
+        return result;
+    }
+
+    #endregion
+
     /// <summary>
     /// Writes all the methods for the Actions of the <see cref="State"/>
     /// </summary>
@@ -1218,6 +1502,25 @@ public class NodeEditorUtilities
                           + tab + "{\n"
                           + tab + tab + "//Write here the code for the success check for " + nodeName + "\n"
                           + tab + tab + "return ReturnValues.Failed;\n"
+                          + tab + "}\n"
+                          + tab;
+                    }
+                }
+                break;
+            case nameof(UtilitySystem):
+                foreach (UtilityNode node in ((UtilitySystem)elem).nodes)
+                {
+                    if (node.subElem != null)
+                    {
+                        result += GetActionMethods(node.subElem);
+                    }
+                    else
+                    {
+                        string nodeName = CleanName(node.nodeName);
+                        result += "\n" + tab +
+                          "private void " + nodeName + actionsEnding + "()\n"
+                          + tab + "{\n"
+                          + tab + tab + "\n"
                           + tab + "}\n"
                           + tab;
                     }

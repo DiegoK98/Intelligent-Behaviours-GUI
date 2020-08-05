@@ -110,6 +110,7 @@ public class NodeEditor : EditorWindow
     [MenuItem("Window/" + editorTitle)]
     static void ShowEditor()
     {
+        // We clear any UndoSteps from previous uses of the GUI
         NodeEditorUtilities.ClearUndoSteps();
 
         // Close any previous window
