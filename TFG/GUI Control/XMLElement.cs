@@ -58,9 +58,14 @@ public class XMLElement
     public bool isRandom { get; set; }
 
     /// <summary>
-    /// Parameter for DelayT and LoopN Nodes
+    /// Parameter for DelayT Nodes
     /// </summary>
-    public float NProperty { get; set; }
+    public float delayTime { get; set; }
+
+    /// <summary>
+    /// Parameter for LoopN Nodes
+    /// </summary>
+    public int Nloops { get; set; }
 
     // Transitions properties
 
@@ -294,7 +299,8 @@ public class XMLElement
                 nodeBT.InitBehaviourNode(currentTree, (int)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY);
                 nodeBT.nodeName = this.name;
                 nodeBT.isRandom = this.isRandom;
-                nodeBT.NProperty = this.NProperty;
+                nodeBT.delayTime = this.delayTime;
+                nodeBT.Nloops = this.Nloops;
 
                 currentTree.nodes.Add(nodeBT);
 

@@ -61,7 +61,7 @@ public class TransitionGUI : GUIElement
     /// <summary>
     /// Weight value for <see cref="toNode"/> is a Weighted Fusion node
     /// </summary>
-    public float weight = 10.5f;
+    public float weight = 1.0f;
 
     /// <summary>
     /// The Initializer for the <seealso cref="TransitionGUI"/>

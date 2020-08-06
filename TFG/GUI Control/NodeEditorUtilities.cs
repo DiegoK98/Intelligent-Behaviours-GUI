@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -746,7 +747,6 @@ public class NodeEditorUtilities
         for (int i = subElems.Count - 1; i >= 0; i--)
         {
             string engineEnding = "";
-            string elemName = CleanName(subElems[i].elementName) + engineEnding;
 
             switch (subElems[i].GetType().ToString())
             {
@@ -760,6 +760,8 @@ public class NodeEditorUtilities
                     engineEnding = subUSEnding;
                     break;
             }
+
+            string elemName = CleanName(subElems[i].elementName) + engineEnding;
 
             result += "Create" + elemName + "();\n" + tab + tab;
         }
@@ -893,7 +895,7 @@ public class NodeEditorUtilities
         switch (perception.type)
         {
             case perceptionType.Timer:
-                result = perception.timerNumber.ToString();
+                result = perception.timerNumber.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f";
                 break;
             case perceptionType.IsInState:
                 result = CleanName(perception.elemName) + subFSMEnding + ", " + "\"" + perception.stateName + "\"";
@@ -1149,7 +1151,7 @@ public class NodeEditorUtilities
             {
                 case behaviourType.LoopN:
                     string loopNodeName = "LoopN_" + subNodeName;
-                    result += "LoopDecoratorNode " + loopNodeName + " = " + machineName + ".CreateLoopNode(\"" + loopNodeName + "\", " + subNodeName + ", " + node.NProperty + ");\n" + tab + tab;
+                    result += "LoopDecoratorNode " + loopNodeName + " = " + machineName + ".CreateLoopNode(\"" + loopNodeName + "\", " + subNodeName + ", " + node.Nloops + ");\n" + tab + tab;
                     break;
                 case behaviourType.LoopUntilFail:
                     string loopUntilNodeName = "LoopUntilFail_" + subNodeName;
@@ -1161,7 +1163,7 @@ public class NodeEditorUtilities
                     break;
                 case behaviourType.DelayT:
                     string TimerNodeName = "Timer_" + subNodeName;
-                    result += "TimerDecoratorNode " + TimerNodeName + " = " + machineName + ".CreateTimerNode(\"" + TimerNodeName + "\", " + subNodeName + ", " + node.NProperty + ");\n" + tab + tab;
+                    result += "TimerDecoratorNode " + TimerNodeName + " = " + machineName + ".CreateTimerNode(\"" + TimerNodeName + "\", " + subNodeName + ", " + node.delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
                     break;
                 case behaviourType.Succeeder:
                     string SucceederNodeName = "Succeeder_" + subNodeName;
@@ -1305,7 +1307,7 @@ public class NodeEditorUtilities
         result += "List<float> " + weightsListName + " = new List<float>();\n" + tab + tab;
         foreach (float weight in weightsList)
         {
-            result += weightsListName + ".Add(" + weight + ");\n" + tab + tab;
+            result += weightsListName + ".Add(" + weight.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
         }
 
         result += "\n" + tab + tab;

@@ -27,9 +27,14 @@ public class BehaviourNode : BaseNode
     public behaviourType type;
 
     /// <summary>
-    /// Only used for Decorator Nodes that are <see cref="behaviourType.LoopN"/> or <see cref="behaviourType.DelayT"/>
+    /// Parameter used for Decorator Nodes that are <see cref="behaviourType.DelayT"/>
     /// </summary>
-    public float NProperty = 0.0f;
+    public float delayTime = 0.0f;
+
+    /// <summary>
+    /// Parameter used for Decorator Nodes that are <see cref="behaviourType.LoopN"/>
+    /// </summary>
+    public int Nloops = 0;
 
     /// <summary>
     /// True if this <see cref="BehaviourNode"/> is the root of the <see cref="BehaviourTree"/>
@@ -99,8 +104,10 @@ public class BehaviourNode : BaseNode
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                 break;
             case behaviourType.LoopN:
+                int.TryParse(EditorGUILayout.TextField(Nloops.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out Nloops);
+                break;
             case behaviourType.DelayT:
-                float.TryParse(EditorGUILayout.TextField(NProperty.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out NProperty);
+                float.TryParse(EditorGUILayout.TextField(delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out delayTime);
                 break;
         }
     }
@@ -128,7 +135,8 @@ public class BehaviourNode : BaseNode
                 windowPosX = this.windowRect.x,
                 windowPosY = this.windowRect.y,
                 isRandom = this.isRandom,
-                NProperty = this.NProperty,
+                delayTime = this.delayTime,
+                Nloops = this.Nloops,
 
                 nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
                 {
@@ -161,7 +169,8 @@ public class BehaviourNode : BaseNode
             windowRect = new Rect(this.windowRect),
             isRoot = this.isRoot,
             isRandom = this.isRandom,
-            NProperty = this.NProperty
+            delayTime = this.delayTime,
+            Nloops = this.Nloops
         };
 
         if (this.subElem)
