@@ -18,7 +18,7 @@ public class PerceptionXML
     /// <summary>
     /// Parameter for the Timer Perception
     /// </summary>
-    public int timerNumber;
+    public float timerNumber;
 
     /// <summary>
     /// Name of the selected <see cref="FSM"/> or <see cref="BehaviourTree"/> for IsInState and BehaviourTreeStatus Perceptions

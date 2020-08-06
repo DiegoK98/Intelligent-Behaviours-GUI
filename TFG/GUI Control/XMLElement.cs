@@ -60,7 +60,7 @@ public class XMLElement
     /// <summary>
     /// Parameter for DelayT and LoopN Nodes
     /// </summary>
-    public int NProperty { get; set; }
+    public float NProperty { get; set; }
 
     // Transitions properties
 

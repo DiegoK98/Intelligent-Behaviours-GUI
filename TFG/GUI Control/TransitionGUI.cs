@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using System.Globalization;
 
 public class TransitionGUI : GUIElement
 {
@@ -60,7 +61,7 @@ public class TransitionGUI : GUIElement
     /// <summary>
     /// Weight value for <see cref="toNode"/> is a Weighted Fusion node
     /// </summary>
-    public float weight = 1.0f;
+    public float weight = 10.5f;
 
     /// <summary>
     /// The Initializer for the <seealso cref="TransitionGUI"/>
@@ -196,7 +197,7 @@ public class TransitionGUI : GUIElement
 
             // Check if the user changes the textArea
             EditorGUI.BeginChangeCheck();
-            float.TryParse(EditorGUILayout.TextArea(weight.ToString(), Styles.CenteredTitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out weight);
+            float.TryParse(EditorGUILayout.TextField(weight.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.CenteredTitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out weight);
             if (EditorGUI.EndChangeCheck())
             {
                 //if (weight < 0)
@@ -267,10 +268,10 @@ public class TransitionGUI : GUIElement
                             }, GUILayout.Height(20), GUILayout.Width(width * 0.5f));
 
 
-                            int.TryParse(GUILayout.TextField(currentPerception.timerNumber.ToString(), new GUIStyle(Styles.TitleText)
+                            float.TryParse(EditorGUILayout.TextField(currentPerception.timerNumber.ToString(CultureInfo.CreateSpecificCulture("en-US")), new GUIStyle(Styles.TitleText)
                             {
                                 alignment = TextAnchor.MiddleCenter
-                            }, GUILayout.Height(20), GUILayout.Width(20)), out int number);
+                            }, GUILayout.Height(20), GUILayout.Width(20)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out float number);
 
                             currentPerception.timerNumber = number;
                         }

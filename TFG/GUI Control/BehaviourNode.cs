@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Linq;
+using System.Globalization;
 
 public enum behaviourType
 {
@@ -28,7 +29,7 @@ public class BehaviourNode : BaseNode
     /// <summary>
     /// Only used for Decorator Nodes that are <see cref="behaviourType.LoopN"/> or <see cref="behaviourType.DelayT"/>
     /// </summary>
-    public int NProperty = 0;
+    public float NProperty = 0.0f;
 
     /// <summary>
     /// True if this <see cref="BehaviourNode"/> is the root of the <see cref="BehaviourTree"/>
@@ -99,7 +100,7 @@ public class BehaviourNode : BaseNode
                 break;
             case behaviourType.LoopN:
             case behaviourType.DelayT:
-                int.TryParse(EditorGUILayout.TextArea(NProperty.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out NProperty);
+                float.TryParse(EditorGUILayout.TextField(NProperty.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out NProperty);
                 break;
         }
     }
