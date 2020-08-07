@@ -339,9 +339,8 @@ public class UtilityNode : BaseNode
     /// <returns>The <see cref="XMLElement"/> corresponding to this <see cref="BehaviourNode"/></returns>
     public override XMLElement ToXMLElement(params object[] args)
     {
-        BehaviourTree parentTree = (BehaviourTree)args[0];
-
         XMLElement result;
+
         if (this.subElem)
         {
             result = this.subElem.ToXMLElement();
@@ -354,13 +353,14 @@ public class UtilityNode : BaseNode
                 elemType = this.GetType().ToString(),
                 windowPosX = this.windowRect.x,
                 windowPosY = this.windowRect.y,
-                //isRandom = this.isRandom,
-                //NProperty = this.NProperty,
-
-                nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
-                {
-                    return node.ToXMLElement(parentTree);
-                }),
+                thirdType = this.fusionType.ToString(),
+                fourthType = this.curveType.ToString(),
+                variableMax = this.variableMax,
+                variableMin = this.variableMin,
+                slope = this.slope,
+                exp = this.exp,
+                displX = this.displX,
+                displY = this.displY
             };
         }
 

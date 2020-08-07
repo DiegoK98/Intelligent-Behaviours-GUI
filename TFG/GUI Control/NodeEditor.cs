@@ -1776,6 +1776,9 @@ public class NodeEditor : EditorWindow
                 case nameof(BehaviourTree):
                     newElem = loadedXML.ToBehaviourTree(element, null, this);
                     break;
+                case nameof(UtilitySystem):
+                    newElem = loadedXML.ToUtilitySystem(element, null, this);
+                    break;
                 default:
                     Debug.LogError("Wrong content in saved data");
                     return null;

@@ -99,6 +99,7 @@ public class TransitionGUI : GUIElement
             windowPosX = this.windowRect.x,
             windowPosY = this.windowRect.y,
             Id = this.identificator,
+            weight = this.weight,
             fromId = this.fromNode.identificator,
             toId = this.toNode.identificator,
             perception = this.rootPerception.ToPerceptionXML()

@@ -49,15 +49,19 @@ public class UtilitySystem : ClickableElement
     {
         XMLElement result = new XMLElement
         {
-            //name = CleanName(this.elementName),
-            //elemType = this.GetType().ToString(),
-            //windowPosX = this.windowRect.x,
-            //windowPosY = this.windowRect.y,
-            //nodes = nodes.FindAll(o => o.isRoot).ConvertAll((rootNode) =>
-            //{
-            //    return rootNode.ToXMLElement(this);
-            //}),
-            //Id = this.identificator
+            name = CleanName(this.elementName),
+            elemType = this.GetType().ToString(),
+            windowPosX = this.windowRect.x,
+            windowPosY = this.windowRect.y,
+            nodes = nodes.ConvertAll((node) =>
+            {
+                return node.ToXMLElement(this);
+            }),
+            transitions = connections.ConvertAll((conn) =>
+            {
+                return conn.ToXMLElement(this);
+            }),
+            Id = this.identificator
         };
 
         return result;
@@ -163,13 +167,13 @@ public class UtilitySystem : ClickableElement
     /// <returns></returns>
     public bool ConnectedCheck(UtilityNode start, UtilityNode end)
     {
-        foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.toNode)))
         {
-            if (end.Equals((UtilityNode)transition.toNode))
+            if (end.Equals((UtilityNode)transition.fromNode))
             {
                 return true;
             }
-            if (ConnectedCheck((UtilityNode)transition.toNode, end))
+            if (ConnectedCheck((UtilityNode)transition.fromNode, end))
                 return true;
         }
 
