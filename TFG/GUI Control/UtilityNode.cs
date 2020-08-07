@@ -140,6 +140,57 @@ public class UtilityNode : BaseNode
     }
 
     /// <summary>
+    /// The Initializer for the <seealso cref="UtilityNode"/> when it is being loaded from an XML
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="typeNumber"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
+    /// <param name="subElem"></param>
+    public void InitUtilityNodeFromXML(NodeEditor sender, ClickableElement parent, utilityType type, fusionType fusionType, curveType curveType,
+        float posx, float posy, string id, string name, float variableMax, float variableMin, float slope, float exp, float displX, float displY, ClickableElement subElem = null)
+    {
+        InitBaseNode(parent, id);
+
+        this.editor = sender;
+
+        this.type = type;
+        this.fusionType = fusionType;
+        this.curveType = curveType;
+
+        if (subElem != null)
+        {
+            this.subElem = subElem;
+            nodeName = this.subElem.elementName;
+            windowRect = new Rect(posx, posy, ClickableElement.width, ClickableElement.height);
+        }
+        else
+        {
+            nodeName = parent.elementNamer.AddName(id, name);
+
+            if (type == utilityType.Fusion)
+            {
+                windowRect = new Rect(posx, posy, width, height * 1.7f);
+            }
+            else if (type == utilityType.Curve)
+            {
+                windowRect = new Rect(posx, posy, width, height * 1.5f);
+            }
+            else
+            {
+                windowRect = new Rect(posx, posy, width, height);
+            }
+        }
+
+        this.variableMax = variableMax;
+        this.variableMin = variableMin;
+        this.slope = slope;
+        this.exp = exp;
+        this.displX = displX;
+        this.displY = displY;
+    }
+
+    /// <summary>
     /// Draws all the elements inside the <see cref="UtilityNode"/>
     /// </summary>
     public override void DrawWindow()

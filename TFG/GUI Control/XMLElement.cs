@@ -142,9 +142,7 @@ public class XMLElement
     public FSM ToFSM(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
     {
         FSM fsm = ScriptableObject.CreateInstance<FSM>();
-        fsm.InitFSM(sender, parent, this.windowPosX, this.windowPosY, true);
-        fsm.identificator = this.Id;
-        fsm.elementName = this.name;
+        fsm.InitFSMFromXML(sender, parent, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         foreach (XMLElement node in this.nodes)
         {
@@ -182,50 +180,46 @@ public class XMLElement
             BaseNode node1 = fsm.states.Where(n => n.identificator == trans.fromId).FirstOrDefault();
             BaseNode node2 = fsm.states.Where(n => n.identificator == trans.toId).FirstOrDefault();
             if (node1 != null && node2 != null)
-                fsm.AddTransition(trans.ToTransitionGUI(node1, node2));
+                fsm.AddTransition(trans.ToTransitionGUI(fsm, node1, node2));
         }
 
-        if (parent is FSM)
+        switch (parent.GetType().ToString())
         {
-            StateNode node = ScriptableObject.CreateInstance<StateNode>();
-            node.InitStateNode(parent, 2, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
-            node.identificator = this.Id;
+            case nameof(FSM):
+                StateNode state = ScriptableObject.CreateInstance<StateNode>();
+                state.InitStateNodeFromXML(parent, stateType.Unconnected, fsm.windowRect.position.x, fsm.windowRect.position.y, this.Id, this.name, fsm);
 
-            if (this.secondType.Equals(stateType.Entry.ToString()))
-            {
-                ((FSM)parent).AddEntryState(node);
-            }
-            else
-            {
-                ((FSM)parent).states.Add(node);
-            }
-        }
+                if (this.secondType.Equals(stateType.Entry.ToString()))
+                {
+                    ((FSM)parent).AddEntryState(state);
+                }
+                else
+                {
+                    ((FSM)parent).states.Add(state);
+                }
+                break;
+            case nameof(BehaviourTree):
+                BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
+                node.InitBehaviourNode(parent, behaviourType.Leaf, fsm.windowRect.x, fsm.windowRect.y, fsm);
 
-        if (parent is BehaviourTree)
-        {
-            BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(parent, 2, fsm.windowRect.x, fsm.windowRect.y, fsm);
+                ((BehaviourTree)parent).nodes.Add(node);
 
-            ((BehaviourTree)parent).nodes.Add(node);
+                if (selectedNode != null)
+                {
+                    TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
+                    transition.InitTransitionGUI(parent, selectedNode, node);
 
-            if (selectedNode != null)
-            {
-                TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                transition.InitTransitionGUI(parent, selectedNode, node);
+                    ((BehaviourTree)parent).connections.Add(transition);
 
-                ((BehaviourTree)parent).connections.Add(transition);
+                    selectedNode = node;
+                }
+                break;
+            case nameof(UtilitySystem):
+                UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
+                utilNode.InitUtilityNode(sender, parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
 
-                selectedNode = node;
-            }
-        }
-
-        if (parent is UtilitySystem)
-        {
-            UtilityNode node = ScriptableObject.CreateInstance<UtilityNode>();
-            node.InitUtilityNode(sender, parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
-            node.identificator = this.Id;
-
-            ((UtilitySystem)parent).nodes.Add(node);
+                ((UtilitySystem)parent).nodes.Add(utilNode);
+                break;
         }
 
         return fsm;
@@ -238,13 +232,7 @@ public class XMLElement
     public StateNode ToStateNode(FSM parent)
     {
         StateNode node = ScriptableObject.CreateInstance<StateNode>();
-        node.identificator = this.Id;
-        node.parent = parent;
-        node.nodeName = this.name;
-        node.windowRect = new Rect(this.windowPosX, this.windowPosY, StateNode.width, StateNode.height);
-        node.type = stateType.Unconnected;
-
-        parent.elementNamer.AddName(node.identificator, node.nodeName);
+        node.InitStateNodeFromXML(parent, stateType.Unconnected, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         return node;
     }
@@ -255,18 +243,10 @@ public class XMLElement
     /// <param name="from"></param>
     /// <param name="to"></param>
     /// <returns></returns>
-    public TransitionGUI ToTransitionGUI(BaseNode from, BaseNode to)
+    public TransitionGUI ToTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to)
     {
         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-        transition.identificator = this.Id;
-        transition.transitionName = this.name;
-        transition.width = TransitionGUI.baseWidth;
-        transition.height = TransitionGUI.baseHeight;
-        transition.weight = this.weight;
-        transition.fromNode = from;
-        transition.toNode = to;
-
-        transition.rootPerception = this.perception.ToGUIElement();
+        transition.InitTransitionGUIFromXML(parent, from, to, this.Id, this.name, this.perception.ToGUIElement(), this.weight);
 
         return transition;
     }
@@ -281,9 +261,7 @@ public class XMLElement
     public BehaviourTree ToBehaviourTree(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
     {
         BehaviourTree bt = ScriptableObject.CreateInstance<BehaviourTree>();
-        bt.InitBehaviourTree(sender, parent, this.windowPosX, this.windowPosY);
-        bt.identificator = this.Id;
-        bt.elementName = this.name;
+        bt.InitBehaviourTreeFromXML(sender, parent, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         foreach (XMLElement node in this.nodes)
         {
@@ -307,47 +285,43 @@ public class XMLElement
             }
         }
 
-        if (parent is FSM)
+        switch (parent.GetType().ToString())
         {
-            StateNode node = ScriptableObject.CreateInstance<StateNode>();
-            node.InitStateNode(parent, 2, bt.windowRect.position.x, bt.windowRect.position.y, bt);
-            node.identificator = this.Id;
+            case nameof(FSM):
+                StateNode state = ScriptableObject.CreateInstance<StateNode>();
+                state.InitStateNodeFromXML(parent, stateType.Unconnected, bt.windowRect.position.x, bt.windowRect.position.y, this.Id, this.name, bt);
 
-            if (this.secondType.Equals(stateType.Entry.ToString()))
-            {
-                ((FSM)parent).AddEntryState(node);
-            }
-            else
-            {
-                ((FSM)parent).states.Add(node);
-            }
-        }
+                if (this.secondType.Equals(stateType.Entry.ToString()))
+                {
+                    ((FSM)parent).AddEntryState(state);
+                }
+                else
+                {
+                    ((FSM)parent).states.Add(state);
+                }
+                break;
+            case nameof(BehaviourTree):
+                BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
+                node.InitBehaviourNode(parent, behaviourType.Leaf, bt.windowRect.x, bt.windowRect.y, bt);
 
-        if (parent is BehaviourTree)
-        {
-            BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(parent, 2, bt.windowRect.x, bt.windowRect.y, bt);
+                ((BehaviourTree)parent).nodes.Add(node);
 
-            ((BehaviourTree)parent).nodes.Add(node);
+                if (selectedNode != null)
+                {
+                    TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
+                    transition.InitTransitionGUI(parent, selectedNode, node);
 
-            if (selectedNode != null)
-            {
-                TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                transition.InitTransitionGUI(parent, selectedNode, node);
+                    ((BehaviourTree)parent).connections.Add(transition);
 
-                ((BehaviourTree)parent).connections.Add(transition);
+                    selectedNode = node;
+                }
+                break;
+            case nameof(UtilitySystem):
+                UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
+                utilNode.InitUtilityNode(sender, parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
 
-                selectedNode = node;
-            }
-        }
-
-        if (parent is UtilitySystem)
-        {
-            UtilityNode node = ScriptableObject.CreateInstance<UtilityNode>();
-            node.InitUtilityNode(sender, parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
-            node.identificator = this.Id;
-
-            ((UtilitySystem)parent).nodes.Add(node);
+                ((UtilitySystem)parent).nodes.Add(utilNode);
+                break;
         }
 
         return bt;
@@ -371,11 +345,7 @@ public class XMLElement
                 break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
-                nodeBT.InitBehaviourNode(currentTree, (int)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY);
-                nodeBT.nodeName = this.name;
-                nodeBT.isRandom = this.isRandom;
-                nodeBT.delayTime = this.delayTime;
-                nodeBT.Nloops = this.Nloops;
+                nodeBT.InitBehaviourNodeFromXML(currentTree, (behaviourType)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY, this.Id, this.name, this.delayTime, this.Nloops, this.isRandom);
 
                 currentTree.nodes.Add(nodeBT);
 
@@ -411,9 +381,7 @@ public class XMLElement
     public UtilitySystem ToUtilitySystem(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
     {
         UtilitySystem utilSystem = ScriptableObject.CreateInstance<UtilitySystem>();
-        utilSystem.InitUtilitySystem(sender, parent, this.windowPosX, this.windowPosY);
-        utilSystem.identificator = this.Id;
-        utilSystem.elementName = this.name;
+        utilSystem.InitUtilitySystemFromXML(sender, parent, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         foreach (XMLElement node in this.nodes)
         {
@@ -429,7 +397,7 @@ public class XMLElement
                     node.ToUtilitySystem(utilSystem, null, sender);
                     break;
                 case nameof(UtilityNode):
-                    UtilityNode state = node.ToUtilityNode(utilSystem);
+                    UtilityNode state = node.ToUtilityNode(utilSystem, sender);
 
                     utilSystem.nodes.Add(state);
                     break;
@@ -444,50 +412,46 @@ public class XMLElement
             BaseNode node1 = utilSystem.nodes.Where(n => n.identificator == trans.fromId).FirstOrDefault();
             BaseNode node2 = utilSystem.nodes.Where(n => n.identificator == trans.toId).FirstOrDefault();
             if (node1 != null && node2 != null)
-                utilSystem.connections.Add(trans.ToTransitionGUI(node1, node2));
+                utilSystem.connections.Add(trans.ToTransitionGUI(utilSystem, node1, node2));
         }
 
-        if (parent is FSM)
+        switch (parent.GetType().ToString())
         {
-            StateNode node = ScriptableObject.CreateInstance<StateNode>();
-            node.InitStateNode(parent, 2, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
-            node.identificator = this.Id;
+            case nameof(FSM):
+                StateNode state = ScriptableObject.CreateInstance<StateNode>();
+                state.InitStateNodeFromXML(parent, stateType.Unconnected, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, this.Id, this.name, utilSystem);
 
-            if (this.secondType.Equals(stateType.Entry.ToString()))
-            {
-                ((FSM)parent).AddEntryState(node);
-            }
-            else
-            {
-                ((FSM)parent).states.Add(node);
-            }
-        }
+                if (this.secondType.Equals(stateType.Entry.ToString()))
+                {
+                    ((FSM)parent).AddEntryState(state);
+                }
+                else
+                {
+                    ((FSM)parent).states.Add(state);
+                }
+                break;
+            case nameof(BehaviourTree):
+                BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
+                node.InitBehaviourNode(parent, behaviourType.Leaf, utilSystem.windowRect.x, utilSystem.windowRect.y, utilSystem);
 
-        if (parent is BehaviourTree)
-        {
-            BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(parent, 2, utilSystem.windowRect.x, utilSystem.windowRect.y, utilSystem);
+                ((BehaviourTree)parent).nodes.Add(node);
 
-            ((BehaviourTree)parent).nodes.Add(node);
+                if (selectedNode != null)
+                {
+                    TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
+                    transition.InitTransitionGUI(parent, selectedNode, node);
 
-            if (selectedNode != null)
-            {
-                TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                transition.InitTransitionGUI(parent, selectedNode, node);
+                    ((BehaviourTree)parent).connections.Add(transition);
 
-                ((BehaviourTree)parent).connections.Add(transition);
+                    selectedNode = node;
+                }
+                break;
+            case nameof(UtilitySystem):
+                UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
+                utilNode.InitUtilityNode(sender, parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
 
-                selectedNode = node;
-            }
-        }
-
-        if (parent is UtilitySystem)
-        {
-            UtilityNode node = ScriptableObject.CreateInstance<UtilityNode>();
-            node.InitUtilityNode(sender, parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
-            node.identificator = this.Id;
-
-            ((UtilitySystem)parent).nodes.Add(node);
+                ((UtilitySystem)parent).nodes.Add(utilNode);
+                break;
         }
 
         return utilSystem;
@@ -497,37 +461,13 @@ public class XMLElement
     /// Creates and returns the <see cref="StateNode"/> corresponding to this <see cref="XMLElement"/>
     /// </summary>
     /// <returns></returns>
-    public UtilityNode ToUtilityNode(UtilitySystem parent)
+    public UtilityNode ToUtilityNode(UtilitySystem parent, NodeEditor sender)
     {
         UtilityNode node = ScriptableObject.CreateInstance<UtilityNode>();
-        node.identificator = this.Id;
-        node.parent = parent;
-        node.nodeName = this.name;
-        node.type = (utilityType)Enum.Parse(typeof(utilityType), this.secondType);
-        node.fusionType = (fusionType)Enum.Parse(typeof(fusionType), this.thirdType);
-        node.curveType = (curveType)Enum.Parse(typeof(curveType), this.fourthType);
-
-        if (node.type == utilityType.Fusion)
-        {
-            node.windowRect = new Rect(windowPosX, windowPosY, BaseNode.width, BaseNode.height * 1.7f);
-        }
-        else if (node.type == utilityType.Curve)
-        {
-            node.windowRect = new Rect(windowPosX, windowPosY, BaseNode.width, BaseNode.height * 1.5f);
-        }
-        else
-        {
-            node.windowRect = new Rect(windowPosX, windowPosY, BaseNode.width, BaseNode.height);
-        }
-
-        node.variableMax = this.variableMax;
-        node.variableMin = this.variableMin;
-        node.slope = this.slope;
-        node.exp = this.exp;
-        node.displX = this.displX;
-        node.displY = this.displY;
-
-        parent.elementNamer.AddName(node.identificator, node.nodeName);
+        node.InitUtilityNodeFromXML(sender, parent, (utilityType)Enum.Parse(typeof(utilityType), this.secondType),
+            (fusionType)Enum.Parse(typeof(fusionType), this.thirdType),
+            (curveType)Enum.Parse(typeof(curveType), this.fourthType),
+            this.windowPosX, this.windowPosY, this.Id, this.name, this.variableMax, this.variableMin, this.slope, this.exp, this.displX, this.displY);
 
         return node;
     }

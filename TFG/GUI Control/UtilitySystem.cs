@@ -24,9 +24,9 @@ public class UtilitySystem : ClickableElement
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="id"></param>
-    public void InitUtilitySystem(NodeEditor editor, ClickableElement parent, float posx, float posy, string id = null)
+    public void InitUtilitySystem(NodeEditor editor, ClickableElement parent, float posx, float posy)
     {
-        InitClickableElement(id);
+        InitClickableElement();
 
         this.editor = editor;
         this.parent = parent;
@@ -35,6 +35,29 @@ public class UtilitySystem : ClickableElement
             elementName = parent.elementNamer.AddName(identificator, "New US ");
         else
             elementName = editor.editorNamer.AddName(identificator, "New US ");
+
+        windowRect = new Rect(posx, posy, width, height);
+    }
+
+    /// <summary>
+    /// The Initializer for the <seealso cref="UtilitySystem"/> when it is being loaded from an XML
+    /// </summary>
+    /// <param name="editor"></param>
+    /// <param name="parent"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
+    /// <param name="id"></param>
+    public void InitUtilitySystemFromXML(NodeEditor editor, ClickableElement parent, float posx, float posy, string id, string name)
+    {
+        InitClickableElement(id);
+
+        this.editor = editor;
+        this.parent = parent;
+
+        if (parent != null)
+            elementName = parent.elementNamer.AddName(identificator, name);
+        else
+            elementName = editor.editorNamer.AddName(identificator, name);
 
         windowRect = new Rect(posx, posy, width, height);
     }

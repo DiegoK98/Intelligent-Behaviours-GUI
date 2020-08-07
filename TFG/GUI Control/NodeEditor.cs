@@ -2009,7 +2009,7 @@ public class NodeEditor : EditorWindow
             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
             StateNode node = CreateInstance<StateNode>();
-            node.InitStateNode(currentElem, 2, newFSM.windowRect.position.x, newFSM.windowRect.position.y, newFSM);
+            node.InitStateNode(currentElem, stateType.Unconnected, newFSM.windowRect.position.x, newFSM.windowRect.position.y, newFSM);
 
             if (!((FSM)currentElem).HasEntryState)
             {
@@ -2024,7 +2024,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             BehaviourNode node = CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(currentElem, 2, newFSM.windowRect.x, newFSM.windowRect.y, newFSM);
+            node.InitBehaviourNode(currentElem, behaviourType.Leaf, newFSM.windowRect.x, newFSM.windowRect.y, newFSM);
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
@@ -2068,7 +2068,7 @@ public class NodeEditor : EditorWindow
             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
             StateNode node = CreateInstance<StateNode>();
-            node.InitStateNode(currentElem, 2, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
+            node.InitStateNode(currentElem, stateType.Unconnected, newBT.windowRect.position.x, newBT.windowRect.position.y, newBT);
 
             if (!((FSM)currentElem).HasEntryState)
             {
@@ -2083,7 +2083,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             BehaviourNode node = CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(currentElem, 2, newBT.windowRect.x, newBT.windowRect.y, newBT);
+            node.InitBehaviourNode(currentElem, behaviourType.Leaf, newBT.windowRect.x, newBT.windowRect.y, newBT);
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
@@ -2127,7 +2127,7 @@ public class NodeEditor : EditorWindow
             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
             StateNode node = CreateInstance<StateNode>();
-            node.InitStateNode(currentElem, 2, newUS.windowRect.position.x, newUS.windowRect.position.y, newUS);
+            node.InitStateNode(currentElem, stateType.Unconnected, newUS.windowRect.position.x, newUS.windowRect.position.y, newUS);
 
             if (!((FSM)currentElem).HasEntryState)
             {
@@ -2142,7 +2142,7 @@ public class NodeEditor : EditorWindow
         if (currentElem is BehaviourTree)
         {
             BehaviourNode node = CreateInstance<BehaviourNode>();
-            node.InitBehaviourNode(currentElem, 2, newUS.windowRect.x, newUS.windowRect.y, newUS);
+            node.InitBehaviourNode(currentElem, behaviourType.Leaf, newUS.windowRect.x, newUS.windowRect.y, newUS);
 
             selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
             toCreateNode = node;
@@ -2170,7 +2170,7 @@ public class NodeEditor : EditorWindow
         NodeEditorUtilities.GenerateUndoStep(currentElem);
 
         StateNode node = CreateInstance<StateNode>();
-        node.InitStateNode(currentElem, 2, posX, posY);
+        node.InitStateNode(currentElem, stateType.Unconnected, posX, posY);
 
         if (!((FSM)currentElem).HasEntryState)
         {
@@ -2217,7 +2217,7 @@ public class NodeEditor : EditorWindow
     private void CreateSelector(int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(currentElem, 1, posX, posY);
+        node.InitBehaviourNode(currentElem, behaviourType.Sequence, posX, posY);
 
         if (nodeIndex > -1)
         {
@@ -2244,7 +2244,7 @@ public class NodeEditor : EditorWindow
     private void CreateLeafNode(int type, int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(currentElem, type, posX, posY);
+        node.InitBehaviourNode(currentElem, (behaviourType)type, posX, posY);
 
         selectednode = ((BehaviourTree)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2676,7 +2676,7 @@ public class NodeEditor : EditorWindow
                             currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                             newElem = CreateInstance<StateNode>();
-                            newElem.InitStateNode(currentElem, 2, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                            newElem.InitStateNode(currentElem, stateType.Unconnected, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
                         }
                         else
                         {
@@ -2691,7 +2691,7 @@ public class NodeEditor : EditorWindow
                                 ((BaseNode)elem).parent = currentElem;
 
                                 newElem = CreateInstance<StateNode>();
-                                newElem.InitStateNode(currentElem, 2, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                newElem.InitStateNode(currentElem, stateType.Unconnected, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
                             }
                         }
 
@@ -2739,7 +2739,7 @@ public class NodeEditor : EditorWindow
                             currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                             newElem = CreateInstance<BehaviourNode>();
-                            newElem.InitBehaviourNode(currentElem, 2, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                            newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
                         }
                         else
                         {
@@ -2754,7 +2754,7 @@ public class NodeEditor : EditorWindow
                                 ((BaseNode)elem).parent = currentElem;
 
                                 newElem = CreateInstance<BehaviourNode>();
-                                newElem.InitBehaviourNode(currentElem, 2, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
                             }
                         }
 

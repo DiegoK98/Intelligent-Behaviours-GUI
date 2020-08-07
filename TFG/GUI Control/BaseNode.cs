@@ -34,10 +34,17 @@ public abstract class BaseNode : GUIElement
     /// <summary>
     /// The Initializer for the <seealso cref="BaseNode"/>
     /// </summary>
-    public void InitBaseNode(ClickableElement parent)
+    public void InitBaseNode(ClickableElement parent, string id = null)
     {
-        identificator = UniqueID();
         this.parent = parent;
+        if(id == null)
+        {
+            identificator = UniqueID();
+        }
+        else
+        {
+            identificator = id;
+        }
     }
 
     /// <summary>

@@ -66,11 +66,11 @@ public class BehaviourNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitBehaviourNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
+    public void InitBehaviourNode(ClickableElement parent, behaviourType type, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode(parent);
 
-        type = (behaviourType)typeNumber;
+        this.type = type;
 
         if (subElem != null)
         {
@@ -83,6 +83,37 @@ public class BehaviourNode : BaseNode
             nodeName = parent.elementNamer.AddName(identificator, "New " + type + " Node ");
             windowRect = new Rect(posx, posy, width, height);
         }
+    }
+
+    /// <summary>
+    /// The Initializer for the <seealso cref="BehaviourNode"/> when it is being loaded from an XML
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="typeNumber"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
+    /// <param name="subElem"></param>
+    public void InitBehaviourNodeFromXML(ClickableElement parent, behaviourType type, float posx, float posy, string id, string name, float delayTime, int Nloops, bool isRandom, ClickableElement subElem = null)
+    {
+        InitBaseNode(parent, id);
+
+        this.type = type;
+
+        if (subElem != null)
+        {
+            this.subElem = subElem;
+            nodeName = this.subElem.elementName;
+            windowRect = new Rect(posx, posy, ClickableElement.width, ClickableElement.height);
+        }
+        else
+        {
+            nodeName = parent.elementNamer.AddName(id, name);
+            windowRect = new Rect(posx, posy, width, height);
+        }
+
+        this.delayTime = delayTime;
+        this.Nloops = Nloops;
+        this.isRandom = isRandom;
     }
 
     /// <summary>

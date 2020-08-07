@@ -39,7 +39,7 @@ public class FSM : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitFSM(NodeEditor editor, ClickableElement parent, float posx, float posy, bool isFromXML = false)
+    public void InitFSM(NodeEditor editor, ClickableElement parent, float posx, float posy)
     {
         InitClickableElement();
 
@@ -53,15 +53,34 @@ public class FSM : ClickableElement
 
         windowRect = new Rect(posx, posy, width, height);
 
-        if (!isFromXML)
-        {
-            // Create the entry state
-            StateNode entryNode = CreateInstance<StateNode>();
-            entryNode.InitStateNode(this, 1, 50, 50);
+        // Create the entry state
+        StateNode entryNode = CreateInstance<StateNode>();
+        entryNode.InitStateNode(this, stateType.Entry, 50, 50);
 
-            if (entryNode != null)
-                AddEntryState(entryNode);
-        }
+        if (entryNode != null)
+            AddEntryState(entryNode);
+    }
+
+    /// <summary>
+    /// The Initializer for the <seealso cref="FSM"/> when it is being loaded from XML
+    /// </summary>
+    /// <param name="editor"></param>
+    /// <param name="parent"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
+    public void InitFSMFromXML(NodeEditor editor, ClickableElement parent, float posx, float posy, string id, string name)
+    {
+        InitClickableElement(id);
+
+        this.editor = editor;
+        this.parent = parent;
+
+        if (parent != null)
+            elementName = parent.elementNamer.AddName(identificator, name);
+        else
+            elementName = editor.editorNamer.AddName(identificator, name);
+
+        windowRect = new Rect(posx, posy, width, height);
     }
 
     /// <summary>

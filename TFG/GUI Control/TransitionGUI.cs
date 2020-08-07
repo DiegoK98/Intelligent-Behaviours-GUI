@@ -86,6 +86,29 @@ public class TransitionGUI : GUIElement
     }
 
     /// <summary>
+    /// The Initializer for the <seealso cref="TransitionGUI"/> when it is being loaded from an XML
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    public void InitTransitionGUIFromXML(ClickableElement parent, BaseNode from, BaseNode to, string id, string name, PerceptionGUI rootPerception, float weight = 1.0f)
+    {
+        this.identificator = id;
+
+        this.transitionName = parent.elementNamer.AddName(identificator, name);
+
+        this.width = baseWidth;
+        this.height = baseHeight;
+
+        this.weight = weight;
+
+        this.fromNode = from;
+        this.toNode = to;
+
+        this.rootPerception = rootPerception;
+    }
+
+    /// <summary>
     /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="TransitionGUI"/>
     /// </summary>
     /// <param name="args"></param>

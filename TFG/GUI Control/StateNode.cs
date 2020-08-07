@@ -22,7 +22,7 @@ public class StateNode : BaseNode
     /// <param name="typeNumber"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitStateNode(ClickableElement parent, int typeNumber, float posx, float posy, ClickableElement subElem = null)
+    public void InitStateNode(ClickableElement parent, stateType type, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode(parent);
 
@@ -38,7 +38,32 @@ public class StateNode : BaseNode
             windowRect = new Rect(posx, posy, width, height);
         }
 
-        type = (stateType)typeNumber;
+        this.type = type;
+    }
+
+    /// <summary>
+    /// The Initializer for the <seealso cref="StateNode"/> when it is being loaded from an XML
+    /// </summary>
+    /// <param name="typeNumber"></param>
+    /// <param name="posx"></param>
+    /// <param name="posy"></param>
+    public void InitStateNodeFromXML(ClickableElement parent, stateType type, float posx, float posy, string id, string name, ClickableElement subElem = null)
+    {
+        InitBaseNode(parent, id);
+
+        if (subElem != null)
+        {
+            this.subElem = subElem;
+            nodeName = this.subElem.elementName;
+            windowRect = new Rect(posx, posy, ClickableElement.width, ClickableElement.height);
+        }
+        else
+        {
+            nodeName = parent.elementNamer.AddName(id, name);
+            windowRect = new Rect(posx, posy, width, height);
+        }
+
+        this.type = type;
     }
 
     /// <summary>
