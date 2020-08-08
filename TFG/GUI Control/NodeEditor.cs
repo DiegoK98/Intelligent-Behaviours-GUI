@@ -1583,19 +1583,19 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawNodeWindow(int id)
     {
-        if (currentElem is FSM)
+        if (currentElem is FSM && ((FSM)currentElem).states.Count > id)
         {
             ((FSM)currentElem).states[id].DrawWindow();
             if (((FSM)currentElem).states[id].subElem != null)
                 ((FSM)currentElem).states[id].subElem.elementName = ((FSM)currentElem).states[id].nodeName;
         }
-        if (currentElem is BehaviourTree)
+        if (currentElem is BehaviourTree && ((BehaviourTree)currentElem).nodes.Count > id)
         {
             ((BehaviourTree)currentElem).nodes[id].DrawWindow();
             if (((BehaviourTree)currentElem).nodes[id].subElem != null)
                 ((BehaviourTree)currentElem).nodes[id].subElem.elementName = ((BehaviourTree)currentElem).nodes[id].nodeName;
         }
-        if (currentElem is UtilitySystem)
+        if (currentElem is UtilitySystem && ((UtilitySystem)currentElem).nodes.Count > id)
         {
             ((UtilitySystem)currentElem).nodes[id].DrawWindow();
             if (((UtilitySystem)currentElem).nodes[id].subElem != null)
@@ -1611,7 +1611,9 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawElementWindow(int id)
     {
-        Elements[id].DrawWindow();
+        if (Elements.Count > id)
+            Elements[id].DrawWindow();
+
         GUI.DragWindow();
     }
 
@@ -1621,11 +1623,11 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawTransitionBox(int id)
     {
-        if (currentElem is FSM)
+        if (currentElem is FSM && ((FSM)currentElem).transitions.Count > id - ((FSM)currentElem).states.Count)
         {
             ((FSM)currentElem).transitions[id - ((FSM)currentElem).states.Count].DrawBox(this);
         }
-        if (currentElem is UtilitySystem)
+        if (currentElem is UtilitySystem && ((UtilitySystem)currentElem).connections.Count > id - ((UtilitySystem)currentElem).nodes.Count)
         {
             ((UtilitySystem)currentElem).connections[id - ((UtilitySystem)currentElem).nodes.Count].DrawBox(this);
         }

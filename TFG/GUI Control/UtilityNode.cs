@@ -85,6 +85,11 @@ public class UtilityNode : BaseNode
     public bool openFoldout;
 
     /// <summary>
+    /// Value that determinates the max coordinate in the 4 directions equally
+    /// </summary>
+    private float regularSize = 10;
+
+    /// <summary>
     /// Returns the <see cref="utilityType"/> properly written
     /// </summary>
     /// <returns></returns>
@@ -294,59 +299,69 @@ public class UtilityNode : BaseNode
                         break;
                 }
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(10);
-                GUILayout.BeginVertical();
-                try
+                if (curveType != curveType.LinearParts)
                 {
-                    openFoldout = EditorGUILayout.Foldout(openFoldout, "Visualize curve");
-
-                    if (openFoldout)
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(10);
+                    GUILayout.BeginVertical();
+                    try
                     {
-                        windowRect.height = height * 2.5f;
+                        openFoldout = EditorGUILayout.Foldout(openFoldout, "Visualize curve");
 
-                        Rect rect = new Rect(windowRect.width * 0.2f, windowRect.height * 0.6f, windowRect.width * 0.6f, 50);
-                        EditorGUI.DrawRect(rect, new Color(0, 0, 1, 0.25f));
-
-                        // Value that determinates the max coordinate in the 4 directions equally
-                        float regularSize = 10;
-
-                        float yMin = -regularSize;
-                        float yMax = regularSize;
-                        float xMin = -regularSize;
-                        float xMax = regularSize;
-
-                        float step = 1 / editor.position.width;
-
-                        Handles.color = new Color(0.6f, 0.6f, 0.6f);
-                        DrawAxis(rect);
-
-                        Handles.color = Color.white;
-
-                        Vector3 prevPos = new Vector3(0, CurveFunc(xMin), 0);
-                        for (float t = step + xMin; t < xMax; t += step)
+                        if (openFoldout)
                         {
-                            Vector3 pos = new Vector3((t + xMax) / (xMax - xMin), CurveFunc(t), 0);
+                            windowRect.height = height * 2.5f;
 
-                            if (pos.y < yMax && pos.y > yMin)
+                            Rect rect = new Rect(windowRect.width * 0.2f, windowRect.height * 0.6f, windowRect.width * 0.6f, 50);
+                            EditorGUI.DrawRect(rect, new Color(0, 0, 1, 0.25f));
+
+                            Event e = Event.current;
+                            if (e.type == EventType.ScrollWheel)
                             {
-                                Handles.DrawLine(
-                                    new Vector3(rect.xMin + prevPos.x * rect.width, rect.yMax - ((prevPos.y - yMin) / (yMax - yMin)) * rect.height, 0),
-                                    new Vector3(rect.xMin + pos.x * rect.width, rect.yMax - ((pos.y - yMin) / (yMax - yMin)) * rect.height, 0));
+                                regularSize += e.delta.y * 0.02f * regularSize;
                             }
 
-                            prevPos = pos;
+                            float yMin = -regularSize;
+                            float yMax = regularSize;
+                            float xMin = -regularSize;
+                            float xMax = regularSize;
+
+                            float step = 1 / editor.position.width;
+
+                            Handles.color = new Color(0.6f, 0.6f, 0.6f);
+                            DrawAxis(rect);
+
+                            Handles.color = Color.white;
+
+                            Vector3 prevPos = new Vector3(0, CurveFunc(xMin), 0);
+                            for (float t = step + xMin; t < xMax; t += step)
+                            {
+                                Vector3 pos = new Vector3((t + xMax) / (xMax - xMin), CurveFunc(t), 0);
+
+                                if (pos.y < yMax && pos.y > yMin)
+                                {
+                                    Handles.DrawLine(
+                                        new Vector3(rect.xMin + prevPos.x * rect.width, rect.yMax - ((prevPos.y - yMin) / (yMax - yMin)) * rect.height, 0),
+                                        new Vector3(rect.xMin + pos.x * rect.width, rect.yMax - ((pos.y - yMin) / (yMax - yMin)) * rect.height, 0));
+                                }
+
+                                prevPos = pos;
+                            }
+                        }
+                        else
+                        {
+                            windowRect.height = height * 1.5f;
                         }
                     }
-                    else
+                    finally
                     {
-                        windowRect.height = height * 1.5f;
+                        GUILayout.EndHorizontal();
+                        GUILayout.EndVertical();
                     }
                 }
-                finally
+                else
                 {
-                    GUILayout.EndHorizontal();
-                    GUILayout.EndVertical();
+                    windowRect.height = height * 1.2f;
                 }
 
                 break;

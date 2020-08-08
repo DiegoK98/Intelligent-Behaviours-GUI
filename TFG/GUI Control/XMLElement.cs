@@ -183,43 +183,46 @@ public class XMLElement
                 fsm.AddTransition(trans.ToTransitionGUI(fsm, node1, node2));
         }
 
-        switch (parent.GetType().ToString())
+        if (parent)
         {
-            case nameof(FSM):
-                StateNode state = ScriptableObject.CreateInstance<StateNode>();
-                state.InitStateNodeFromXML(parent, stateType.Unconnected, fsm.windowRect.position.x, fsm.windowRect.position.y, this.Id, this.name, fsm);
+            switch (parent.GetType().ToString())
+            {
+                case nameof(FSM):
+                    StateNode state = ScriptableObject.CreateInstance<StateNode>();
+                    state.InitStateNodeFromXML(parent, stateType.Unconnected, fsm.windowRect.position.x, fsm.windowRect.position.y, this.Id, this.name, fsm);
 
-                if (this.secondType.Equals(stateType.Entry.ToString()))
-                {
-                    ((FSM)parent).AddEntryState(state);
-                }
-                else
-                {
-                    ((FSM)parent).states.Add(state);
-                }
-                break;
-            case nameof(BehaviourTree):
-                BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
-                node.InitBehaviourNode(parent, behaviourType.Leaf, fsm.windowRect.x, fsm.windowRect.y, fsm);
+                    if (this.secondType.Equals(stateType.Entry.ToString()))
+                    {
+                        ((FSM)parent).AddEntryState(state);
+                    }
+                    else
+                    {
+                        ((FSM)parent).states.Add(state);
+                    }
+                    break;
+                case nameof(BehaviourTree):
+                    BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
+                    node.InitBehaviourNode(parent, behaviourType.Leaf, fsm.windowRect.x, fsm.windowRect.y, fsm);
 
-                ((BehaviourTree)parent).nodes.Add(node);
+                    ((BehaviourTree)parent).nodes.Add(node);
 
-                if (selectedNode != null)
-                {
-                    TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI(parent, selectedNode, node);
+                    if (selectedNode != null)
+                    {
+                        TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
+                        transition.InitTransitionGUI(parent, selectedNode, node);
 
-                    ((BehaviourTree)parent).connections.Add(transition);
+                        ((BehaviourTree)parent).connections.Add(transition);
 
-                    selectedNode = node;
-                }
-                break;
-            case nameof(UtilitySystem):
-                UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
-                utilNode.InitUtilityNode(sender, parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
+                        selectedNode = node;
+                    }
+                    break;
+                case nameof(UtilitySystem):
+                    UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
+                    utilNode.InitUtilityNode(sender, parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
 
-                ((UtilitySystem)parent).nodes.Add(utilNode);
-                break;
+                    ((UtilitySystem)parent).nodes.Add(utilNode);
+                    break;
+            }
         }
 
         return fsm;
@@ -285,43 +288,46 @@ public class XMLElement
             }
         }
 
-        switch (parent.GetType().ToString())
+        if (parent)
         {
-            case nameof(FSM):
-                StateNode state = ScriptableObject.CreateInstance<StateNode>();
-                state.InitStateNodeFromXML(parent, stateType.Unconnected, bt.windowRect.position.x, bt.windowRect.position.y, this.Id, this.name, bt);
+            switch (parent.GetType().ToString())
+            {
+                case nameof(FSM):
+                    StateNode state = ScriptableObject.CreateInstance<StateNode>();
+                    state.InitStateNodeFromXML(parent, stateType.Unconnected, bt.windowRect.position.x, bt.windowRect.position.y, this.Id, this.name, bt);
 
-                if (this.secondType.Equals(stateType.Entry.ToString()))
-                {
-                    ((FSM)parent).AddEntryState(state);
-                }
-                else
-                {
-                    ((FSM)parent).states.Add(state);
-                }
-                break;
-            case nameof(BehaviourTree):
-                BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
-                node.InitBehaviourNode(parent, behaviourType.Leaf, bt.windowRect.x, bt.windowRect.y, bt);
+                    if (this.secondType.Equals(stateType.Entry.ToString()))
+                    {
+                        ((FSM)parent).AddEntryState(state);
+                    }
+                    else
+                    {
+                        ((FSM)parent).states.Add(state);
+                    }
+                    break;
+                case nameof(BehaviourTree):
+                    BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
+                    node.InitBehaviourNode(parent, behaviourType.Leaf, bt.windowRect.x, bt.windowRect.y, bt);
 
-                ((BehaviourTree)parent).nodes.Add(node);
+                    ((BehaviourTree)parent).nodes.Add(node);
 
-                if (selectedNode != null)
-                {
-                    TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI(parent, selectedNode, node);
+                    if (selectedNode != null)
+                    {
+                        TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
+                        transition.InitTransitionGUI(parent, selectedNode, node);
 
-                    ((BehaviourTree)parent).connections.Add(transition);
+                        ((BehaviourTree)parent).connections.Add(transition);
 
-                    selectedNode = node;
-                }
-                break;
-            case nameof(UtilitySystem):
-                UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
-                utilNode.InitUtilityNode(sender, parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
+                        selectedNode = node;
+                    }
+                    break;
+                case nameof(UtilitySystem):
+                    UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
+                    utilNode.InitUtilityNode(sender, parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
 
-                ((UtilitySystem)parent).nodes.Add(utilNode);
-                break;
+                    ((UtilitySystem)parent).nodes.Add(utilNode);
+                    break;
+            }
         }
 
         return bt;
@@ -415,43 +421,46 @@ public class XMLElement
                 utilSystem.connections.Add(trans.ToTransitionGUI(utilSystem, node1, node2));
         }
 
-        switch (parent.GetType().ToString())
+        if (parent)
         {
-            case nameof(FSM):
-                StateNode state = ScriptableObject.CreateInstance<StateNode>();
-                state.InitStateNodeFromXML(parent, stateType.Unconnected, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, this.Id, this.name, utilSystem);
+            switch (parent.GetType().ToString())
+            {
+                case nameof(FSM):
+                    StateNode state = ScriptableObject.CreateInstance<StateNode>();
+                    state.InitStateNodeFromXML(parent, stateType.Unconnected, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, this.Id, this.name, utilSystem);
 
-                if (this.secondType.Equals(stateType.Entry.ToString()))
-                {
-                    ((FSM)parent).AddEntryState(state);
-                }
-                else
-                {
-                    ((FSM)parent).states.Add(state);
-                }
-                break;
-            case nameof(BehaviourTree):
-                BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
-                node.InitBehaviourNode(parent, behaviourType.Leaf, utilSystem.windowRect.x, utilSystem.windowRect.y, utilSystem);
+                    if (this.secondType.Equals(stateType.Entry.ToString()))
+                    {
+                        ((FSM)parent).AddEntryState(state);
+                    }
+                    else
+                    {
+                        ((FSM)parent).states.Add(state);
+                    }
+                    break;
+                case nameof(BehaviourTree):
+                    BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
+                    node.InitBehaviourNode(parent, behaviourType.Leaf, utilSystem.windowRect.x, utilSystem.windowRect.y, utilSystem);
 
-                ((BehaviourTree)parent).nodes.Add(node);
+                    ((BehaviourTree)parent).nodes.Add(node);
 
-                if (selectedNode != null)
-                {
-                    TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI(parent, selectedNode, node);
+                    if (selectedNode != null)
+                    {
+                        TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
+                        transition.InitTransitionGUI(parent, selectedNode, node);
 
-                    ((BehaviourTree)parent).connections.Add(transition);
+                        ((BehaviourTree)parent).connections.Add(transition);
 
-                    selectedNode = node;
-                }
-                break;
-            case nameof(UtilitySystem):
-                UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
-                utilNode.InitUtilityNode(sender, parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
+                        selectedNode = node;
+                    }
+                    break;
+                case nameof(UtilitySystem):
+                    UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
+                    utilNode.InitUtilityNode(sender, parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
 
-                ((UtilitySystem)parent).nodes.Add(utilNode);
-                break;
+                    ((UtilitySystem)parent).nodes.Add(utilNode);
+                    break;
+            }
         }
 
         return utilSystem;
