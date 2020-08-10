@@ -109,12 +109,12 @@ public class UtilityNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitUtilityNode(NodeEditor sender, ClickableElement parent, utilityType type, float posx, float posy, ClickableElement subElem = null)
+    public void InitUtilityNode(ClickableElement parent, utilityType type, float posx, float posy, ClickableElement subElem = null)
     {
         InitBaseNode(parent);
 
         this.type = type;
-        this.editor = sender;
+        this.editor = EditorWindow.GetWindow<NodeEditor>();
 
         if (subElem != null)
         {
@@ -152,12 +152,12 @@ public class UtilityNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitUtilityNodeFromXML(NodeEditor sender, ClickableElement parent, utilityType type, fusionType fusionType, curveType curveType,
+    public void InitUtilityNodeFromXML(ClickableElement parent, utilityType type, fusionType fusionType, curveType curveType,
         float posx, float posy, string id, string name, float variableMax, float variableMin, float slope, float exp, float displX, float displY, ClickableElement subElem = null)
     {
         InitBaseNode(parent, id);
 
-        this.editor = sender;
+        this.editor = EditorWindow.GetWindow<NodeEditor>();
 
         this.type = type;
         this.fusionType = fusionType;

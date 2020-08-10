@@ -14,6 +14,11 @@ public class TransitionGUI : GUIElement
     public string transitionName = "";
 
     /// <summary>
+    /// Reference to the NodeEditor window
+    /// </summary>
+    public NodeEditor sender;
+
+    /// <summary>
     /// <see cref="BaseNode"/> that this transition comes from
     /// </summary>
     public BaseNode fromNode;
@@ -71,18 +76,20 @@ public class TransitionGUI : GUIElement
     /// <param name="to"></param>
     public void InitTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to)
     {
-        identificator = UniqueID();
+        this.sender = EditorWindow.GetWindow<NodeEditor>();
 
-        transitionName = parent.elementNamer.AddName(identificator, "New Transition ");
+        this.identificator = UniqueID();
 
-        width = baseWidth;
-        height = baseHeight;
+        this.transitionName = parent.elementNamer.AddName(identificator, "New Transition ");
 
-        fromNode = from;
-        toNode = to;
+        this.width = baseWidth;
+        this.height = baseHeight;
 
-        rootPerception = CreateInstance<PerceptionGUI>();
-        rootPerception.InitPerceptionGUI(perceptionType.Push);
+        this.fromNode = from;
+        this.toNode = to;
+
+        this.rootPerception = CreateInstance<PerceptionGUI>();
+        this.rootPerception.InitPerceptionGUI(perceptionType.Push);
     }
 
     /// <summary>
@@ -93,6 +100,8 @@ public class TransitionGUI : GUIElement
     /// <param name="to"></param>
     public void InitTransitionGUIFromXML(ClickableElement parent, BaseNode from, BaseNode to, string id, string name, PerceptionGUI rootPerception, float weight = 1.0f)
     {
+        this.sender = EditorWindow.GetWindow<NodeEditor>();
+
         this.identificator = id;
 
         this.transitionName = parent.elementNamer.AddName(identificator, name);
@@ -187,7 +196,7 @@ public class TransitionGUI : GUIElement
     /// Draws all the elements inside the <see cref="GUIElement.windowRect"/>
     /// </summary>
     /// <param name="parent"></param>
-    public void DrawBox(NodeEditor sender)
+    public void DrawBox()
     {
         if (sender.currentElem is FSM)
         {
@@ -202,7 +211,7 @@ public class TransitionGUI : GUIElement
             GUILayout.BeginArea(areaRect);
             try
             {
-                PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception, sender);
+                PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
             }
             finally
             {
@@ -244,8 +253,7 @@ public class TransitionGUI : GUIElement
     /// <param name="heightAcc"></param>
     /// <param name="widthAcc"></param>
     /// <param name="currentPerception"></param>
-    /// <param name="sender"></param>
-    private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref PerceptionGUI currentPerception, NodeEditor sender)
+    private void PerceptionFoldout(ref int heightAcc, ref int widthAcc, ref PerceptionGUI currentPerception)
     {
         GUILayout.BeginHorizontal();
         GUILayout.Space(10);
@@ -443,17 +451,17 @@ public class TransitionGUI : GUIElement
                         heightAcc += 60;
                         widthAcc += 20;
 
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild, sender);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild);
                         GUILayout.Label("-AND-", Styles.TitleText, GUILayout.Height(20));
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild, sender);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild);
                         break;
                     case perceptionType.Or:
                         heightAcc += 60;
                         widthAcc += 20;
 
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild, sender);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.firstChild);
                         GUILayout.Label("-OR-", Styles.TitleText, GUILayout.Height(20));
-                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild, sender);
+                        PerceptionFoldout(ref heightAcc, ref widthAcc, ref currentPerception.secondChild);
                         break;
                     case perceptionType.Custom:
                         heightAcc += 70;

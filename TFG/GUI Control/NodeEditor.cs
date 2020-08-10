@@ -728,7 +728,7 @@ public class NodeEditor : EditorWindow
                     }
                     if (focusedObjects.Count > 0 && GUIUtility.keyboardControl == 0)
                     {
-                        PopupWindow.InitDelete(this, focusedObjects.ToArray());
+                        PopupWindow.InitDelete(focusedObjects.ToArray());
                         e.Use();
                     }
                     break;
@@ -1625,11 +1625,11 @@ public class NodeEditor : EditorWindow
     {
         if (currentElem is FSM && ((FSM)currentElem).transitions.Count > id - ((FSM)currentElem).states.Count)
         {
-            ((FSM)currentElem).transitions[id - ((FSM)currentElem).states.Count].DrawBox(this);
+            ((FSM)currentElem).transitions[id - ((FSM)currentElem).states.Count].DrawBox();
         }
         if (currentElem is UtilitySystem && ((UtilitySystem)currentElem).connections.Count > id - ((UtilitySystem)currentElem).nodes.Count)
         {
-            ((UtilitySystem)currentElem).connections[id - ((UtilitySystem)currentElem).nodes.Count].DrawBox(this);
+            ((UtilitySystem)currentElem).connections[id - ((UtilitySystem)currentElem).nodes.Count].DrawBox();
         }
 
         GUI.DragWindow();
@@ -1736,7 +1736,7 @@ public class NodeEditor : EditorWindow
         }
         else
         {
-            PopupWindow.InitExport(this);
+            PopupWindow.InitExport();
         }
     }
 
@@ -1773,13 +1773,13 @@ public class NodeEditor : EditorWindow
             switch (loadedXML.elemType)
             {
                 case nameof(FSM):
-                    newElem = loadedXML.ToFSM(element, null, this);
+                    newElem = loadedXML.ToFSM(element, null);
                     break;
                 case nameof(BehaviourTree):
-                    newElem = loadedXML.ToBehaviourTree(element, null, this);
+                    newElem = loadedXML.ToBehaviourTree(element, null);
                     break;
                 case nameof(UtilitySystem):
-                    newElem = loadedXML.ToUtilitySystem(element, null, this);
+                    newElem = loadedXML.ToUtilitySystem(element, null);
                     break;
                 default:
                     Debug.LogError("Wrong content in saved data");
@@ -1885,20 +1885,30 @@ public class NodeEditor : EditorWindow
     /// <param name="start"></param>
     /// <param name="end"></param>
     /// <param name="isFocused"></param>
-    /// <param name="hasCouple"></param>
-    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool hasCouple = false)
+    /// <param name="isDouble"></param>
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isDouble = false)
     {
+        // We add an offset so the start and end points are centered in their respective nodes
+
+        start.x += start.width / 2;
+        start.y += start.height / 2;
+
+        end.x += end.width / 2;
+        end.y += end.height / 2;
+
         // Check which sides to put the curve on
+
         float ang = Vector2.SignedAngle((end.position - start.position), Vector2.right);
-        Vector3 direction = Vector3.up;
+        Vector3 direction = Vector3.right;
 
         if (ang > -45 && ang <= 45)
         {
-            start.x += start.width / 2;
-            end.x -= end.width / 2;
             direction = Vector3.right;
 
-            if (hasCouple)
+            start.x += start.width / 2;
+            end.x -= end.width / 2;
+
+            if (isDouble)
             {
                 start.y += pairTransitionsOffset;
                 end.y += pairTransitionsOffset;
@@ -1906,11 +1916,12 @@ public class NodeEditor : EditorWindow
         }
         else if (ang > 45 && ang <= 135)
         {
-            start.y -= start.height / 2;
-            end.y += end.height / 2;
             direction = Vector3.down;
 
-            if (hasCouple)
+            start.y -= start.height / 2;
+            end.y += end.height / 2;
+
+            if (isDouble)
             {
                 start.x += pairTransitionsOffset;
                 end.x += pairTransitionsOffset;
@@ -1918,11 +1929,12 @@ public class NodeEditor : EditorWindow
         }
         else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
         {
-            start.x -= start.width / 2;
-            end.x += end.width / 2;
             direction = Vector3.left;
 
-            if (hasCouple)
+            start.x -= start.width / 2;
+            end.x += end.width / 2;
+
+            if (isDouble)
             {
                 start.y -= pairTransitionsOffset;
                 end.y -= pairTransitionsOffset;
@@ -1930,11 +1942,12 @@ public class NodeEditor : EditorWindow
         }
         else if (ang > -135 && ang <= -45)
         {
-            start.y += start.height / 2;
-            end.y -= end.height / 2;
             direction = Vector3.up;
 
-            if (hasCouple)
+            start.y += start.height / 2;
+            end.y -= end.height / 2;
+
+            if (isDouble)
             {
                 start.x -= pairTransitionsOffset;
                 end.x -= pairTransitionsOffset;
@@ -1942,10 +1955,9 @@ public class NodeEditor : EditorWindow
         }
 
         // Draw curve
-
         // Curve parameters
-        Vector3 startPos = new Vector3(start.x + start.width / 2, start.y + start.height / 2, 0);
-        Vector3 endPos = new Vector3(end.x + end.width / 2, end.y + end.height / 2, 0);
+        Vector3 startPos = new Vector3(start.x, start.y, 0);
+        Vector3 endPos = new Vector3(end.x, end.y, 0);
         Vector3 startTan = startPos + direction * 50;
         Vector3 endTan = endPos - direction * 50;
 
@@ -1966,16 +1978,22 @@ public class NodeEditor : EditorWindow
 
         // Color
         Color shadowCol = new Color(0, 0, 0, 0.06f);
+
+        // Factor that determines how big the shadow/light of the curve will be
         int focusFactor = 3;
 
+        // If the curve is focused it will look white, and with a bigger shadow to look more bright
         if (isFocused)
         {
             shadowCol = new Color(1, 1, 1, 0.1f);
             focusFactor = 10;
         }
 
+        // Draw the whole thing a number of times with increasing width
+        // so it looks like a shadow when unfocused and like a backlight when focused
         for (int i = 0; i < focusFactor; i++)
         {
+            // Draw the curve
             Handles.DrawBezier(startPos, endPos, startTan, endTan, shadowCol, null, (i + 1) * 5);
 
             // Draw arrow
@@ -1983,6 +2001,8 @@ public class NodeEditor : EditorWindow
             Handles.DrawBezier(pos2, endPos, pos2, endPos, shadowCol, null, (i + 1) * 5);
         }
 
+        // Draw it with width 1 (sharper looking)
+        // Draw the curve
         Handles.DrawBezier(startPos, endPos, startTan, endTan, Color.black, null, 1);
 
         // Draw arrow
@@ -1999,7 +2019,7 @@ public class NodeEditor : EditorWindow
     private void CreateFSM(int nodeIndex, float posX, float posY)
     {
         FSM newFSM = CreateInstance<FSM>();
-        newFSM.InitFSM(this, currentElem, posX, posY);
+        newFSM.InitFSM(currentElem, posX, posY);
 
         if (currentElem is null)
         {
@@ -2038,7 +2058,7 @@ public class NodeEditor : EditorWindow
             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
             UtilityNode node = CreateInstance<UtilityNode>();
-            node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newFSM);
+            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newFSM);
 
             ((UtilitySystem)currentElem).nodes.Add(node);
         }
@@ -2053,7 +2073,7 @@ public class NodeEditor : EditorWindow
     private void CreateBT(int nodeIndex, float posX, float posY)
     {
         BehaviourTree newBT = CreateInstance<BehaviourTree>();
-        newBT.InitBehaviourTree(this, currentElem, posX, posY);
+        newBT.InitBehaviourTree(currentElem, posX, posY);
 
         if (!string.IsNullOrEmpty(name))
         {
@@ -2097,7 +2117,7 @@ public class NodeEditor : EditorWindow
             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
             UtilityNode node = CreateInstance<UtilityNode>();
-            node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newBT);
+            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newBT);
 
             ((UtilitySystem)currentElem).nodes.Add(node);
         }
@@ -2112,7 +2132,7 @@ public class NodeEditor : EditorWindow
     private void CreateUS(int nodeIndex, float posX, float posY)
     {
         UtilitySystem newUS = CreateInstance<UtilitySystem>();
-        newUS.InitUtilitySystem(this, currentElem, posX, posY);
+        newUS.InitUtilitySystem(currentElem, posX, posY);
 
         if (!string.IsNullOrEmpty(name))
         {
@@ -2156,7 +2176,7 @@ public class NodeEditor : EditorWindow
             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
             UtilityNode node = CreateInstance<UtilityNode>();
-            node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY, newUS);
+            node.InitUtilityNode(currentElem, utilityType.Action, posX, posY, newUS);
 
             ((UtilitySystem)currentElem).nodes.Add(node);
         }
@@ -2262,7 +2282,7 @@ public class NodeEditor : EditorWindow
     private void CreateVariable(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(this, currentElem, utilityType.Variable, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Variable, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2278,7 +2298,7 @@ public class NodeEditor : EditorWindow
     private void CreateFusion(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(this, currentElem, utilityType.Fusion, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Fusion, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2296,7 +2316,7 @@ public class NodeEditor : EditorWindow
         NodeEditorUtilities.GenerateUndoStep(currentElem);
 
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(this, currentElem, utilityType.Action, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Action, posX, posY);
 
         ((UtilitySystem)currentElem).nodes.Add(node);
     }
@@ -2310,7 +2330,7 @@ public class NodeEditor : EditorWindow
     private void CreateCurve(int nodeIndex, float posX = 50, float posY = 50)
     {
         UtilityNode node = CreateInstance<UtilityNode>();
-        node.InitUtilityNode(this, currentElem, utilityType.Curve, posX, posY);
+        node.InitUtilityNode(currentElem, utilityType.Curve, posX, posY);
 
         selectednode = ((UtilitySystem)currentElem).nodes[nodeIndex];
         toCreateNode = node;
@@ -2384,22 +2404,22 @@ public class NodeEditor : EditorWindow
     {
         if (currentElem is FSM)
         {
-            PopupWindow.InitDelete(this, ((FSM)currentElem).states[selectIndex]);
+            PopupWindow.InitDelete(((FSM)currentElem).states[selectIndex]);
         }
 
         if (currentElem is BehaviourTree)
         {
-            PopupWindow.InitDelete(this, ((BehaviourTree)currentElem).nodes[selectIndex]);
+            PopupWindow.InitDelete(((BehaviourTree)currentElem).nodes[selectIndex]);
         }
 
         if (currentElem is UtilitySystem)
         {
-            PopupWindow.InitDelete(this, ((UtilitySystem)currentElem).nodes[selectIndex]);
+            PopupWindow.InitDelete(((UtilitySystem)currentElem).nodes[selectIndex]);
         }
 
         if (currentElem is null)
         {
-            PopupWindow.InitDelete(this, Elements[selectIndex]);
+            PopupWindow.InitDelete(Elements[selectIndex]);
         }
     }
 
@@ -2408,7 +2428,7 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void DeleteTransition(int selectIndex)
     {
-        PopupWindow.InitDelete(this, ((FSM)currentElem).transitions[selectIndex]);
+        PopupWindow.InitDelete(((FSM)currentElem).transitions[selectIndex]);
     }
 
     /// <summary>
@@ -2795,7 +2815,7 @@ public class NodeEditor : EditorWindow
                             currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                             newElem = CreateInstance<UtilityNode>();
-                            newElem.InitUtilityNode(this, currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                            newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
                         }
                         else
                         {
@@ -2810,7 +2830,7 @@ public class NodeEditor : EditorWindow
                                 ((BaseNode)elem).parent = currentElem;
 
                                 newElem = CreateInstance<UtilityNode>();
-                                newElem.InitUtilityNode(this, currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
                             }
                         }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class FSM : ClickableElement
 {
@@ -39,11 +40,11 @@ public class FSM : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitFSM(NodeEditor editor, ClickableElement parent, float posx, float posy)
+    public void InitFSM(ClickableElement parent, float posx, float posy)
     {
         InitClickableElement();
 
-        this.editor = editor;
+        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -68,11 +69,11 @@ public class FSM : ClickableElement
     /// <param name="parent"></param>
     /// <param name="posx"></param>
     /// <param name="posy"></param>
-    public void InitFSMFromXML(NodeEditor editor, ClickableElement parent, float posx, float posy, string id, string name)
+    public void InitFSMFromXML(ClickableElement parent, float posx, float posy, string id, string name)
     {
         InitClickableElement(id);
 
-        this.editor = editor;
+        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -218,17 +219,17 @@ public class FSM : ClickableElement
             if (elem.fromNode is null || elem.toNode is null)
                 break;
 
-            bool hasCouple = false;
+            bool isDouble = false;
 
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
             if (transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
             {
-                hasCouple = true;
+                isDouble = true;
             }
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), hasCouple);
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), isDouble);
         }
     }
 

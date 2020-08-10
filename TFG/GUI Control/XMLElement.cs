@@ -139,23 +139,23 @@ public class XMLElement
     /// <param name="parent"></param>
     /// <param name="selectedNode"></param>
     /// <returns></returns>
-    public FSM ToFSM(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
+    public FSM ToFSM(ClickableElement parent, BaseNode selectedNode = null)
     {
         FSM fsm = ScriptableObject.CreateInstance<FSM>();
-        fsm.InitFSMFromXML(sender, parent, this.windowPosX, this.windowPosY, this.Id, this.name);
+        fsm.InitFSMFromXML(parent, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         foreach (XMLElement node in this.nodes)
         {
             switch (node.elemType)
             {
                 case nameof(FSM):
-                    node.ToFSM(fsm, null, sender);
+                    node.ToFSM(fsm, null);
                     break;
                 case nameof(BehaviourTree):
-                    node.ToBehaviourTree(fsm, null, sender);
+                    node.ToBehaviourTree(fsm, null);
                     break;
                 case nameof(UtilitySystem):
-                    node.ToUtilitySystem(fsm, null, sender);
+                    node.ToUtilitySystem(fsm, null);
                     break;
                 case nameof(StateNode):
                     StateNode state = node.ToStateNode(fsm);
@@ -218,7 +218,7 @@ public class XMLElement
                     break;
                 case nameof(UtilitySystem):
                     UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
-                    utilNode.InitUtilityNode(sender, parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
+                    utilNode.InitUtilityNode(parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
 
                     ((UtilitySystem)parent).nodes.Add(utilNode);
                     break;
@@ -259,28 +259,27 @@ public class XMLElement
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="selectedNode"></param>
-    /// <param name="sender"></param>
     /// <returns></returns>
-    public BehaviourTree ToBehaviourTree(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
+    public BehaviourTree ToBehaviourTree(ClickableElement parent, BaseNode selectedNode = null)
     {
         BehaviourTree bt = ScriptableObject.CreateInstance<BehaviourTree>();
-        bt.InitBehaviourTreeFromXML(sender, parent, this.windowPosX, this.windowPosY, this.Id, this.name);
+        bt.InitBehaviourTreeFromXML(parent, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         foreach (XMLElement node in this.nodes)
         {
             switch (node.elemType)
             {
                 case nameof(FSM):
-                    node.ToFSM(bt, null, sender);
+                    node.ToFSM(bt, null);
                     break;
                 case nameof(BehaviourTree):
-                    node.ToBehaviourTree(bt, null, sender);
+                    node.ToBehaviourTree(bt, null);
                     break;
                 case nameof(UtilitySystem):
-                    node.ToUtilitySystem(bt, null, sender);
+                    node.ToUtilitySystem(bt, null);
                     break;
                 case nameof(BehaviourNode):
-                    node.ToBehaviourNode(null, bt, parent, sender);
+                    node.ToBehaviourNode(null, bt, parent);
                     break;
                 default:
                     Debug.LogError("Wrong content in saved data");
@@ -323,7 +322,7 @@ public class XMLElement
                     break;
                 case nameof(UtilitySystem):
                     UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
-                    utilNode.InitUtilityNode(sender, parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
+                    utilNode.InitUtilityNode(parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
 
                     ((UtilitySystem)parent).nodes.Add(utilNode);
                     break;
@@ -339,15 +338,15 @@ public class XMLElement
     /// <param name="selectedNode"></param>
     /// <param name="currentTree"></param>
     /// <param name="currentElement"></param>
-    public void ToBehaviourNode(BaseNode selectedNode, BehaviourTree currentTree, ClickableElement currentElement, NodeEditor sender = null)
+    public void ToBehaviourNode(BaseNode selectedNode, BehaviourTree currentTree, ClickableElement currentElement)
     {
         switch (this.elemType)
         {
             case nameof(FSM):
-                this.ToFSM(currentElement, selectedNode, sender);
+                this.ToFSM(currentElement, selectedNode);
                 break;
             case nameof(BehaviourTree):
-                this.ToBehaviourTree(currentElement, selectedNode, sender);
+                this.ToBehaviourTree(currentElement, selectedNode);
                 break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
@@ -369,7 +368,7 @@ public class XMLElement
 
                 foreach (XMLElement childState in this.nodes)
                 {
-                    childState.ToBehaviourNode(nodeBT, currentTree, currentTree, sender);
+                    childState.ToBehaviourNode(nodeBT, currentTree, currentTree);
                 }
                 break;
             default:
@@ -384,26 +383,26 @@ public class XMLElement
     /// <param name="parent"></param>
     /// <param name="selectedNode"></param>
     /// <returns></returns>
-    public UtilitySystem ToUtilitySystem(ClickableElement parent, BaseNode selectedNode = null, NodeEditor sender = null)
+    public UtilitySystem ToUtilitySystem(ClickableElement parent, BaseNode selectedNode = null)
     {
         UtilitySystem utilSystem = ScriptableObject.CreateInstance<UtilitySystem>();
-        utilSystem.InitUtilitySystemFromXML(sender, parent, this.windowPosX, this.windowPosY, this.Id, this.name);
+        utilSystem.InitUtilitySystemFromXML(parent, this.windowPosX, this.windowPosY, this.Id, this.name);
 
         foreach (XMLElement node in this.nodes)
         {
             switch (node.elemType)
             {
                 case nameof(FSM):
-                    node.ToFSM(utilSystem, null, sender);
+                    node.ToFSM(utilSystem, null);
                     break;
                 case nameof(BehaviourTree):
-                    node.ToBehaviourTree(utilSystem, null, sender);
+                    node.ToBehaviourTree(utilSystem, null);
                     break;
                 case nameof(UtilitySystem):
-                    node.ToUtilitySystem(utilSystem, null, sender);
+                    node.ToUtilitySystem(utilSystem, null);
                     break;
                 case nameof(UtilityNode):
-                    UtilityNode state = node.ToUtilityNode(utilSystem, sender);
+                    UtilityNode state = node.ToUtilityNode(utilSystem);
 
                     utilSystem.nodes.Add(state);
                     break;
@@ -456,7 +455,7 @@ public class XMLElement
                     break;
                 case nameof(UtilitySystem):
                     UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
-                    utilNode.InitUtilityNode(sender, parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
+                    utilNode.InitUtilityNode(parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
 
                     ((UtilitySystem)parent).nodes.Add(utilNode);
                     break;
@@ -470,10 +469,10 @@ public class XMLElement
     /// Creates and returns the <see cref="StateNode"/> corresponding to this <see cref="XMLElement"/>
     /// </summary>
     /// <returns></returns>
-    public UtilityNode ToUtilityNode(UtilitySystem parent, NodeEditor sender)
+    public UtilityNode ToUtilityNode(UtilitySystem parent)
     {
         UtilityNode node = ScriptableObject.CreateInstance<UtilityNode>();
-        node.InitUtilityNodeFromXML(sender, parent, (utilityType)Enum.Parse(typeof(utilityType), this.secondType),
+        node.InitUtilityNodeFromXML(parent, (utilityType)Enum.Parse(typeof(utilityType), this.secondType),
             (fusionType)Enum.Parse(typeof(fusionType), this.thirdType),
             (curveType)Enum.Parse(typeof(curveType), this.fourthType),
             this.windowPosX, this.windowPosY, this.Id, this.name, this.variableMax, this.variableMin, this.slope, this.exp, this.displX, this.displY);

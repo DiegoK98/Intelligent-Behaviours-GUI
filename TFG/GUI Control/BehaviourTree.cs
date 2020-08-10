@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class BehaviourTree : ClickableElement
@@ -24,11 +25,11 @@ public class BehaviourTree : ClickableElement
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="id"></param>
-    public void InitBehaviourTree(NodeEditor editor, ClickableElement parent, float posx, float posy)
+    public void InitBehaviourTree(ClickableElement parent, float posx, float posy)
     {
         InitClickableElement();
 
-        this.editor = editor;
+        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -47,11 +48,11 @@ public class BehaviourTree : ClickableElement
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="id"></param>
-    public void InitBehaviourTreeFromXML(NodeEditor editor, ClickableElement parent, float posx, float posy, string id, string name)
+    public void InitBehaviourTreeFromXML(ClickableElement parent, float posx, float posy, string id, string name)
     {
         InitClickableElement(id);
 
-        this.editor = editor;
+        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)

@@ -45,12 +45,11 @@ public class PopupWindow : EditorWindow
     /// <summary>
     /// Initializer for the <see cref="PopupWindow"/> when deleting a <see cref="GUIElement"/>
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="focusedElems"></param>
     /// <param name="type"></param>
-    public static void InitDelete(NodeEditor sender, params GUIElement[] focusedElems)
+    public static void InitDelete(params GUIElement[] focusedElems)
     {
-        senderEditor = sender;
+        senderEditor = EditorWindow.GetWindow<NodeEditor>();
 
         PopupType = typeOfPopup.Delete;
 
@@ -66,17 +65,16 @@ public class PopupWindow : EditorWindow
     /// <summary>
     /// Initializer for the <see cref="PopupWindow"/> when failed at exporting a <see cref="ClickableElement"/>
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="focusElem"></param>
     /// <param name="type"></param>
-    public static void InitExport(NodeEditor sender)
+    public static void InitExport()
     {
-        senderEditor = sender;
+        senderEditor = EditorWindow.GetWindow<NodeEditor>();
 
         PopupType = typeOfPopup.FailedExport;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
-        window.position = new Rect(sender.position.center.x - width / 2, sender.position.center.y - height / 2, width, height);
+        window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
         window.ShowPopup();
     }
 
