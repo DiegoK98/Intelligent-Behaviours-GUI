@@ -121,14 +121,19 @@ public class NodeEditorUtilities
     static readonly string subUSEnding = "_SubUS";
 
     /// <summary>
+    /// Name of the GUI package folder
+    /// </summary>
+    static readonly string GUIpackageName = "Intelligent Behaviours GUI Package";
+
+    /// <summary>
     /// Name for the saves Folder
     /// </summary>
-    static readonly string savesFolderName = "Saves (Intelligent Behaviours)";
+    static readonly string savesFolderName = "Saves";
 
     /// <summary>
     /// Name for the scripts Folder
     /// </summary>
-    static readonly string scriptsFolderName = "Scripts (Intelligent Behaviours)";
+    static readonly string scriptsFolderName = "Scripts";
 
     /// <summary>
     /// Name for the undo steps folder
@@ -157,9 +162,16 @@ public class NodeEditorUtilities
     {
         get
         {
-            string path = Application.dataPath + "/" + undoStepsFolder;
-            string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
-            return files.Count();
+            string path = "Assets/" + GUIpackageName + "/" + undoStepsFolder;
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
+                return files.Count();
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 
@@ -170,9 +182,16 @@ public class NodeEditorUtilities
     {
         get
         {
-            string path = Application.dataPath + "/" + redoStepsFolder;
-            string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
-            return files.Count();
+            string path = "Assets/" + GUIpackageName + "/" + redoStepsFolder;
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
+                return files.Count();
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 
@@ -206,11 +225,14 @@ public class NodeEditorUtilities
         }
         string templatePath = AssetDatabase.GUIDToAssetPath(guids[0]);
 
-        // Create Asset
-        if (!AssetDatabase.IsValidFolder("Assets/" + scriptsFolderName))
-            AssetDatabase.CreateFolder("Assets", scriptsFolderName);
+        string basePath = "Assets/" + GUIpackageName;
+        string fullPath = basePath + "/" + scriptsFolderName;
 
-        string scriptPath = EditorUtility.SaveFilePanel("Select a folder for the script", "Assets/" + scriptsFolderName, CleanName(elem.elementName) + ".cs", "CS");
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder(fullPath))
+            AssetDatabase.CreateFolder(basePath, scriptsFolderName);
+
+        string scriptPath = EditorUtility.SaveFilePanel("Select a folder for the script", fullPath, CleanName(elem.elementName) + ".cs", "CS");
 
         if (!string.IsNullOrEmpty(scriptPath))
         {
@@ -226,11 +248,14 @@ public class NodeEditorUtilities
     /// <param name="elem"></param>
     public static void GenerateElemXMLFile(ClickableElement elem)
     {
-        // Create Asset
-        if (!AssetDatabase.IsValidFolder("Assets/" + savesFolderName))
-            AssetDatabase.CreateFolder("Assets", savesFolderName);
+        string basePath = "Assets/" + GUIpackageName;
+        string fullPath = basePath + "/" + savesFolderName;
 
-        string path = EditorUtility.SaveFilePanel("Select a folder for the save file", "Assets/" + savesFolderName, CleanName(elem.elementName) + "_savedData.xml", "XML");
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder(fullPath))
+            AssetDatabase.CreateFolder(basePath, savesFolderName);
+
+        string path = EditorUtility.SaveFilePanel("Select a folder for the save file", fullPath, CleanName(elem.elementName) + "_savedData.xml", "XML");
 
         if (!string.IsNullOrEmpty(path))
         {
@@ -252,12 +277,14 @@ public class NodeEditorUtilities
         if (elem is null) // For now
             return;
 
-        // Create Asset
-        if (!AssetDatabase.IsValidFolder("Assets/" + undoStepsFolder))
-            AssetDatabase.CreateFolder("Assets", undoStepsFolder);
+        string basePath = "Assets/" + GUIpackageName;
+        string path = basePath + "/" + undoStepsFolder;
 
-        // Generate the path
-        string path = Application.dataPath + "/" + undoStepsFolder;
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder(path))
+            AssetDatabase.CreateFolder(basePath, undoStepsFolder);
+
+        // Generate the file
         string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
         int numOfStepsSaved = files.Count();
         string fullPath = path + "/current_step" + numOfStepsSaved + ".xml";
@@ -293,12 +320,14 @@ public class NodeEditorUtilities
         if (elem is null) // For now
             return;
 
-        // Create Asset
-        if (!AssetDatabase.IsValidFolder("Assets/" + redoStepsFolder))
-            AssetDatabase.CreateFolder("Assets", redoStepsFolder);
+        string basePath = "Assets/" + GUIpackageName;
+        string path = basePath + "/" + redoStepsFolder;
 
-        // Generate the path
-        string path = Application.dataPath + "/" + redoStepsFolder;
+        // Create Asset
+        if (!AssetDatabase.IsValidFolder(path))
+            AssetDatabase.CreateFolder(basePath, redoStepsFolder);
+
+        // Generate the file
         string[] files = Directory.GetFiles(path).Where(s => s.EndsWith(".xml")).ToArray();
         int numOfStepsSaved = files.Count();
         string fullPath = path + "/current_step" + numOfStepsSaved + ".xml";
@@ -330,7 +359,7 @@ public class NodeEditorUtilities
     /// <returns></returns>
     public static XMLElement LoadSavedData()
     {
-        string path = EditorUtility.OpenFilePanel("Open a save file", "Assets/Intelligent Behaviours Saves", "XML");
+        string path = EditorUtility.OpenFilePanel("Open a save file", "Assets/" + GUIpackageName + "/" + savesFolderName, "XML");
 
         if (string.IsNullOrEmpty(path))
             return null;
@@ -346,7 +375,7 @@ public class NodeEditorUtilities
     {
         // Get last step path
         string path;
-        string[] files = Directory.GetFiles(Application.dataPath + "/" + undoStepsFolder).Where(s => s.EndsWith(".xml")).ToArray();
+        string[] files = Directory.GetFiles("Assets/" + GUIpackageName + "/" + undoStepsFolder).Where(s => s.EndsWith(".xml")).ToArray();
 
         Dictionary<string, DateTime> dates = new Dictionary<string, DateTime>();
 
@@ -380,7 +409,7 @@ public class NodeEditorUtilities
     {
         // Get last step path
         string path;
-        string[] files = Directory.GetFiles(Application.dataPath + "/" + redoStepsFolder).Where(s => s.EndsWith(".xml")).ToArray();
+        string[] files = Directory.GetFiles("Assets/" + GUIpackageName + "/" + redoStepsFolder).Where(s => s.EndsWith(".xml")).ToArray();
 
         Dictionary<string, DateTime> dates = new Dictionary<string, DateTime>();
 
@@ -413,9 +442,11 @@ public class NodeEditorUtilities
     {
         ClearRedoSteps();
 
-        if (AssetDatabase.IsValidFolder("Assets/" + undoStepsFolder))
+        string path = "Assets/" + GUIpackageName + "/" + undoStepsFolder;
+
+        if (AssetDatabase.IsValidFolder(path))
         {
-            string[] files = Directory.GetFiles(Application.dataPath + "/" + undoStepsFolder);
+            string[] files = Directory.GetFiles(path);
 
             foreach (string file in files)
             {
@@ -429,9 +460,11 @@ public class NodeEditorUtilities
     /// </summary>
     public static void ClearRedoSteps()
     {
-        if (AssetDatabase.IsValidFolder("Assets/" + redoStepsFolder))
+        string path = "Assets/" + GUIpackageName + "/" + redoStepsFolder;
+
+        if (AssetDatabase.IsValidFolder(path))
         {
-            string[] files = Directory.GetFiles(Application.dataPath + "/" + redoStepsFolder);
+            string[] files = Directory.GetFiles(path);
 
             foreach (string file in files)
             {
