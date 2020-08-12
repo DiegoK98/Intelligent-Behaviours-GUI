@@ -1321,7 +1321,6 @@ public class NodeEditor : EditorWindow
         var isCut = cutObjects.Contains(elem);
         Color col = Color.white;
         Texture2D originalTexture = null;
-        int type;
 
         switch (elem.GetType().ToString())
         {
@@ -1345,22 +1344,22 @@ public class NodeEditor : EditorWindow
 
             // FSM Node
             case nameof(StateNode):
-                type = (int)((StateNode)elem).type;
+                stateType StType = ((StateNode)elem).type;
 
                 // Nodo normal
                 if (((StateNode)elem).subElem == null)
                 {
-                    switch (type)
+                    switch (StType)
                     {
-                        case 0:
+                        case stateType.Default:
                             originalTexture = Resources.Load<Texture2D>("Def_Node_Rect");
                             col = Color.grey;
                             break;
-                        case 1:
+                        case stateType.Entry:
                             originalTexture = Resources.Load<Texture2D>("Entry_Rect");
                             col = Color.green;
                             break;
-                        case 2:
+                        case stateType.Unconnected:
                             originalTexture = Resources.Load<Texture2D>("Unconnected_Node_Rect");
                             col = Color.red;
                             break;
@@ -1372,17 +1371,17 @@ public class NodeEditor : EditorWindow
                 // Nodo con sub-elemento
                 else
                 {
-                    switch (type)
+                    switch (StType)
                     {
-                        case 0:
+                        case stateType.Default:
                             originalTexture = Resources.Load<Texture2D>("Def_Sub_Rect");
                             col = Color.grey;
                             break;
-                        case 1:
+                        case stateType.Entry:
                             originalTexture = Resources.Load<Texture2D>("Entry_Sub_Rect");
                             col = Color.green;
                             break;
-                        case 2:
+                        case stateType.Unconnected:
                             originalTexture = Resources.Load<Texture2D>("Unconnected_Sub_Rect");
                             col = Color.red;
                             break;
@@ -1395,19 +1394,19 @@ public class NodeEditor : EditorWindow
 
             // BehaviourNode
             case nameof(BehaviourNode):
-                type = (int)((BehaviourNode)elem).type;
+                behaviourType BNType = ((BehaviourNode)elem).type;
 
-                switch (type)
+                switch (BNType)
                 {
-                    case 0:
+                    case behaviourType.Sequence:
                         originalTexture = Resources.Load<Texture2D>("Sequence_Rect");
                         col = Color.yellow;
                         break;
-                    case 1:
+                    case behaviourType.Selector:
                         originalTexture = Resources.Load<Texture2D>("Selector_Rect");
                         col = new Color(1, 0.5f, 0, 1); //orange
                         break;
-                    case 2:
+                    case behaviourType.Leaf:
                         if (((BehaviourNode)elem).subElem == null) //Es un nodo normal
                         {
                             originalTexture = Resources.Load<Texture2D>("Leaf_Rect");
@@ -1418,12 +1417,12 @@ public class NodeEditor : EditorWindow
                         }
                         col = new Color(0, 0.75f, 0, 1); //dark green
                         break;
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
+                    case behaviourType.LoopN:
+                    case behaviourType.LoopUntilFail:
+                    case behaviourType.Inverter:
+                    case behaviourType.DelayT:
+                    case behaviourType.Succeeder:
+                    case behaviourType.Conditional:
                         originalTexture = Resources.Load<Texture2D>("Decorator_Rect"); //Hacer un rombo gris
                                                                                        //col = Color.grey;
                         break;
@@ -1435,19 +1434,19 @@ public class NodeEditor : EditorWindow
 
             // UtilityNode
             case nameof(UtilityNode):
-                type = (int)((UtilityNode)elem).type;
+                utilityType UNType = ((UtilityNode)elem).type;
 
-                switch (type)
+                switch (UNType)
                 {
-                    case 0:
+                    case utilityType.Variable:
                         originalTexture = Resources.Load<Texture2D>("Variable_Rect");
                         col = new Color(1, 0.5f, 0, 1); //orange
                         break;
-                    case 1:
+                    case utilityType.Fusion:
                         originalTexture = Resources.Load<Texture2D>("Fusion_Rect");
                         col = Color.yellow;
                         break;
-                    case 2:
+                    case utilityType.Action:
                         if (((UtilityNode)elem).subElem == null) //Es un nodo normal
                         {
                             originalTexture = Resources.Load<Texture2D>("Leaf_Rect");
@@ -1458,8 +1457,7 @@ public class NodeEditor : EditorWindow
                         }
                         col = new Color(0, 0.75f, 0, 1); //dark green
                         break;
-                    case 3:
-                    case 4:
+                    case utilityType.Curve:
                         if (((UtilityNode)elem).openFoldout)
                         {
                             originalTexture = Resources.Load<Texture2D>("Curve_Rect_Unfolded");
@@ -2213,7 +2211,7 @@ public class NodeEditor : EditorWindow
     private void CreateSequence(int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(currentElem, 0, posX, posY);
+        node.InitBehaviourNode(currentElem, behaviourType.Sequence, posX, posY);
 
         if (nodeIndex > -1)
         {
@@ -2239,7 +2237,7 @@ public class NodeEditor : EditorWindow
     private void CreateSelector(int nodeIndex, float posX = 50, float posY = 50)
     {
         BehaviourNode node = CreateInstance<BehaviourNode>();
-        node.InitBehaviourNode(currentElem, behaviourType.Sequence, posX, posY);
+        node.InitBehaviourNode(currentElem, behaviourType.Selector, posX, posY);
 
         if (nodeIndex > -1)
         {
