@@ -106,7 +106,7 @@ public class BehaviourTree : ClickableElement
         };
 
         ((BehaviourTree)result).nodes = this.nodes.Select(o => (BehaviourNode)o.CopyElement(result)).ToList();
-        ((BehaviourTree)result).connections = this.connections.Select(o => 
+        ((BehaviourTree)result).connections = this.connections.Select(o =>
         (TransitionGUI)o.CopyElement(((BehaviourTree)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
                                      ((BehaviourTree)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
@@ -191,7 +191,7 @@ public class BehaviourTree : ClickableElement
     /// <summary>
     /// Returns how many children <paramref name="node"/> has
     /// </summary>
-    /// <param name="i"></param>
+    /// <param name="node"></param>
     /// <returns>The number of children <paramref name="node"/> has</returns>
     public int ChildrenCount(BehaviourNode node)
     {
@@ -203,6 +203,42 @@ public class BehaviourTree : ClickableElement
         }
 
         return res;
+    }
+
+    /// <summary>
+    /// Return true if the root node is not a good type for being a root
+    /// </summary>
+    /// <param name="i"></param>
+    /// <returns>The number of children <paramref name="paramNode"/> has</returns>
+    public bool BadRootCheck(BehaviourNode paramNode = null)
+    {
+        BehaviourNode node;
+
+        if (paramNode)
+        {
+            node = paramNode;
+        }
+        else
+        {
+            node = nodes.Where(n => n.isRoot).FirstOrDefault();
+            if (!node)
+            {
+                return false;
+            }
+        }
+
+        if (node.type == behaviourType.Leaf)
+            return true;
+
+        if (node.type < behaviourType.Leaf)
+            return false;
+
+        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+        {
+            return BadRootCheck((BehaviourNode)transition.toNode);
+        }
+
+        return false;
     }
 
     /// <summary>

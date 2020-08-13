@@ -5,6 +5,18 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 
+public enum perceptionType
+{
+    Push,
+    Timer,
+    Value,
+    IsInState,
+    BehaviourTreeStatus,
+    And,
+    Or,
+    Custom
+}
+
 public class PerceptionGUI : GUIElement
 {
     /// <summary>

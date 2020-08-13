@@ -4,6 +4,13 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
+public enum stateType
+{
+    Default,
+    Entry,
+    Unconnected
+}
+
 public class StateNode : BaseNode
 {
     /// <summary>

@@ -183,7 +183,25 @@ public class NodeEditor : EditorWindow
         if (currentElem is FSM)
         {
             ((FSM)currentElem).DrawCurves();
+        }
 
+        if (currentElem is BehaviourTree)
+        {
+            ((BehaviourTree)currentElem).DrawCurves();
+        }
+
+        if (currentElem is UtilitySystem)
+        {
+            ((UtilitySystem)currentElem).DrawCurves();
+        }
+
+        #endregion
+
+        // Check for errors or warnings and add them to the list
+        #region Errors and Warnings Control
+
+        if (currentElem is FSM)
+        {
             if (!((FSM)currentElem).HasEntryState)
             {
                 currentElem.AddError(Error.NoEntryState);
@@ -205,8 +223,6 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is BehaviourTree)
         {
-            ((BehaviourTree)currentElem).DrawCurves();
-
             if (((BehaviourTree)currentElem).nodes.Where(n => n.isRoot).Count() > 1)
             {
                 currentElem.AddError(Error.MoreThanOneRoot);
@@ -215,12 +231,19 @@ public class NodeEditor : EditorWindow
             {
                 currentElem.RemoveError(Error.MoreThanOneRoot);
             }
+
+            if (((BehaviourTree)currentElem).BadRootCheck())
+            {
+                currentElem.AddWarning(Warning.LeafIsRoot);
+            }
+            else
+            {
+                currentElem.RemoveWarning(Warning.LeafIsRoot);
+            }
         }
 
         if (currentElem is UtilitySystem)
         {
-            ((UtilitySystem)currentElem).DrawCurves();
-
             if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Action && !((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n))))
             {
                 currentElem.AddWarning(Warning.NoFactors);
@@ -1067,11 +1090,6 @@ public class NodeEditor : EditorWindow
                 if (currentElem.CheckNameExisting(transition.transitionName, 1))
                     repeatedNames = true;
             }
-
-            if (repeatedNames)
-                currentElem.AddError(Error.RepeatedName);
-            else
-                currentElem.RemoveError(Error.RepeatedName);
         }
         else if (currentElem is BehaviourTree)
         {
@@ -1080,11 +1098,6 @@ public class NodeEditor : EditorWindow
                 if (currentElem.CheckNameExisting(node.nodeName, 1))
                     repeatedNames = true;
             }
-
-            if (repeatedNames)
-                currentElem.AddError(Error.RepeatedName);
-            else
-                currentElem.RemoveError(Error.RepeatedName);
         }
         else if (currentElem is UtilitySystem)
         {
@@ -1093,12 +1106,12 @@ public class NodeEditor : EditorWindow
                 if (currentElem.CheckNameExisting(node.nodeName, 1))
                     repeatedNames = true;
             }
-
-            if (repeatedNames)
-                currentElem.AddError(Error.RepeatedName);
-            else
-                currentElem.RemoveError(Error.RepeatedName);
         }
+
+        if (repeatedNames)
+            currentElem.AddError(Error.RepeatedName);
+        else if (currentElem)
+            currentElem.RemoveError(Error.RepeatedName);
 
         Repaint();
 
@@ -1728,7 +1741,7 @@ public class NodeEditor : EditorWindow
     /// </summary>
     void ExportCode(object elem)
     {
-        if (((ClickableElement)elem).GetErrors().Count == 0)
+        if (((ClickableElement)elem).GetErrors().Count != -1)
         {
             NodeEditorUtilities.GenerateElemScript((ClickableElement)elem);
         }
@@ -2503,7 +2516,7 @@ public class NodeEditor : EditorWindow
         {
             if ((int)warning.Value > currentPriority)
             {
-                maxPriorityErrorOrWarning = Enums.WarningToString(warning.Value, warning.Key);
+                maxPriorityErrorOrWarning = ConsoleLogs.WarningToString(warning.Value, warning.Key);
                 currentPriority = (int)warning.Value;
             }
         }
@@ -2516,7 +2529,7 @@ public class NodeEditor : EditorWindow
             if ((int)error.Value > currentPriority)
             {
                 errorShown = true;
-                maxPriorityErrorOrWarning = Enums.ErrorToString(error.Value, error.Key);
+                maxPriorityErrorOrWarning = ConsoleLogs.ErrorToString(error.Value, error.Key);
                 currentPriority = (int)error.Value;
             }
         }

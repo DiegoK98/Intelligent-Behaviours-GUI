@@ -1471,7 +1471,16 @@ public class NodeEditorUtilities
             string nodeName = CleanName(node.nodeName);
 
             UtilityNode prevFactor = node.GetWeightsAndFactors().Select(k => k.Value).FirstOrDefault();
-            string prevFactorName = CleanName(prevFactor.nodeName);
+            string prevFactorName;
+
+            if (prevFactor)
+            {
+                prevFactorName = CleanName(prevFactor.nodeName);
+            }
+            else
+            {
+                prevFactorName = "null";
+            }
 
             if (node.subElem is null)
             {

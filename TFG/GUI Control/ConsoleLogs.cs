@@ -4,8 +4,6 @@ using UnityEngine;
 
 public enum Error
 {
-    //The higher the number, the higher its priority
-    // Number must be unique
     NoEntryState = 4,
     MoreThanOneRoot = 3,
     RepeatedName = 2
@@ -13,31 +11,13 @@ public enum Error
 
 public enum Warning
 {
+    LeafIsRoot = 4,
     NoFactors = 3,
-    WeightZero = 2,
-    UnconnectedNode = 1
+    UnconnectedNode = 2,
+    WeightZero = 1,
 }
 
-public enum stateType
-{
-    Default,
-    Entry,
-    Unconnected
-}
-
-public enum perceptionType
-{
-    Push,
-    Timer,
-    Value,
-    IsInState,
-    BehaviourTreeStatus,
-    And,
-    Or,
-    Custom
-}
-
-public class Enums
+public class ConsoleLogs
 {
     /// <summary>
     /// Transforms the <paramref name="error"/> into a pre-defined message
@@ -53,11 +33,11 @@ public class Enums
             case Error.NoEntryState:
                 prompt += "You can't have a FSM without an Entry State";
                 break;
-            case Error.RepeatedName:
-                prompt += "You can't have two elements with the same name";
-                break;
             case Error.MoreThanOneRoot:
                 prompt += "You can't have a BT with more than one Root";
+                break;
+            case Error.RepeatedName:
+                prompt += "You can't have two elements with the same name";
                 break;
             default:
                 prompt += "Unknown error :(";
@@ -79,14 +59,17 @@ public class Enums
 
         switch (warning)
         {
+            case Warning.LeafIsRoot:
+                prompt += "A Leaf Node cannot be the root of the Behaviour Tree";
+                break;
             case Warning.NoFactors:
-                prompt += "You have at least one Action node without any Factors connected to it";
+                prompt += "At least one Action node does not have any Factors connected to it, meaning it will be ignored";
+                break;
+            case Warning.UnconnectedNode:
+                prompt += "At least one State node is disconnected from the entry state, meaning it will be ignored";
                 break;
             case Warning.WeightZero:
                 prompt += "Having a Factor with a weight value of zero means it will be ignored";
-                break;
-            case Warning.UnconnectedNode:
-                prompt += "At least one node is disconnected from the entry state";
                 break;
             default:
                 prompt += "Unknown warning :(";
