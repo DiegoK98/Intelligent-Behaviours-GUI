@@ -265,7 +265,7 @@ public class NodeEditor : EditorWindow
 
         #endregion
 
-        // Control for the events called by the mouse and keyboard
+        // Control for the events called by the mouse
         #region Mouse Click Control
 
         if (e.type == EventType.MouseDown)
@@ -297,166 +297,163 @@ public class NodeEditor : EditorWindow
                     // Set menu items
                     GenericMenu menu = new GenericMenu();
 
-                    if (currentElem is FSM)
+                    if (currentElem)
                     {
-                        if (!clickedOnWindow && !clickedOnTransition)
+                        switch (currentElem.GetType().ToString())
                         {
-                            menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
-                            menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
-                            menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
-                        }
-                        else if (clickedOnWindow)
-                        {
-                            menu.AddItem(new GUIContent("Make Transition"), false, ContextCallback, new string[] { "makeTransition", selectIndex.ToString() });
-
-                            if (!((FSM)currentElem).isEntryState(((FSM)currentElem).states[selectIndex]))
-                            {
-                                menu.AddSeparator("");
-                                menu.AddItem(new GUIContent("Convert to Entry State"), false, ContextCallback, new string[] { "entryState", selectIndex.ToString() });
-                            }
-
-                            if (((FSM)currentElem).states[selectIndex].subElem != null)
-                            {
-                                menu.AddSeparator("");
-                                menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, ((FSM)currentElem).states[selectIndex].subElem);
-                                menu.AddItem(new GUIContent("Export Code"), false, ExportCode, ((FSM)currentElem).states[selectIndex].subElem);
-                            }
-
-                            menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
-                        }
-                        else if (clickedOnTransition)
-                        {
-                            menu.AddItem(new GUIContent("Reconnect Transition"), false, ContextCallback, new string[] { "reconnectTransition", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Flip Transition"), false, ContextCallback, new string[] { "flipTransition", selectIndex.ToString() });
-                            menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Delete Transition"), false, ContextCallback, new string[] { "deleteTransition", selectIndex.ToString() });
-                        }
-                    }
-                    else if (currentElem is BehaviourTree)
-                    {
-                        if (!clickedOnWindow && !clickedOnTransition)
-                        {
-                            if (((BehaviourTree)currentElem).nodes.Count == 0)
-                            {
-                                menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, new string[] { "Sequence", selectIndex.ToString() });
-                                menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
-                                menu.AddSeparator("");
-                            }
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
-                        }
-                        else if (clickedOnWindow)
-                        {
-                            if (!clickedOnLeaf)
-                            {
-                                if (decoratorWithOneChild)
+                            case nameof(FSM):
+                                if (!clickedOnWindow && !clickedOnTransition)
                                 {
-                                    menu.AddDisabledItem(new GUIContent("Add Sequence"));
-                                    menu.AddDisabledItem(new GUIContent("Add Selector"));
-                                    menu.AddSeparator("");
-                                    menu.AddDisabledItem(new GUIContent("Add Leaf Node"));
-                                    menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Loop (N)"));
-                                    menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add LoopU (Until Fail)"));
-                                    menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Inverter"));
-                                    menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Timer"));
-                                    menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Succeeder"));
-                                    menu.AddDisabledItem(new GUIContent("Decorator Nodes/Add Conditional"));
-                                    menu.AddDisabledItem(new GUIContent("Add FSM"));
-                                    menu.AddDisabledItem(new GUIContent("Add BT"));
-                                    menu.AddDisabledItem(new GUIContent("Add Utility System"));
+                                    menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
                                 }
-                                else
+                                else if (clickedOnWindow)
                                 {
-                                    menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, new string[] { "Sequence", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
-                                    menu.AddSeparator("");
-                                    menu.AddItem(new GUIContent("Add Leaf Node"), false, ContextCallback, new string[] { "leafNode", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Decorator Nodes/Add Loop (N)"), false, ContextCallback, new string[] { "loopN", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Decorator Nodes/Add LoopU (Until Fail)"), false, ContextCallback, new string[] { "loopUFail", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Decorator Nodes/Add Inverter"), false, ContextCallback, new string[] { "inverter", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Decorator Nodes/Add Timer"), false, ContextCallback, new string[] { "timer", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Decorator Nodes/Add Succeeder"), false, ContextCallback, new string[] { "succeeder", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Decorator Nodes/Add Conditional"), false, ContextCallback, new string[] { "conditional", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
-                                    menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
+                                    menu.AddItem(new GUIContent("Make Transition"), false, ContextCallback, new string[] { "makeTransition", selectIndex.ToString() });
+
+                                    if (!((FSM)currentElem).isEntryState(((FSM)currentElem).states[selectIndex]))
+                                    {
+                                        menu.AddItem(new GUIContent("Convert to Entry State"), false, ContextCallback, new string[] { "entryState", selectIndex.ToString() });
+                                    }
                                 }
-
+                                else if (clickedOnTransition)
+                                {
+                                    menu.AddItem(new GUIContent("Reconnect Transition"), false, ContextCallback, new string[] { "reconnectTransition", selectIndex.ToString() });
+                                    menu.AddItem(new GUIContent("Flip Transition"), false, ContextCallback, new string[] { "flipTransition", selectIndex.ToString() });
+                                }
                                 menu.AddSeparator("");
-                            }
-                            else if (((BehaviourTree)currentElem).nodes[selectIndex].subElem != null)
-                            {
-                                menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, ((BehaviourTree)currentElem).nodes[selectIndex].subElem);
-                                menu.AddItem(new GUIContent("Export Code"), false, ExportCode, ((BehaviourTree)currentElem).nodes[selectIndex].subElem);
-                            }
+                                break;
+                            case nameof(BehaviourTree):
+                                if (!clickedOnWindow && !clickedOnTransition)
+                                {
+                                    if (((BehaviourTree)currentElem).nodes.Count == 0)
+                                    {
+                                        menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, new string[] { "Sequence", selectIndex.ToString() });
+                                        menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
+                                        menu.AddSeparator("");
+                                    }
+                                }
+                                else if (clickedOnWindow)
+                                {
+                                    if (nodeWithAscendants)
+                                        menu.AddItem(new GUIContent("Disconnect Node"), false, ContextCallback, new string[] { "disconnectNode", selectIndex.ToString() });
+                                    else
+                                        menu.AddItem(new GUIContent("Connect Node"), false, ContextCallback, new string[] { "connectNode", selectIndex.ToString() });
 
-                            if (nodeWithAscendants)
-                                menu.AddItem(new GUIContent("Disconnect Node"), false, ContextCallback, new string[] { "disconnectNode", selectIndex.ToString() });
-                            else
-                                menu.AddItem(new GUIContent("Connect Node"), false, ContextCallback, new string[] { "connectNode", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
+                                    menu.AddSeparator("");
+
+                                    if (!clickedOnLeaf)
+                                    {
+                                        if (decoratorWithOneChild)
+                                        {
+                                            menu.AddDisabledItem(new GUIContent("Add Sequence"));
+                                            menu.AddDisabledItem(new GUIContent("Add Selector"));
+                                            menu.AddDisabledItem(new GUIContent("Add Leaf Node"));
+                                            menu.AddDisabledItem(new GUIContent("Decorator Nodes"));
+                                            menu.AddSeparator("");
+                                            menu.AddDisabledItem(new GUIContent("Add FSM"));
+                                            menu.AddDisabledItem(new GUIContent("Add Behaviour Tree"));
+                                            menu.AddDisabledItem(new GUIContent("Add Utility System"));
+                                        }
+                                        else
+                                        {
+                                            menu.AddItem(new GUIContent("Add Sequence"), false, ContextCallback, new string[] { "Sequence", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Add Selector"), false, ContextCallback, new string[] { "Selector", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Add Leaf Node"), false, ContextCallback, new string[] { "leafNode", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Decorator Nodes/Add Loop (N)"), false, ContextCallback, new string[] { "loopN", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Decorator Nodes/Add LoopU (Until Fail)"), false, ContextCallback, new string[] { "loopUFail", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Decorator Nodes/Add Inverter"), false, ContextCallback, new string[] { "inverter", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Decorator Nodes/Add Timer"), false, ContextCallback, new string[] { "timer", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Decorator Nodes/Add Succeeder"), false, ContextCallback, new string[] { "succeeder", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Decorator Nodes/Add Conditional"), false, ContextCallback, new string[] { "conditional", selectIndex.ToString() });
+                                            menu.AddSeparator("");
+                                            menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Add Behaviour Tree"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                                            menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
+                                        }
+
+                                        menu.AddSeparator("");
+                                    }
+                                }
+                                break;
+                            case nameof(UtilitySystem):
+                                if (!clickedOnWindow && !clickedOnTransition)
+                                {
+                                    menu.AddItem(new GUIContent("Add Action"), false, ContextCallback, new string[] { "Action", selectIndex.ToString() });
+                                    menu.AddSeparator("");
+                                }
+                                else if (clickedOnWindow)
+                                {
+                                    if (((UtilitySystem)currentElem).nodes[selectIndex].type != utilityType.Action)
+                                    {
+                                        menu.AddItem(new GUIContent("Connect Node"), false, ContextCallback, new string[] { "connectNode", selectIndex.ToString() });
+                                        menu.AddSeparator("");
+                                    }
+
+                                    if (!clickedOnVariable && !actionWithOneFactor && !curveWithOneFactor)
+                                    {
+                                        menu.AddItem(new GUIContent("Factors/Add Variable"), false, ContextCallback, new string[] { "Variable", selectIndex.ToString() });
+                                        menu.AddItem(new GUIContent("Factors/Add Fusion"), false, ContextCallback, new string[] { "Fusion", selectIndex.ToString() });
+                                        menu.AddItem(new GUIContent("Factors/Add Curve"), false, ContextCallback, new string[] { "Curve", selectIndex.ToString() });
+                                        menu.AddSeparator("");
+                                    }
+                                }
+                                break;
                         }
                     }
-                    else if (currentElem is UtilitySystem)
+
+                    if (clickedOnElement || clickedOnWindow || clickedOnTransition)
                     {
-                        if (!clickedOnWindow && !clickedOnTransition)
+                        ClickableElement element = null;
+                        if (currentElem is FSM && clickedOnWindow)
                         {
-                            menu.AddItem(new GUIContent("Add Action"), false, ContextCallback, new string[] { "Action", selectIndex.ToString() });
+                            element = ((FSM)currentElem).states[selectIndex].subElem;
+                        }
+                        else if (currentElem is BehaviourTree && clickedOnLeaf)
+                        {
+                            element = ((BehaviourTree)currentElem).nodes[selectIndex].subElem;
+                        }
+                        else if (currentElem is UtilitySystem && clickedOnWindow)
+                        {
+                            element = ((UtilitySystem)currentElem).nodes[selectIndex].subElem;
+                        }
+                        else if (!currentElem)
+                        {
+                            element = Elements[selectIndex];
+                        }
+
+                        if (element)
+                        {
+                            menu.AddItem(new GUIContent("Save"), false, SaveElem, element);
+                            menu.AddItem(new GUIContent("Export Code"), false, ExportCode, element);
+                            menu.AddSeparator("");
+                        }
+
+                        menu.AddItem(new GUIContent("Delete"), false, ContextCallback, new string[] { "deleteElement", selectIndex.ToString(), clickedOnTransition.ToString() });
+                    }
+                    else
+                    {
+                        if (!(currentElem is BehaviourTree))
+                        {
                             menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
+                            menu.AddItem(new GUIContent("Add Behaviour Tree"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
                             menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
                             menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
                         }
-                        else if (clickedOnWindow)
-                        {
-                            if (((UtilitySystem)currentElem).nodes[selectIndex].type != utilityType.Action)
-                            {
-                                menu.AddItem(new GUIContent("Connect Node"), false, ContextCallback, new string[] { "connectNode", selectIndex.ToString() });
-                            }
 
-                            if (!clickedOnVariable && !actionWithOneFactor && !curveWithOneFactor)
-                            {
-                                menu.AddItem(new GUIContent("Factors/Add Variable"), false, ContextCallback, new string[] { "Variable", selectIndex.ToString() });
-                                menu.AddItem(new GUIContent("Factors/Add Fusion"), false, ContextCallback, new string[] { "Fusion", selectIndex.ToString() });
-                                menu.AddItem(new GUIContent("Factors/Add Curve"), false, ContextCallback, new string[] { "Curve", selectIndex.ToString() });
-                            }
-                            else if (((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
-                            {
-                                menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, ((UtilitySystem)currentElem).nodes[selectIndex].subElem);
-                                menu.AddItem(new GUIContent("Export Code"), false, ExportCode, ((UtilitySystem)currentElem).nodes[selectIndex].subElem);
-                            }
+                        menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
+                    }
 
-                            menu.AddItem(new GUIContent("Delete Node"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
-                        }
-                    }
-                    else if (currentElem is null)
-                    {
-                        if (!clickedOnElement)
-                        {
-                            menu.AddItem(new GUIContent("Add FSM"), false, ContextCallback, new string[] { "FSM", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Add BT"), false, ContextCallback, new string[] { "BT", selectIndex.ToString() });
-                            menu.AddItem(new GUIContent("Add Utility System"), false, ContextCallback, new string[] { "US", selectIndex.ToString() });
-                            menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Load Element from file"), false, LoadSaveFile);
-                        }
-                        else
-                        {
-                            menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, Elements[selectIndex]);
-                            menu.AddItem(new GUIContent("Export Code"), false, ExportCode, Elements[selectIndex]);
-                            menu.AddSeparator("");
-                            menu.AddItem(new GUIContent("Delete Element"), false, ContextCallback, new string[] { "deleteNode", selectIndex.ToString() });
-                        }
-                    }
+                    menu.AddSeparator("");
 
                     if (focusedObjects.Count > 0)
                     {
                         menu.AddItem(new GUIContent("Cut"), false, Cut);
                         menu.AddItem(new GUIContent("Copy"), false, Copy);
+                    }
+                    else
+                    {
+                        menu.AddDisabledItem(new GUIContent("Cut"));
+                        menu.AddDisabledItem(new GUIContent("Copy"));
                     }
 
                     if (clipboard.Count > 0)
@@ -471,7 +468,7 @@ public class NodeEditor : EditorWindow
                     menu.ShowAsContext();
                     e.Use();
                 }
-                //Click derecho estando en uno de estos dos modos, lo cancela
+                //Click derecho estando en uno de estos modos, lo cancela
                 else
                 {
                     makeTransitionMode = false;
@@ -492,110 +489,36 @@ public class NodeEditor : EditorWindow
                     focusedObjects.Clear();
                 }
 
+                GUIElement selNode = null;
+
                 if (clickedOnElement)
                 {
-                    if (focusedObjects.Contains(Elements[selectIndex]))
-                    {
-                        focusedObjects.Remove(Elements[selectIndex]);
-                    }
-                    else
-                    {
-                        focusedObjects.Add(Elements[selectIndex]);
-                    }
-
-                    if (Event.current.clickCount == 2)
-                    {
-                        focusedObjects.Clear();
-                        currentElem = Elements[selectIndex];
-                        NodeEditorUtilities.ClearUndoSteps();
-                        e.Use();
-                    }
+                    selNode = Elements[selectIndex];
                 }
                 else if (clickedOnTransition)
                 {
                     if (currentElem is FSM)
                     {
-                        if (focusedObjects.Contains(((FSM)currentElem).transitions[selectIndex]))
-                        {
-                            focusedObjects.Remove(((FSM)currentElem).transitions[selectIndex]);
-                        }
-                        else
-                        {
-                            focusedObjects.Add(((FSM)currentElem).transitions[selectIndex]);
-                        }
+                        selNode = ((FSM)currentElem).transitions[selectIndex];
                     }
                     if (currentElem is UtilitySystem)
                     {
-                        if (focusedObjects.Contains(((UtilitySystem)currentElem).connections[selectIndex]))
-                        {
-                            focusedObjects.Remove(((UtilitySystem)currentElem).connections[selectIndex]);
-                        }
-                        else
-                        {
-                            focusedObjects.Add(((UtilitySystem)currentElem).connections[selectIndex]);
-                        }
+                        selNode = ((UtilitySystem)currentElem).connections[selectIndex];
                     }
                 }
                 else if (clickedOnWindow)
                 {
                     if (currentElem is FSM)
                     {
-                        if (focusedObjects.Contains(((FSM)currentElem).states[selectIndex]))
-                        {
-                            focusedObjects.Remove(((FSM)currentElem).states[selectIndex]);
-                        }
-                        else
-                        {
-                            focusedObjects.Add(((FSM)currentElem).states[selectIndex]);
-                        }
-
-                        if (Event.current.clickCount == 2 && ((FSM)currentElem).states[selectIndex].subElem != null)
-                        {
-                            currentElem = ((FSM)currentElem).states[selectIndex].subElem;
-                            NodeEditorUtilities.ClearUndoSteps();
-                            e.Use();
-                        }
+                        selNode = ((FSM)currentElem).states[selectIndex];
                     }
                     else if (currentElem is BehaviourTree)
                     {
-                        if (focusedObjects.Contains(((BehaviourTree)currentElem).nodes[selectIndex]))
-                        {
-                            focusedObjects.Remove(((BehaviourTree)currentElem).nodes[selectIndex]);
-                            focusedObjects.Remove(((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(((BehaviourTree)currentElem).nodes[selectIndex])).FirstOrDefault());
-                        }
-                        else
-                        {
-                            focusedObjects.Add(((BehaviourTree)currentElem).nodes[selectIndex]);
-
-                            GUIElement transToAdd = ((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(((BehaviourTree)currentElem).nodes[selectIndex])).FirstOrDefault();
-                            if (transToAdd)
-                                focusedObjects.Add(transToAdd);
-                        }
-
-                        if (Event.current.clickCount == 2 && ((BehaviourTree)currentElem).nodes[selectIndex].subElem != null)
-                        {
-                            currentElem = ((BehaviourTree)currentElem).nodes[selectIndex].subElem;
-                            NodeEditorUtilities.ClearUndoSteps();
-                            e.Use();
-                        }
+                        selNode = ((BehaviourTree)currentElem).nodes[selectIndex];
                     }
                     else if (currentElem is UtilitySystem)
                     {
-                        if (focusedObjects.Contains(((UtilitySystem)currentElem).nodes[selectIndex]))
-                        {
-                            focusedObjects.Remove(((UtilitySystem)currentElem).nodes[selectIndex]);
-                        }
-                        else
-                        {
-                            focusedObjects.Add(((UtilitySystem)currentElem).nodes[selectIndex]);
-                        }
-
-                        if (Event.current.clickCount == 2 && ((UtilitySystem)currentElem).nodes[selectIndex].subElem != null)
-                        {
-                            currentElem = ((UtilitySystem)currentElem).nodes[selectIndex].subElem;
-                            NodeEditorUtilities.ClearUndoSteps();
-                            e.Use();
-                        }
+                        selNode = ((UtilitySystem)currentElem).nodes[selectIndex];
                     }
                 }
                 else
@@ -605,6 +528,45 @@ public class NodeEditor : EditorWindow
                     e.Use();
                 }
 
+                if (focusedObjects.Contains(selNode))
+                {
+                    focusedObjects.Remove(selNode);
+                    if (currentElem is BehaviourTree)
+                    {
+                        focusedObjects.Remove(((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(selNode)).FirstOrDefault());
+                    }
+                }
+                else if (selNode)
+                {
+                    focusedObjects.Add(selNode);
+
+                    if (currentElem is BehaviourTree)
+                    {
+                        GUIElement transToAdd = ((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(selNode)).FirstOrDefault();
+                        if (transToAdd)
+                            focusedObjects.Add(transToAdd);
+                    }
+                }
+
+                if (Event.current.clickCount == 2)
+                {
+                    focusedObjects.Clear();
+
+                    if (currentElem)
+                    {
+                        if (((BaseNode)selNode).subElem != null)
+                            currentElem = ((BaseNode)selNode).subElem;
+                    }
+                    else
+                    {
+                        currentElem = (ClickableElement)selNode;
+                    }
+
+                    NodeEditorUtilities.ClearUndoSteps();
+                    e.Use();
+                }
+
+                // Manage the makeXmode things
                 if (currentElem is FSM)
                 {
                     if (makeTransitionMode)
@@ -734,6 +696,8 @@ public class NodeEditor : EditorWindow
         }
 
         #endregion
+
+        // Control for the events called by the keyboard
         #region Key Press Control
 
         if (e.type == EventType.KeyUp)
@@ -1653,8 +1617,22 @@ public class NodeEditor : EditorWindow
     void ContextCallback(object data)
     {
         string[] dataList = (string[])data;
-        string order = dataList[0];
-        int index = int.Parse(dataList[1]);
+        string order = "";
+        int index = 0;
+        bool isTransition = false;
+
+        switch (dataList.Count())
+        {
+            case 3:
+                isTransition = bool.Parse(dataList[2]);
+                goto case 2;
+            case 2:
+                index = int.Parse(dataList[1]);
+                goto case 1;
+            case 1:
+                order = dataList[0];
+                break;
+        }
 
         switch (order)
         {
@@ -1718,11 +1696,8 @@ public class NodeEditor : EditorWindow
             case "flipTransition":
                 FlipTransition(index);
                 break;
-            case "deleteNode":
-                DeleteNode(index);
-                break;
-            case "deleteTransition":
-                DeleteTransition(index);
+            case "deleteElement":
+                DeleteElement(index, isTransition);
                 break;
             case "entryState":
                 ConvertToEntry(index);
@@ -2411,11 +2386,18 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Makes a <see cref="PopupWindow"/> appear that will delete the clicked node if accepted
     /// </summary>
-    private void DeleteNode(int selectIndex)
+    private void DeleteElement(int selectIndex, bool isTransition)
     {
         if (currentElem is FSM)
         {
-            PopupWindow.InitDelete(((FSM)currentElem).states[selectIndex]);
+            if (isTransition)
+            {
+                PopupWindow.InitDelete(((FSM)currentElem).transitions[selectIndex]);
+            }
+            else
+            {
+                PopupWindow.InitDelete(((FSM)currentElem).states[selectIndex]);
+            }
         }
 
         if (currentElem is BehaviourTree)
@@ -2432,14 +2414,6 @@ public class NodeEditor : EditorWindow
         {
             PopupWindow.InitDelete(Elements[selectIndex]);
         }
-    }
-
-    /// <summary>
-    /// Makes a <see cref="PopupWindow"/> appear that will delete the clicked transition if accepted
-    /// </summary>
-    private void DeleteTransition(int selectIndex)
-    {
-        PopupWindow.InitDelete(((FSM)currentElem).transitions[selectIndex]);
     }
 
     /// <summary>

@@ -54,7 +54,7 @@ public class PopupWindow : EditorWindow
         PopupType = typeOfPopup.Delete;
 
         elems = new List<GUIElement>(focusedElems);
-        typeOfElem = elems[0].GetTypeString();
+        typeOfElem = elems[0]?.GetTypeString();
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
         window.ShowModalUtility();
