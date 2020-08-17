@@ -130,7 +130,7 @@ public class NodeEditor : EditorWindow
         Event e = Event.current;
         mousePos = e.mousePosition;
 
-        // Show the GUI elements that are over the windows
+        // Show the GUI elements that are over the rest of the GUI
         #region GUI overlay elements
 
         ShowTopBar();
@@ -155,7 +155,7 @@ public class NodeEditor : EditorWindow
 
         #endregion
 
-        // Draw the curves for everything
+        // Draw the curves
         #region Curves Drawing
 
         if ((makeTransitionMode || makeAttachedNode || makeConnectionMode) && selectednode != null)

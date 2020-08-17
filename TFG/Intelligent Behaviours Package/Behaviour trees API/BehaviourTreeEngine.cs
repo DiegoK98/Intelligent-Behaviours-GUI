@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Stateless;
+//using Stateless;
 
 public class BehaviourTreeEngine : BehaviourEngine {
 
@@ -26,8 +26,8 @@ public class BehaviourTreeEngine : BehaviourEngine {
         base.IsSubMachine = false;
 
         entryState = new State("Entry_Machine", this);
+        this.actualState = entryState;
         states.Add(entryState.Name, entryState);
-        BehaviourMachine = new StateMachine<State, Perception>(entryState);
 
         Active = true;
     }
@@ -44,8 +44,8 @@ public class BehaviourTreeEngine : BehaviourEngine {
         base.IsSubMachine = isSubmachine;
 
         entryState = new State("Entry_Machine", this);
+        this.actualState = entryState;
         states.Add(entryState.Name, entryState);
-        BehaviourMachine = new StateMachine<State, Perception>(entryState);
 
         Active = (isSubmachine) ? false : true;
     }
@@ -84,6 +84,7 @@ public class BehaviourTreeEngine : BehaviourEngine {
             return;
 
         if(ActiveNode != null && ActiveNode.ReturnValue == ReturnValues.Running) { // Node with NO submachine in it
+            //Console.WriteLine(ActiveNode.StateNode.Name + " " + ActiveNode.ReturnValue);
             ActiveNode.Update();
         }
         else if(ActiveNode.HasSubmachine) { // Node with a submachine in it

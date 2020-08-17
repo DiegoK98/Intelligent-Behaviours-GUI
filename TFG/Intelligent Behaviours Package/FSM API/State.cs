@@ -10,6 +10,8 @@ public class State {
     public Perception StatePerception { get; }
     public BehaviourEngine BehaviourEngine { get; }
 
+    public StateConfigurator configurator;
+
     private Action StateActionVoid;
     private Action<Perception> StateActionPerception;
 
@@ -26,6 +28,7 @@ public class State {
     {
         this.Name = stateName;
         this.BehaviourEngine = behaviourEngine;
+        this.configurator = new StateConfigurator(StateConfigurator.STATE_TYPE.EMPTY);
     }
 
     /// <summary>
@@ -39,8 +42,9 @@ public class State {
         this.Name = stateName;
         this.StateActionVoid = method;
         this.BehaviourEngine = behaviourEngine;
+        this.configurator = new StateConfigurator(StateConfigurator.STATE_TYPE.NOT_EMPTY);
 
-        BehaviourEngine.BehaviourMachine.Configure(this)
+        BehaviourEngine.Configure(this)
             .OnEntry(() => method());
     }
 
@@ -56,8 +60,9 @@ public class State {
         this.StateActionPerception = method;
         this.StatePerception = (Perception)method.Method.GetParameters().GetValue(0);
         this.BehaviourEngine = behaviourEngine;
+        this.configurator = new StateConfigurator(StateConfigurator.STATE_TYPE.NOT_EMPTY);
 
-        BehaviourEngine.BehaviourMachine.Configure(this)
+        BehaviourEngine.Configure(this)
             .OnEntry(() => method((Perception)method.Method.GetParameters().GetValue(0)));
     }
 
@@ -72,8 +77,9 @@ public class State {
     {
         this.Name = stateName;
         this.BehaviourEngine = behaviourEngine;
+        this.configurator = new StateConfigurator(StateConfigurator.STATE_TYPE.NOT_EMPTY);
 
-        BehaviourEngine.BehaviourMachine.Configure(this)
+        BehaviourEngine.Configure(this)
             .OnEntry(() => EntrySubmachine(entrySubMachineState, stateTo, subMachine, behaviourEngine));
     }
 
@@ -81,13 +87,35 @@ public class State {
 
     private void EntrySubmachine(State entrySubmachineState, State stateTo, BehaviourEngine subMachine, BehaviourEngine behaviourEngine)
     {
-        if(subMachine.BehaviourMachine.State != subMachine.GetState("Entry_Machine"))
+        if(subMachine.actualState != subMachine.GetState("Entry_Machine"))
             return;
 
-        new Transition("Entry_submachine state", subMachine.BehaviourMachine.State, new PushPerception(subMachine), stateTo, subMachine)
+        new Transition("Entry_submachine state", subMachine.actualState, new PushPerception(subMachine), stateTo, subMachine)
             .FireTransition();
 
         behaviourEngine.Active = false;
         subMachine.Active = true;
+    }
+
+    public void Entry(){
+        if(this.configurator.stateType != StateConfigurator.STATE_TYPE.EMPTY){
+            configurator.entry();
+        }
+    }
+    public void InternalTransition(String tName)
+    {
+        Action toExecute;
+        if (configurator.internalTransition.TryGetValue(tName, out toExecute))
+        {
+            toExecute.Invoke();
+        }
+    }
+
+    public void Exit(String tName) {
+        Action toExecute;
+        if (configurator.exit.TryGetValue(tName, out toExecute))
+        {
+            toExecute.Invoke();
+        }              
     }
 }

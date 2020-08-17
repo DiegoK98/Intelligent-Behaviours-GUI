@@ -19,12 +19,13 @@ public abstract class Perception {
         return;
     }
 
+
     /// <summary>
     /// Fires the perception so the transition happens
     /// </summary>
     public void Fire()
     {
-        behaviourEngine.BehaviourMachine.Fire(this);
+        behaviourEngine.Fire(this);
     }
 
     public void SetBehaviourMachine(BehaviourEngine behaviourEngine)

@@ -10,6 +10,12 @@ public class IsInStatePerception : Perception {
 
     #endregion variables
 
+    /// <summary>
+    /// Creates a <see cref="Perception"/> that returns true when a machine is in the State/Action provided
+    /// </summary>
+    /// <param name="engineToLook">The engine that contains the State/Action to look</param>
+    /// <param name="stateToLookFor">The name of the State or Action that you want to fetch</param>
+    /// <param name="behaviourEngine">The behaviout engine that contains this perception</param>
     public IsInStatePerception(BehaviourEngine engineToLook, string stateToLookFor, BehaviourEngine behaviourEngine)
     {
         this.engineToLook = engineToLook;
@@ -19,7 +25,7 @@ public class IsInStatePerception : Perception {
 
     public override bool Check()
     {
-        if(engineToLook.BehaviourMachine.State == stateToLook) {
+        if(engineToLook.actualState == stateToLook) {
             return true;
         }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Stateless;
 
 public abstract class BehaviourEngine {
 
@@ -9,15 +8,19 @@ public abstract class BehaviourEngine {
 
     public const bool IsASubmachine = true;
     public const bool IsNotASubmachine = false;
-
-    public StateMachine<State, Perception> BehaviourMachine { get; set; }
     public bool Active { get; set; }
     public LeafNode NodeToReturn { get; set; }
     public bool IsSubMachine { get; set; }
 
+    /* TODO ¿Transiciones y estados por id (int) en vez de por string?
+     Diferencias en HashCode:
+     https://stackoverflow.com/questions/15632300/which-is-faster-string-or-integer-has-hashkey-in-java
+     https://stackoverflow.com/questions/5743474/key-performance-for-a-dictionary (C#)*/
     protected Dictionary<string, Transition> transitions;
     protected Dictionary<string, State> states;
     protected State entryState;
+
+    public State actualState { get; set; }
 
     #endregion variables
 
@@ -182,7 +185,35 @@ public abstract class BehaviourEngine {
         }
     }
 
+    /// <summary>
+    /// Creates a new <see cref="Transition"/> that exits from any Behaviour Engine to a Utility Engine. ONLY exits to Utility Machines
+    /// </summary>
+    /// <param name="transitionName">The name of the transition</param>
+    /// <param name="stateFrom">The <see cref="State"/> where the transition comes from (only submachine's state)</param>
+    /// <param name="perception">The <see cref="Perception"/> that will trigger the transition</param>
+    /// <param name="superMachine">The <see cref="UtilitySystemEngine"/> where the transition goes to (only entry super machine state)</param>
+    /// <returns></returns>
+    public Transition CreateExitTransition(string transitionName, State stateFrom, Perception perception, UtilitySystemEngine superMachine)
+    {
+        if (!transitions.ContainsKey(transitionName))
+        {
+            State stateTo = superMachine.GetEntryState();
+            Transition exitTransition = new Transition(transitionName, stateFrom, perception, stateTo, superMachine, this);
+
+            // Transition managed by the sub-state machine
+            transitions.Add(transitionName, exitTransition);
+            
+            return exitTransition;
+        }
+        else
+        {
+            throw new DuplicateWaitObjectException(transitionName, "The transition already exists in the behaviour engine");
+        }
+    }
+
     #endregion create exit transitions
+
+    #region other methods
 
     /// <summary>
     /// Fires the transition
@@ -204,6 +235,22 @@ public abstract class BehaviourEngine {
         }
         else {
             throw new KeyNotFoundException("The Transition '" + transitionName + "' is not found");
+        }
+    }
+
+    /// <summary>
+    /// Fires the transition
+    /// </summary>
+    /// <param name="perception">The perception that will trigger the transition associated</param>
+    public void Fire(Perception perception)
+    {
+        // INNEFICIENT. Change the storage of transitions to find them by perception too.
+        foreach(Transition t in transitions.Values)
+        {
+            if (t.Perception.Equals(perception))
+            {
+                t.FireTransition();
+            }
         }
     }
 
@@ -231,17 +278,38 @@ public abstract class BehaviourEngine {
         }
     }
 
+
     /// <summary>
     /// Gets the current state the machine is in
     /// </summary>
     /// <returns></returns>
     public State GetCurrentState()
     {
-        return BehaviourMachine.State;
+        return this.actualState;
     }
+
 
     public virtual void Reset()
     {
         return;
     }
+
+    /// <summary>
+    /// Resets the perceptions that are from the transitions of current state
+    /// </summary>
+    public void ResetPerceptionsActiveState()
+    {
+        foreach (Transition t in transitions.Values){
+            if(t.StateFrom == actualState)
+            {
+                t.Perception.Reset();
+            }
+        }
+    }
+
+    public StateConfigurator Configure(State st){
+        return st.configurator;
+    }
+
+    #endregion other methods
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+//using UnityEngine;
 
 public abstract class TreeNode {
 
@@ -13,6 +13,8 @@ public abstract class TreeNode {
     public bool HasSubmachine { get; set; }
 
     protected BehaviourTreeEngine behaviourTree;
+
+    protected bool firstExecution = false;
 
     #endregion variables
 
@@ -40,6 +42,7 @@ public abstract class TreeNode {
     public virtual void Reset()
     {
         ReturnValue = ReturnValues.Running;
+        firstExecution = false;
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Stateless;
+//using Stateless;
 
 public class StateMachineEngine : BehaviourEngine {
 
@@ -15,8 +15,8 @@ public class StateMachineEngine : BehaviourEngine {
         base.IsSubMachine = false;
 
         entryState = new State("Entry_Machine", this);
+        this.actualState = entryState;
         states.Add(entryState.Name, entryState);
-        BehaviourMachine = new StateMachine<State, Perception>(entryState);
         Active = true;
     }
 
@@ -31,8 +31,8 @@ public class StateMachineEngine : BehaviourEngine {
         base.IsSubMachine = isSubmachine;
 
         entryState = new State("Entry_Machine", this);
+        this.actualState = entryState;
         states.Add(entryState.Name, entryState);
-        BehaviourMachine = new StateMachine<State, Perception>(entryState);
         Active = (isSubmachine) ? false : true;
     }
 
@@ -41,9 +41,11 @@ public class StateMachineEngine : BehaviourEngine {
     /// </summary>
     public void Update()
     {
+        
         foreach(Transition transition in transitions.Values) {
-            if(transition.StateFrom == BehaviourMachine.State) {
+            if (transition.StateFrom == this.actualState) {
                 if(transition.Perception.Check()) {
+                    //Console.WriteLine("Transicion lanzada " + transition.Name);
                     Fire(transition);
                     break;
                 }
