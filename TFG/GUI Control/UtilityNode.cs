@@ -298,6 +298,9 @@ public class UtilityNode : BaseNode
                         GUILayout.EndHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
+
+                        // We reset the baseHeight in case the curveType was linearParts and then it came here
+                        baseHeight = height * 1.5f;
                         break;
                     case curveType.Exponential:
                         GUILayout.BeginHorizontal();
@@ -317,6 +320,9 @@ public class UtilityNode : BaseNode
                         GUILayout.EndHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
+
+                        // We reset the baseHeight in case the curveType was linearParts and then it came here
+                        baseHeight = height * 1.5f;
                         break;
                     case curveType.LinearParts:
                         GUILayout.BeginHorizontal();
@@ -420,7 +426,7 @@ public class UtilityNode : BaseNode
                         Handles.color = Color.white;
 
                         Vector3 prevPos = new Vector3(0, CurveFunc(xMin), 0);
-                        for (float t = step + xMin; t < xMax; t += step)
+                        for (float t = xMin + step; t < xMax; t += step * regularSize * 5)
                         {
                             Vector3 pos = new Vector3((t + xMax) / (xMax - xMin), CurveFunc(t), 0);
 
