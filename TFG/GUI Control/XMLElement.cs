@@ -109,6 +109,11 @@ public class XMLElement
     /// </summary>
     public float displY { get; set; }
 
+    /// <summary>
+    /// Parameter for Curve nodes
+    /// </summary>
+    public List<Vector2> points { get; set; }
+
     // Transitions properties
 
     /// <summary>
@@ -475,7 +480,7 @@ public class XMLElement
         node.InitUtilityNodeFromXML(parent, (utilityType)Enum.Parse(typeof(utilityType), this.secondType),
             (fusionType)Enum.Parse(typeof(fusionType), this.thirdType),
             (curveType)Enum.Parse(typeof(curveType), this.fourthType),
-            this.windowPosX, this.windowPosY, this.Id, this.name, this.variableMax, this.variableMin, this.slope, this.exp, this.displX, this.displY);
+            this.windowPosX, this.windowPosY, this.Id, this.name, this.variableMax, this.variableMin, this.slope, this.exp, this.displX, this.displY, this.points);
 
         return node;
     }

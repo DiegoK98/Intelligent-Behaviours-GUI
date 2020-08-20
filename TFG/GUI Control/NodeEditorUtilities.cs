@@ -1348,40 +1348,22 @@ public class NodeEditorUtilities
     #region Utility System
 
     /// <summary>
-    /// Writes all the weights list declaration and initialization
+    /// Writes all the declaration and initialization from a list of type T. The content of .Add() at the initialization, can be defined with <paramref name="func"/>
     /// </summary>
-    /// <param name="weightsList"></param>
-    /// <param name="weightsListName"></param>
+    /// <typeparam name="T">Type of the <paramref name="preexistingList"/> elements</typeparam>
+    /// <typeparam name="TResult">Type of the resulting list</typeparam>
+    /// <param name="listName"></param>
+    /// <param name="preexistingList"></param>
+    /// <param name="func">The string of code that will be written inside the Add() for each element like this: "resultList.Add(" + func + ")"</param>
     /// <returns></returns>
-    private static string CreateWeightsList(List<float> weightsList, string weightsListName)
+    private static string CreateList<T, TResult>(string listName, List<T> preexistingList, Func<T, string> func)
     {
         string result = string.Empty;
 
-        result += "List<float> " + weightsListName + " = new List<float>();\n" + tab + tab;
-        foreach (float weight in weightsList)
+        result += "List<" + typeof(TResult) + "> " + listName + " = new List<" + typeof(TResult) + ">();\n" + tab + tab;
+        foreach (T elem in preexistingList)
         {
-            result += weightsListName + ".Add(" + weight.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
-        }
-
-        result += "\n" + tab + tab;
-
-        return result;
-    }
-
-    /// <summary>
-    /// Writes all the Factors list declaration and initialization
-    /// </summary>
-    /// <param name="factorsList"></param>
-    /// <param name="factorsListName"></param>
-    /// <returns></returns>
-    private static string CreateFactorsList(List<UtilityNode> factorsList, string factorsListName)
-    {
-        string result = string.Empty;
-
-        result += "List<Factor> " + factorsListName + " = new List<Factor>();\n" + tab + tab;
-        foreach (UtilityNode node in factorsList)
-        {
-            result += factorsListName + ".Add(" + CleanName(node.nodeName) + ");\n" + tab + tab;
+            result += listName + ".Add(" + func(elem) + ");\n" + tab + tab;
         }
 
         result += "\n" + tab + tab;
@@ -1416,16 +1398,16 @@ public class NodeEditorUtilities
                     switch (node.fusionType)
                     {
                         case fusionType.Weighted:
-                            result += CreateFactorsList(node.GetWeightsAndFactors().Select(k => k.Value).ToList(), factorsListName);
-                            result += CreateWeightsList(node.GetWeightsAndFactors().Select(k => k.Key).ToList(), weightsListName);
+                            result += CreateList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
+                            result += CreateList<float, float>(weightsListName, node.GetWeightsAndFactors().Select(k => k.Key).ToList(), (float weightElem) => weightElem.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f");
                             result += "Factor " + factorName + " = " + "new WeightedSumFusion(" + factorsListName + ", " + weightsListName + ");\n" + tab + tab;
                             break;
                         case fusionType.GetMax:
-                            result += CreateFactorsList(node.GetWeightsAndFactors().Select(k => k.Value).ToList(), factorsListName);
+                            result += CreateList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
                             result += "Factor " + factorName + " = " + "new MaxFusion(" + factorsListName + ");\n" + tab + tab;
                             break;
                         case fusionType.GetMin:
-                            result += CreateFactorsList(node.GetWeightsAndFactors().Select(k => k.Value).ToList(), factorsListName);
+                            result += CreateList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
                             result += "Factor " + factorName + " = " + "new MinFusion(" + factorsListName + ");\n" + tab + tab;
                             break;
                     }
@@ -1443,7 +1425,9 @@ public class NodeEditorUtilities
                             result += "Factor " + factorName + " = " + "new ExpCurve(" + prevFactorName + ", " + node.exp + ", " + node.displX + ", " + node.displY + ");\n" + tab + tab;
                             break;
                         case curveType.LinearParts:
-                            result += "Factor " + factorName + " = " + "new LinearPartsCurve();\n" + tab + tab; // TODO
+                            string pointsListName = factorName + "Points";
+                            result += CreateList<Vector2, Point2D>(pointsListName, node.points, (Vector2 point) => "new Point2D(" + point.x + ", " + point.y + ")");
+                            result += "Factor " + factorName + " = " + "new LinearPartsCurve(" + prevFactorName + ", " + pointsListName + ");\n" + tab + tab;
                             break;
                     }
                     break;

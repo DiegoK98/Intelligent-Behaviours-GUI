@@ -550,20 +550,24 @@ public class NodeEditor : EditorWindow
 
                 if (Event.current.clickCount == 2)
                 {
-                    focusedObjects.Clear();
+                    if (selNode is ClickableElement)
+                    {
+                        focusedObjects.Clear();
 
-                    if (currentElem)
-                    {
-                        if (((BaseNode)selNode).subElem != null)
-                            currentElem = ((BaseNode)selNode).subElem;
-                    }
-                    else
-                    {
                         currentElem = (ClickableElement)selNode;
-                    }
 
-                    NodeEditorUtilities.ClearUndoSteps();
-                    e.Use();
+                        NodeEditorUtilities.ClearUndoSteps();
+                        e.Use();
+                    }
+                    else if (selNode is BaseNode && ((BaseNode)selNode).subElem != null)
+                    {
+                        focusedObjects.Clear();
+
+                        currentElem = ((BaseNode)selNode).subElem;
+
+                        NodeEditorUtilities.ClearUndoSteps();
+                        e.Use();
+                    }
                 }
 
                 // Manage the makeXmode things

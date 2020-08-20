@@ -50,6 +50,11 @@ public class UtilityNode : BaseNode
     public NodeEditor editor;
 
     /// <summary>
+    /// Base height that will change depending on the number of Points when it's a curve node
+    /// </summary>
+    public float baseHeight;
+
+    /// <summary>
     /// Min value for the Variable nodes
     /// </summary>
     public float variableMin;
@@ -80,9 +85,19 @@ public class UtilityNode : BaseNode
     public float displY;
 
     /// <summary>
+    /// List of points for the Linear Parts Curve Node
+    /// </summary>
+    public List<Vector2> points;
+
+    /// <summary>
     /// Boolean for keeping in memory if the curve visualizer foldout is open
     /// </summary>
     public bool openFoldout;
+
+    /// <summary>
+    /// Boolean for keeping in memory if the Points area foldout is open
+    /// </summary>
+    public bool openPointsFoldout;
 
     /// <summary>
     /// Value that determinates the max coordinate in the 4 directions equally
@@ -135,13 +150,16 @@ public class UtilityNode : BaseNode
             }
             else if (type == utilityType.Curve)
             {
-                windowRect = new Rect(posx, posy, width, height * 1.5f);
+                baseHeight = height * 1.5f;
+                windowRect = new Rect(posx, posy, width, baseHeight);
             }
             else
             {
                 windowRect = new Rect(posx, posy, width, height);
             }
         }
+
+        points = new List<Vector2>() { new Vector2(0, 0) };
     }
 
     /// <summary>
@@ -153,7 +171,7 @@ public class UtilityNode : BaseNode
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
     public void InitUtilityNodeFromXML(ClickableElement parent, utilityType type, fusionType fusionType, curveType curveType,
-        float posx, float posy, string id, string name, float variableMax, float variableMin, float slope, float exp, float displX, float displY, ClickableElement subElem = null)
+        float posx, float posy, string id, string name, float variableMax, float variableMin, float slope, float exp, float displX, float displY, List<Vector2> points, ClickableElement subElem = null)
     {
         InitBaseNode(parent, id);
 
@@ -179,7 +197,8 @@ public class UtilityNode : BaseNode
             }
             else if (type == utilityType.Curve)
             {
-                windowRect = new Rect(posx, posy, width, height * 1.5f);
+                baseHeight = height * 1.5f;
+                windowRect = new Rect(posx, posy, width, baseHeight);
             }
             else
             {
@@ -193,6 +212,7 @@ public class UtilityNode : BaseNode
         this.exp = exp;
         this.displX = displX;
         this.displY = displY;
+        this.points = points;
     }
 
     /// <summary>
@@ -267,11 +287,14 @@ public class UtilityNode : BaseNode
                         GUILayout.BeginHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.BeginHorizontal();
+
+                        // Linear curve formula
                         GUILayout.Label("y = ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
                         float.TryParse(EditorGUILayout.TextArea(slope.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out slope);
                         GUILayout.Space(2);
                         GUILayout.Label("x + ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
                         float.TryParse(EditorGUILayout.TextArea(displY.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displY);
+
                         GUILayout.EndHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
@@ -280,6 +303,8 @@ public class UtilityNode : BaseNode
                         GUILayout.BeginHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.BeginHorizontal();
+
+                        // Exponential curve formula
                         GUILayout.Label("y = (x - ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
                         GUILayout.Space(15);
                         float.TryParse(EditorGUILayout.TextArea(displX.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displX);
@@ -288,80 +313,136 @@ public class UtilityNode : BaseNode
                         GUILayout.Space(2);
                         GUILayout.Label(" + ", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
                         float.TryParse(EditorGUILayout.TextArea(displY.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out displY);
+
                         GUILayout.EndHorizontal();
                         GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
                         break;
                     case curveType.LinearParts:
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label("Not implemented yet", Styles.WarningLabel);
+                        GUILayout.Space(windowRect.width * 0.2f);
+                        GUILayout.BeginVertical();
+
+                        openPointsFoldout = EditorGUILayout.Foldout(openPointsFoldout, "Points");
+
+                        if (openPointsFoldout)
+                        {
+                            List<Vector2> auxList = new List<Vector2>();
+
+                            // 2D points in the current list
+                            foreach (Vector2 point in points)
+                            {
+                                GUILayout.BeginHorizontal();
+
+                                // The point
+                                GUILayout.Label("• (", Styles.NonEditable, GUILayout.Width(20), GUILayout.Height(25));
+                                float.TryParse(EditorGUILayout.TextArea(point.x.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out float varX);
+                                GUILayout.Label(", ", Styles.NonEditable, GUILayout.Width(10), GUILayout.Height(25));
+                                float.TryParse(EditorGUILayout.TextArea(point.y.ToString(), Styles.TitleText, GUILayout.ExpandWidth(false), GUILayout.Height(20)), out float varY);
+                                GUILayout.Label(")", Styles.NonEditable, GUILayout.Width(10), GUILayout.Height(25));
+
+                                // The X button for deleting the point
+                                // If you don't press it it adds the element to the updated list, else it doesn't hence it will appear as it has been deleted
+                                if (!GUILayout.Button("x", new GUIStyle(GUI.skin.button)
+                                {
+                                    padding = new RectOffset(0, 0, 0, 0),
+                                    alignment = TextAnchor.MiddleCenter,
+                                    fontSize = 15
+                                },
+                                GUILayout.Width(20), GUILayout.Height(20)))
+                                {
+                                    auxList.Add(new Vector2(varX, varY));
+                                }
+
+                                GUILayout.EndHorizontal();
+                            }
+
+                            points = auxList;
+
+                            // The + button for adding a point
+                            GUILayout.BeginHorizontal();
+                            if (GUILayout.Button("+", new GUIStyle(GUI.skin.button)
+                            {
+                                padding = new RectOffset(0, 0, 0, 0),
+                                alignment = TextAnchor.MiddleCenter,
+                                fontSize = 15
+                            },
+                            GUILayout.Width(20), GUILayout.Height(20)))
+                            {
+                                points.Add(new Vector2(0, 0));
+                            }
+                            GUILayout.EndHorizontal();
+
+                            baseHeight = height * 1.5f + (points.Count + 1) * 25;
+                        }
+                        else
+                        {
+                            baseHeight = height * 1.5f;
+                        }
+
+                        GUILayout.EndVertical();
+                        GUILayout.Space(windowRect.width * 0.2f);
                         GUILayout.EndHorizontal();
                         break;
                 }
 
-                if (curveType != curveType.LinearParts)
+                // Create the curve visualization foldout arrow
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(10);
+                GUILayout.BeginVertical();
+                try
                 {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Space(10);
-                    GUILayout.BeginVertical();
-                    try
+                    openFoldout = EditorGUILayout.Foldout(openFoldout, "Visualize curve");
+
+                    if (openFoldout)
                     {
-                        openFoldout = EditorGUILayout.Foldout(openFoldout, "Visualize curve");
+                        windowRect.height = baseHeight + 110;
 
-                        if (openFoldout)
+                        Rect rect = new Rect(windowRect.width * 0.15f, windowRect.height - 110, windowRect.width * 0.7f, windowRect.width * 0.7f);
+                        EditorGUI.DrawRect(rect, new Color(0, 0, 1, 0.25f));
+
+                        Event e = Event.current;
+                        if (e.type == EventType.ScrollWheel)
                         {
-                            windowRect.height = height * 2.5f;
-
-                            Rect rect = new Rect(windowRect.width * 0.2f, windowRect.height * 0.6f, windowRect.width * 0.6f, 50);
-                            EditorGUI.DrawRect(rect, new Color(0, 0, 1, 0.25f));
-
-                            Event e = Event.current;
-                            if (e.type == EventType.ScrollWheel)
-                            {
-                                regularSize += e.delta.y * 0.02f * regularSize;
-                            }
-
-                            float yMin = -regularSize;
-                            float yMax = regularSize;
-                            float xMin = -regularSize;
-                            float xMax = regularSize;
-
-                            float step = 1 / editor.position.width;
-
-                            Handles.color = new Color(0.6f, 0.6f, 0.6f);
-                            DrawAxis(rect);
-
-                            Handles.color = Color.white;
-
-                            Vector3 prevPos = new Vector3(0, CurveFunc(xMin), 0);
-                            for (float t = step + xMin; t < xMax; t += step)
-                            {
-                                Vector3 pos = new Vector3((t + xMax) / (xMax - xMin), CurveFunc(t), 0);
-
-                                if (pos.y < yMax && pos.y > yMin)
-                                {
-                                    Handles.DrawLine(
-                                        new Vector3(rect.xMin + prevPos.x * rect.width, rect.yMax - ((prevPos.y - yMin) / (yMax - yMin)) * rect.height, 0),
-                                        new Vector3(rect.xMin + pos.x * rect.width, rect.yMax - ((pos.y - yMin) / (yMax - yMin)) * rect.height, 0));
-                                }
-
-                                prevPos = pos;
-                            }
+                            regularSize += e.delta.y * 0.02f * regularSize;
                         }
-                        else
+
+                        float yMin = -regularSize;
+                        float yMax = regularSize;
+                        float xMin = -regularSize;
+                        float xMax = regularSize;
+
+                        float step = 1 / editor.position.width;
+
+                        Handles.color = new Color(0.6f, 0.6f, 0.6f);
+                        DrawAxis(rect);
+
+                        Handles.color = Color.white;
+
+                        Vector3 prevPos = new Vector3(0, CurveFunc(xMin), 0);
+                        for (float t = step + xMin; t < xMax; t += step)
                         {
-                            windowRect.height = height * 1.5f;
+                            Vector3 pos = new Vector3((t + xMax) / (xMax - xMin), CurveFunc(t), 0);
+
+                            if (pos.y < yMax && pos.y > yMin)
+                            {
+                                Handles.DrawLine(
+                                    new Vector3(rect.xMin + prevPos.x * rect.width, rect.yMax - ((prevPos.y - yMin) / (yMax - yMin)) * rect.height, 0),
+                                    new Vector3(rect.xMin + pos.x * rect.width, rect.yMax - ((pos.y - yMin) / (yMax - yMin)) * rect.height, 0));
+                            }
+
+                            prevPos = pos;
                         }
                     }
-                    finally
+                    else
                     {
-                        GUILayout.EndHorizontal();
-                        GUILayout.EndVertical();
+                        windowRect.height = baseHeight;
                     }
                 }
-                else
+                finally
                 {
-                    windowRect.height = height * 1.2f;
+                    GUILayout.EndHorizontal();
+                    GUILayout.EndVertical();
                 }
 
                 break;
@@ -376,6 +457,24 @@ public class UtilityNode : BaseNode
                 return slope * t + displY;
             case curveType.Exponential:
                 return Mathf.Pow(t - displX, exp) + displY;
+            case curveType.LinearParts:
+                float returnValue = 0.0f;
+
+                for (int i = 0; i < points.Count; i++)
+                {
+                    float xPoint = points[i].x;
+                    if (i == 0 && t < xPoint) { returnValue = points[i].y; break; };
+                    if ((i == points.Count - 1) && t > xPoint) { returnValue = points[i].y; break; };
+                    if (t == xPoint) { returnValue = points[i].y; break; }
+
+                    if (t > xPoint && t < points[i + 1].x)
+                    {
+                        returnValue = ((t - xPoint) / (points[i + 1].x - xPoint)) * (points[i + 1].y - points[i].y) + points[i].y;
+                        break;
+                    }
+                }
+
+                return returnValue;
             default:
                 return 0;
         }
@@ -426,7 +525,8 @@ public class UtilityNode : BaseNode
                 slope = this.slope,
                 exp = this.exp,
                 displX = this.displX,
-                displY = this.displY
+                displY = this.displY,
+                points = this.points
             };
         }
 
@@ -456,7 +556,12 @@ public class UtilityNode : BaseNode
             fusionType = this.fusionType,
             curveType = this.curveType,
             variableMax = this.variableMax,
-            variableMin = this.variableMin
+            variableMin = this.variableMin,
+            slope = this.slope,
+            exp = this.exp,
+            displX = this.displX,
+            displY = this.displY,
+            points = this.points
         };
 
         if (this.subElem)
@@ -465,25 +570,6 @@ public class UtilityNode : BaseNode
         }
 
         return result;
-    }
-
-    /// <summary>
-    /// Updates the value of the weights accordingly
-    /// </summary>
-    public void WeightsUpdate(string id)
-    {
-        List<TransitionGUI> weightedTransitions = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).ToList();
-        float sumOfWeights = weightedTransitions.Sum(t => t.weight);
-
-        if (sumOfWeights != 1)
-        {
-            foreach (TransitionGUI transition in weightedTransitions.Where(t => t.identificator != id))
-            {
-                transition.weight += (1 - sumOfWeights) * transition.weight / weightedTransitions.Where(t => t.identificator != id).Sum(t => t.weight);
-
-                transition.weight = (float)decimal.Round((decimal)transition.weight, 2);
-            }
-        }
     }
 
     // TODO Ordenar la lista para que cuadre con la lista de factors asociada
@@ -503,4 +589,23 @@ public class UtilityNode : BaseNode
 
         return weightsFactorPair;
     }
+
+    ///// <summary>
+    ///// Updates the value of the weights accordingly
+    ///// </summary>
+    //public void WeightsUpdate(string id)
+    //{
+    //    List<TransitionGUI> weightedTransitions = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).ToList();
+    //    float sumOfWeights = weightedTransitions.Sum(t => t.weight);
+
+    //    if (sumOfWeights != 1)
+    //    {
+    //        foreach (TransitionGUI transition in weightedTransitions.Where(t => t.identificator != id))
+    //        {
+    //            transition.weight += (1 - sumOfWeights) * transition.weight / weightedTransitions.Where(t => t.identificator != id).Sum(t => t.weight);
+
+    //            transition.weight = (float)decimal.Round((decimal)transition.weight, 2);
+    //        }
+    //    }
+    //}
 }
