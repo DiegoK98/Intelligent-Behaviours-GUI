@@ -9,7 +9,8 @@ public class PopupWindow : EditorWindow
     enum typeOfPopup
     {
         Delete,
-        FailedExport
+        FailedExport,
+        Warning
     }
 
     /// <summary>
@@ -31,6 +32,8 @@ public class PopupWindow : EditorWindow
     /// The List of <see cref="GUIElement"/> that will be deleted
     /// </summary>
     static List<GUIElement> elems;
+
+    static string warningText = "";
 
     /// <summary>
     /// Width of the <see cref="PopupWindow"/>
@@ -79,6 +82,22 @@ public class PopupWindow : EditorWindow
     }
 
     /// <summary>
+    /// Initializer for the <see cref="PopupWindow"/> when we want to show a warning to the user
+    /// </summary>
+    public static void InitWarningPopup(string text)
+    {
+        senderEditor = EditorWindow.GetWindow<NodeEditor>();
+
+        warningText = text;
+
+        PopupType = typeOfPopup.Warning;
+
+        PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+        window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
+        window.ShowPopup();
+    }
+
+    /// <summary>
     /// Called once every frame
     /// </summary>
     void OnGUI()
@@ -90,6 +109,9 @@ public class PopupWindow : EditorWindow
                 break;
             case typeOfPopup.FailedExport:
                 ShowExportPopup();
+                break;
+            case typeOfPopup.Warning:
+                ShowWarningPopup();
                 break;
         }
 
@@ -158,6 +180,21 @@ public class PopupWindow : EditorWindow
     private void ShowExportPopup()
     {
         EditorGUILayout.LabelField("Fix all the errors", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+
+        GUILayout.Space(30);
+
+        if (GUILayout.Button("Ok"))
+        {
+            this.Close();
+        }
+    }
+
+    /// <summary>
+    /// Shows the <see cref="PopupWindow"/> warning you about something
+    /// </summary>
+    private void ShowWarningPopup()
+    {
+        EditorGUILayout.LabelField(warningText, EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
 
         GUILayout.Space(30);
 
