@@ -87,37 +87,57 @@ public abstract class ClickableElement : GUIElement
     {
         int repeatedNames = 0;
 
-        if (this is FSM)
+        switch (this.GetType().ToString())
         {
-            foreach (StateNode node in ((FSM)this).states)
-            {
-                if (node.nodeName == name)
+            case nameof(FSM):
+                foreach (StateNode node in ((FSM)this).states)
                 {
-                    repeatedNames++;
-                }
-                if (node.subElem != null)
-                {
-                    if (node.subElem.CheckNameExisting(name, 0))
+                    if (node.nodeName == name)
+                    {
                         repeatedNames++;
+                    }
+                    if (node.subElem != null)
+                    {
+                        if (node.subElem.CheckNameExisting(name, 0))
+                            repeatedNames++;
+                    }
                 }
-            }
-            foreach (TransitionGUI transition in ((FSM)this).transitions)
-            {
-                if (transition.transitionName == name)
+                foreach (TransitionGUI transition in ((FSM)this).transitions)
                 {
-                    repeatedNames++;
+                    if (transition.transitionName == name)
+                    {
+                        repeatedNames++;
+                    }
                 }
-            }
-        }
-        else if (this is BehaviourTree)
-        {
-            foreach (BehaviourNode node in ((BehaviourTree)this).nodes)
-            {
-                if (node.nodeName == name)
+                break;
+            case nameof(BehaviourTree):
+                foreach (BehaviourNode node in ((BehaviourTree)this).nodes)
                 {
-                    repeatedNames++;
+                    if (node.nodeName == name)
+                    {
+                        repeatedNames++;
+                    }
+                    if (node.subElem != null)
+                    {
+                        if (node.subElem.CheckNameExisting(name, 0))
+                            repeatedNames++;
+                    }
                 }
-            }
+                break;
+            case nameof(UtilitySystem):
+                foreach (UtilityNode node in ((UtilitySystem)this).nodes)
+                {
+                    if (node.nodeName == name)
+                    {
+                        repeatedNames++;
+                    }
+                    if (node.subElem != null)
+                    {
+                        if (node.subElem.CheckNameExisting(name, 0))
+                            repeatedNames++;
+                    }
+                }
+                break;
         }
 
         return repeatedNames > threshold;
