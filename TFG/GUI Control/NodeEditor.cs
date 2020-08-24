@@ -1780,10 +1780,14 @@ public class NodeEditor : EditorWindow
                 newElem.windowRect.x = mousePos.x;
                 newElem.windowRect.y = mousePos.y;
             }
-            Elements.Add(newElem);
-            editorNamer.AddName(newElem.identificator, newElem.elementName);
 
             element = currentBackup;
+
+            if (element is null)
+            {
+                Elements.Add(newElem);
+                editorNamer.AddName(newElem.identificator, newElem.elementName);
+            }
 
             return newElem;
         }
@@ -2584,7 +2588,7 @@ public class NodeEditor : EditorWindow
                 if (((BaseNode)elem).subElem is UtilitySystem)
                 {
                     ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).connections.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).connections.Cast<GUIElement>().ToList());
                 }
             }
         }
@@ -2671,7 +2675,7 @@ public class NodeEditor : EditorWindow
 
                         Elements.Add(clickElem);
 
-                        editorNamer.AddName(clickElem.identificator, clickElem.elementName);
+                        clickElem.elementName = editorNamer.AddName(clickElem.identificator, clickElem.elementName);
                     }
                 }
             }
@@ -2697,7 +2701,7 @@ public class NodeEditor : EditorWindow
                                 ((TransitionGUI)elem).sender = this;
 
                                 ((FSM)currentElem).transitions.Add((TransitionGUI)elem);
-                                currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                                ((TransitionGUI)elem).transitionName = currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
                             }
                         }
                         else
@@ -2707,10 +2711,10 @@ public class NodeEditor : EditorWindow
                             if (elem is ClickableElement)
                             {
                                 ((ClickableElement)elem).parent = currentElem;
-                                currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+                                ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                                 newElem = CreateInstance<StateNode>();
-                                newElem.InitStateNode(currentElem, stateType.Unconnected, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                                newElem.InitStateNode(currentElem, stateType.Unconnected, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
                             }
                             else
                             {
@@ -2718,14 +2722,15 @@ public class NodeEditor : EditorWindow
                                 {
                                     newElem = (StateNode)elem;
 
-                                    currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
+                                    newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
                                 }
                                 else
                                 {
                                     ((BaseNode)elem).parent = currentElem;
+                                    ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
                                     newElem = CreateInstance<StateNode>();
-                                    newElem.InitStateNode(currentElem, stateType.Unconnected, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                    newElem.InitStateNode(currentElem, stateType.Unconnected, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
                                 }
                             }
 
@@ -2765,7 +2770,7 @@ public class NodeEditor : EditorWindow
                                 ((TransitionGUI)elem).sender = this;
 
                                 ((BehaviourTree)currentElem).connections.Add((TransitionGUI)elem);
-                                currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                                ((TransitionGUI)elem).transitionName = currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
                             }
                         }
                         else
@@ -2775,10 +2780,10 @@ public class NodeEditor : EditorWindow
                             if (elem is ClickableElement)
                             {
                                 ((ClickableElement)elem).parent = currentElem;
-                                currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+                                ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                                 newElem = CreateInstance<BehaviourNode>();
-                                newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                                newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
                             }
                             else
                             {
@@ -2786,14 +2791,15 @@ public class NodeEditor : EditorWindow
                                 {
                                     newElem = (BehaviourNode)elem;
 
-                                    currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
+                                    newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
                                 }
                                 else
                                 {
                                     ((BaseNode)elem).parent = currentElem;
+                                    ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
                                     newElem = CreateInstance<BehaviourNode>();
-                                    newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                    newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
                                 }
                             }
 
@@ -2824,7 +2830,7 @@ public class NodeEditor : EditorWindow
                                 ((TransitionGUI)elem).sender = this;
 
                                 ((UtilitySystem)currentElem).connections.Add((TransitionGUI)elem);
-                                currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                                ((TransitionGUI)elem).transitionName = currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
                             }
                         }
                         else
@@ -2834,10 +2840,10 @@ public class NodeEditor : EditorWindow
                             if (elem is ClickableElement)
                             {
                                 ((ClickableElement)elem).parent = currentElem;
-                                currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+                                ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
 
                                 newElem = CreateInstance<UtilityNode>();
-                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem);
+                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
                             }
                             else
                             {
@@ -2845,14 +2851,15 @@ public class NodeEditor : EditorWindow
                                 {
                                     newElem = (UtilityNode)elem;
 
-                                    currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
+                                    newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
                                 }
                                 else
                                 {
                                     ((BaseNode)elem).parent = currentElem;
+                                    ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
                                     newElem = CreateInstance<UtilityNode>();
-                                    newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem);
+                                    newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
                                 }
                             }
 
