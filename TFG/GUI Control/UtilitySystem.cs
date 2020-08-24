@@ -151,6 +151,9 @@ public class UtilitySystem : ClickableElement
     {
         foreach (TransitionGUI elem in connections)
         {
+            if (elem.fromNode is null || elem.toNode is null)
+                break;
+
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 

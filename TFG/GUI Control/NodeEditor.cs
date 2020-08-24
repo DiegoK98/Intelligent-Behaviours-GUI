@@ -2638,10 +2638,9 @@ public class NodeEditor : EditorWindow
         }
         else
         {
-
             if (currentElem is null)
             {
-                if (clipboard.Any(e => !(e is ClickableElement || (e is BaseNode && ((BaseNode)e).subElem != null))))
+                if (clipboard.Any(e => !(e is ClickableElement || (e is BaseNode && ((BaseNode)e).subElem != null) || e is TransitionGUI)))
                 {
                     Debug.LogError("[ERROR] Couldn't paste these elements in this place");
                 }
@@ -2659,9 +2658,13 @@ public class NodeEditor : EditorWindow
                         {
                             clickElem = (ClickableElement)elem;
                         }
-                        else
+                        else if (elem is BaseNode)
                         {
                             clickElem = ((BaseNode)elem).subElem;
+                        }
+                        else
+                        {
+                            continue;
                         }
 
                         clickElem.parent = null;
@@ -2689,8 +2692,13 @@ public class NodeEditor : EditorWindow
                     {
                         if (elem is TransitionGUI)
                         {
-                            ((FSM)currentElem).transitions.Add((TransitionGUI)elem);
-                            currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                            if (((TransitionGUI)elem).fromNode is StateNode && ((TransitionGUI)elem).toNode is StateNode)
+                            {
+                                ((TransitionGUI)elem).sender = this;
+
+                                ((FSM)currentElem).transitions.Add((TransitionGUI)elem);
+                                currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                            }
                         }
                         else
                         {
@@ -2752,8 +2760,13 @@ public class NodeEditor : EditorWindow
                     {
                         if (elem is TransitionGUI)
                         {
-                            ((BehaviourTree)currentElem).connections.Add((TransitionGUI)elem);
-                            currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                            if (((TransitionGUI)elem).fromNode is BehaviourNode && ((TransitionGUI)elem).toNode is BehaviourNode)
+                            {
+                                ((TransitionGUI)elem).sender = this;
+
+                                ((BehaviourTree)currentElem).connections.Add((TransitionGUI)elem);
+                                currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                            }
                         }
                         else
                         {
@@ -2806,8 +2819,13 @@ public class NodeEditor : EditorWindow
                     {
                         if (elem is TransitionGUI)
                         {
-                            ((UtilitySystem)currentElem).connections.Add((TransitionGUI)elem);
-                            currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                            if (((TransitionGUI)elem).fromNode is UtilityNode && ((TransitionGUI)elem).toNode is UtilityNode)
+                            {
+                                ((TransitionGUI)elem).sender = this;
+
+                                ((UtilitySystem)currentElem).connections.Add((TransitionGUI)elem);
+                                currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
+                            }
                         }
                         else
                         {
