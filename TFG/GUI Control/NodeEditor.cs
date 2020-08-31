@@ -1799,75 +1799,106 @@ public class NodeEditor : EditorWindow
     /// Deletes the <paramref name="elem"/>
     /// </summary>
     /// <param name="elem"></param>
-    public void Delete(GUIElement elem, ClickableElement element = null, bool skipUndoStep = false)
+    public void Delete(GUIElement elem, ClickableElement parentElement = null, bool skipUndoStep = false)
     {
+        if (elem is null)
+        {
+            Debug.LogError("[Delete] Element was null");
+            return;
+        }
+
+        if (elem is ClickableElement && parentElement)
+        {
+            switch (parentElement.GetType().ToString())
+            {
+                case nameof(FSM):
+                    StateNode state = ((FSM)parentElement).states.Find(n => n.subElem && n.subElem.Equals(elem));
+                    Delete(state, parentElement, true);
+                    break;
+                case nameof(BehaviourTree):
+                    BehaviourNode node = ((BehaviourTree)parentElement).nodes.Find(n => n.subElem && n.subElem.Equals(elem));
+                    Delete(node, parentElement, true);
+                    break;
+                case nameof(UtilitySystem):
+                    UtilityNode utilNode = ((UtilitySystem)parentElement).nodes.Find(n => n.subElem && n.subElem.Equals(elem));
+                    Delete(utilNode, parentElement, true);
+                    break;
+            }
+
+            return;
+        }
+
         if (!skipUndoStep)
         {
             NodeEditorUtilities.GenerateUndoStep(currentElem);
         }
 
-        if (element is null)
+        if (parentElement is null)
         {
-            element = currentElem;
+            parentElement = currentElem;
         }
 
         switch (elem.GetType().ToString())
         {
             case nameof(StateNode):
                 StateNode stateNode = (StateNode)elem;
-                ((FSM)element).DeleteNode(stateNode);
+                ((FSM)parentElement).DeleteNode(stateNode);
 
                 focusedObjects.Remove(stateNode);
                 break;
 
             case nameof(BehaviourNode):
                 BehaviourNode behaviourNode = (BehaviourNode)elem;
-                ((BehaviourTree)element).DeleteNode(behaviourNode);
+                ((BehaviourTree)parentElement).DeleteNode(behaviourNode);
 
                 focusedObjects.Remove(behaviourNode);
                 break;
 
             case nameof(UtilityNode):
                 UtilityNode utilityNode = (UtilityNode)elem;
-                ((UtilitySystem)element).DeleteNode(utilityNode);
+                ((UtilitySystem)parentElement).DeleteNode(utilityNode);
 
                 focusedObjects.Remove(utilityNode);
                 break;
 
             case nameof(TransitionGUI):
-                if (element is FSM)
+                if (parentElement is FSM)
                 {
                     TransitionGUI transition = (TransitionGUI)elem;
-                    ((FSM)element).DeleteTransition(transition);
+                    ((FSM)parentElement).DeleteTransition(transition);
+
+                    focusedObjects.Remove(transition);
+                }
+                else if (parentElement is UtilitySystem)
+                {
+                    TransitionGUI transition = (TransitionGUI)elem;
+                    ((UtilitySystem)parentElement).DeleteConnection(transition);
 
                     focusedObjects.Remove(transition);
                 }
                 break;
 
             case nameof(FSM):
-                FSM fsm = (FSM)elem;
-                Elements.Remove(fsm);
+                Elements.Remove((ClickableElement)elem);
+                editorNamer.RemoveName(elem.identificator);
 
-                editorNamer.RemoveName(fsm.identificator);
+                focusedObjects.Remove(elem);
 
-                focusedObjects.Remove(fsm);
                 break;
 
             case nameof(BehaviourTree):
-                BehaviourTree bt = (BehaviourTree)elem;
-                Elements.Remove(bt);
+                Elements.Remove((ClickableElement)elem);
+                editorNamer.RemoveName(elem.identificator);
 
-                editorNamer.RemoveName(bt.identificator);
+                focusedObjects.Remove(elem);
 
-                focusedObjects.Remove(bt);
                 break;
             case nameof(UtilitySystem):
-                UtilitySystem us = (UtilitySystem)elem;
-                Elements.Remove(us);
+                Elements.Remove((ClickableElement)elem);
+                editorNamer.RemoveName(elem.identificator);
 
-                editorNamer.RemoveName(us.identificator);
+                focusedObjects.Remove(elem);
 
-                focusedObjects.Remove(us);
                 break;
         }
     }

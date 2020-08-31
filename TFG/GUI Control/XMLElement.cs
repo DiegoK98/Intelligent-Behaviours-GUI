@@ -353,6 +353,9 @@ public class XMLElement
             case nameof(BehaviourTree):
                 this.ToBehaviourTree(currentElement, selectedNode);
                 break;
+            case nameof(UtilitySystem):
+                this.ToUtilitySystem(currentElement, selectedNode);
+                break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
                 nodeBT.InitBehaviourNodeFromXML(currentTree, (behaviourType)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY, this.Id, this.name, this.delayTime, this.Nloops, this.isRandom);

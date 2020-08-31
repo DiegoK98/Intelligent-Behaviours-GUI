@@ -171,18 +171,29 @@ public class UtilitySystem : ClickableElement
         {
             foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
             {
-                connections.Remove(transition);
-                //DeleteNode((UtilityNode)transition.toNode);
+                DeleteConnection(transition);
             }
             foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
             {
-                connections.Remove(transition);
+                DeleteConnection(transition);
             }
 
             if (node.subElem == null)
                 elementNamer.RemoveName(node.identificator);
             else
                 elementNamer.RemoveName(node.subElem.identificator);
+        }
+    }
+
+    /// <summary>
+    /// Delete <paramref name="connection"/>
+    /// </summary>
+    /// <param name="connection"></param>
+    public void DeleteConnection(TransitionGUI connection)
+    {
+        if (connections.Remove(connection))
+        {
+            elementNamer.RemoveName(connection.identificator);
         }
     }
 
