@@ -237,19 +237,16 @@ public class FSM : ClickableElement
     /// Delete <paramref name="node"/> and all <see cref="TransitionGUI"/> connected to it
     /// </summary>
     /// <param name="node"></param>
-    public void DeleteNode(StateNode node)
+    public void DeleteNode(StateNode node, bool deleteTransitions = true)
     {
         if (states.Remove(node))
         {
-            for (int i = 0; i < node.nodeTransitions.Count; i++)
+            if (deleteTransitions)
             {
-                DeleteTransition(node.nodeTransitions[i]);
-            }
-
-            // Notify all nodes that this node has been deleted, so they can delete the necessary transition references
-            foreach (StateNode n in states)
-            {
-                n.NodeDeleted(node);
+                foreach (TransitionGUI nodeTransition in transitions.Where(t => t.fromNode.Equals(node) || t.toNode.Equals(node)))
+                {
+                    DeleteTransition(nodeTransition);
+                }
             }
 
             if (node.subElem == null)
@@ -267,11 +264,6 @@ public class FSM : ClickableElement
     {
         if (transitions.Remove(transition))
         {
-            foreach (StateNode n in states)
-            {
-                n.nodeTransitions.Remove(transition);
-            }
-
             CheckConnected();
 
             elementNamer.RemoveName(transition.identificator);
@@ -305,9 +297,9 @@ public class FSM : ClickableElement
             return;
         }
 
-        foreach (TransitionGUI elem in baseNode.nodeTransitions.FindAll(o => o.fromNode.Equals(baseNode)))
+        foreach (TransitionGUI nodeTransition in transitions.FindAll(t => t.fromNode.Equals(baseNode)))
         {
-            CheckConnected((StateNode)elem.toNode);
+            CheckConnected((StateNode)nodeTransition.toNode);
         }
     }
 
@@ -318,9 +310,6 @@ public class FSM : ClickableElement
     public void AddTransition(TransitionGUI newTransition)
     {
         transitions.Add(newTransition);
-
-        ((StateNode)newTransition.fromNode).nodeTransitions.Add(newTransition);
-        ((StateNode)newTransition.toNode).nodeTransitions.Add(newTransition);
 
         CheckConnected();
     }

@@ -165,17 +165,16 @@ public class UtilitySystem : ClickableElement
     /// Deletes the <paramref name="node"/>
     /// </summary>
     /// <param name="node"></param>
-    public void DeleteNode(UtilityNode node)
+    public void DeleteNode(UtilityNode node, bool deleteTransitions = true)
     {
         if (nodes.Remove(node))
         {
-            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+            if (deleteTransitions)
             {
-                DeleteConnection(transition);
-            }
-            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
-            {
-                DeleteConnection(transition);
+                foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode) || node.Equals(t.toNode)))
+                {
+                    DeleteConnection(transition);
+                }
             }
 
             if (node.subElem == null)

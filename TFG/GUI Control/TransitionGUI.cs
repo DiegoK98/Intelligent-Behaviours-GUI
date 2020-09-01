@@ -174,12 +174,6 @@ public class TransitionGUI : GUIElement
             rootPerception = (PerceptionGUI)rootPerception.CopyElement()
         };
 
-        if (fromNode is StateNode && toNode is StateNode)
-        {
-            ((StateNode)fromNode).nodeTransitions.Add((TransitionGUI)result);
-            ((StateNode)toNode).nodeTransitions.Add((TransitionGUI)result);
-        }
-
         return result;
     }
 

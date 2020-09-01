@@ -160,18 +160,21 @@ public class BehaviourTree : ClickableElement
     /// Deletes the <paramref name="node"/> and its children
     /// </summary>
     /// <param name="node"></param>
-    public void DeleteNode(BehaviourNode node)
+    public void DeleteNode(BehaviourNode node, bool deleteTransitions = true)
     {
         if (nodes.Remove(node))
         {
-            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+            if (deleteTransitions)
             {
-                connections.Remove(transition);
-                DeleteNode((BehaviourNode)transition.toNode);
-            }
-            foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
-            {
-                connections.Remove(transition);
+                foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+                {
+                    connections.Remove(transition);
+                    DeleteNode((BehaviourNode)transition.toNode);
+                }
+                foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
+                {
+                    connections.Remove(transition);
+                }
             }
 
             if (node.subElem == null)

@@ -607,6 +607,7 @@ public class NodeEditor : EditorWindow
                             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
                             selectedTransition.toNode = ((FSM)currentElem).states[selectIndex];
+
                             ((FSM)currentElem).CheckConnected();
                         }
 
@@ -1842,21 +1843,21 @@ public class NodeEditor : EditorWindow
         {
             case nameof(StateNode):
                 StateNode stateNode = (StateNode)elem;
-                ((FSM)parentElement).DeleteNode(stateNode);
+                ((FSM)parentElement).DeleteNode(stateNode, !skipUndoStep);
 
                 focusedObjects.Remove(stateNode);
                 break;
 
             case nameof(BehaviourNode):
                 BehaviourNode behaviourNode = (BehaviourNode)elem;
-                ((BehaviourTree)parentElement).DeleteNode(behaviourNode);
+                ((BehaviourTree)parentElement).DeleteNode(behaviourNode, !skipUndoStep);
 
                 focusedObjects.Remove(behaviourNode);
                 break;
 
             case nameof(UtilityNode):
                 UtilityNode utilityNode = (UtilityNode)elem;
-                ((UtilitySystem)parentElement).DeleteNode(utilityNode);
+                ((UtilitySystem)parentElement).DeleteNode(utilityNode, !skipUndoStep);
 
                 focusedObjects.Remove(utilityNode);
                 break;
@@ -2637,12 +2638,6 @@ public class NodeEditor : EditorWindow
             {
                 ((TransitionGUI)elem).fromNode = (BaseNode)clipboard.Find(n => n.identificator == ((TransitionGUI)elem).fromNode.identificator);
                 ((TransitionGUI)elem).toNode = (BaseNode)clipboard.Find(n => n.identificator == ((TransitionGUI)elem).toNode.identificator);
-
-                if (((TransitionGUI)elem).fromNode is StateNode && ((TransitionGUI)elem).toNode is StateNode)
-                {
-                    ((StateNode)((TransitionGUI)elem).fromNode).nodeTransitions.Add((TransitionGUI)elem);
-                    ((StateNode)((TransitionGUI)elem).toNode).nodeTransitions.Add((TransitionGUI)elem);
-                }
             }
         }
 
@@ -2924,9 +2919,84 @@ public class NodeEditor : EditorWindow
     {
         if (NodeEditorUtilities.undoStepsSaved > 0)
         {
+            List<TransitionGUI> transitionsIn = new List<TransitionGUI>();
+            List<TransitionGUI> transitionsOut = new List<TransitionGUI>();
+
             NodeEditorUtilities.GenerateRedoStep(currentElem);
+
+            // We save the node's transitions to reconnect them later if the parent is not the main page
+            if (currentElem.parent)
+            {
+                switch (currentElem.parent.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        StateNode state = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
+                        List<TransitionGUI> stateTransitionsIn = ((FSM)currentElem.parent).transitions.FindAll(t => t.toNode.Equals(state));
+                        List<TransitionGUI> stateTransitionsOut = ((FSM)currentElem.parent).transitions.FindAll(t => t.fromNode.Equals(state));
+
+                        transitionsIn.AddRange(stateTransitionsIn);
+                        transitionsOut.AddRange(stateTransitionsOut);
+                        break;
+                    case nameof(BehaviourTree):
+                        BehaviourNode node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
+                        List<TransitionGUI> nodeTransitionsIn = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.toNode.Equals(node));
+                        List<TransitionGUI> nodeTransitionsOut = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(node));
+
+                        transitionsIn.AddRange(nodeTransitionsIn);
+                        transitionsOut.AddRange(nodeTransitionsOut);
+                        break;
+                    case nameof(UtilitySystem):
+                        UtilityNode utilNode = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
+                        List<TransitionGUI> utilNodeTransitionsIn = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.toNode.Equals(utilNode));
+                        List<TransitionGUI> utilNodeTransitionsOut = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(utilNode));
+
+                        transitionsIn.AddRange(utilNodeTransitionsIn);
+                        transitionsOut.AddRange(utilNodeTransitionsOut);
+                        break;
+                }
+            }
+
+            // Delete the current element and load the one from the UndoSteps to replace it 
             Delete(currentElem, currentElem.parent, true);
             currentElem = LoadElem(NodeEditorUtilities.LoadUndoStep(), currentElem.parent, false);
+
+            // We reconnect the transitions if the parent is not the main page
+            if (currentElem.parent)
+            {
+                BaseNode node = null;
+
+                switch (currentElem.parent.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        node = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                        break;
+                    case nameof(BehaviourTree):
+                        node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                        break;
+                    case nameof(UtilitySystem):
+                        node = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                        break;
+                }
+
+                foreach (TransitionGUI trans in transitionsIn)
+                {
+                    trans.toNode = node;
+
+                    if (currentElem.parent is FSM)
+                        ((FSM)currentElem.parent).CheckConnected();
+                }
+
+                foreach (TransitionGUI trans in transitionsOut)
+                {
+                    trans.fromNode = node;
+
+                    if (currentElem.parent is FSM)
+                        ((FSM)currentElem.parent).CheckConnected();
+                }
+            }
         }
     }
 
@@ -2937,9 +3007,84 @@ public class NodeEditor : EditorWindow
     {
         if (NodeEditorUtilities.redoStepsSaved > 0)
         {
+            List<TransitionGUI> transitionsIn = new List<TransitionGUI>();
+            List<TransitionGUI> transitionsOut = new List<TransitionGUI>();
+
             NodeEditorUtilities.GenerateUndoStep(currentElem, false);
+
+            // We save the node's transitions to reconnect them later if the parent is not the main page
+            if (currentElem.parent)
+            {
+                switch (currentElem.parent.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        StateNode state = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
+                        List<TransitionGUI> stateTransitionsIn = ((FSM)currentElem.parent).transitions.FindAll(t => t.toNode.Equals(state));
+                        List<TransitionGUI> stateTransitionsOut = ((FSM)currentElem.parent).transitions.FindAll(t => t.fromNode.Equals(state));
+
+                        transitionsIn.AddRange(stateTransitionsIn);
+                        transitionsOut.AddRange(stateTransitionsOut);
+                        break;
+                    case nameof(BehaviourTree):
+                        BehaviourNode node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
+                        List<TransitionGUI> nodeTransitionsIn = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.toNode.Equals(node));
+                        List<TransitionGUI> nodeTransitionsOut = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(node));
+
+                        transitionsIn.AddRange(nodeTransitionsIn);
+                        transitionsOut.AddRange(nodeTransitionsOut);
+                        break;
+                    case nameof(UtilitySystem):
+                        UtilityNode utilNode = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
+                        List<TransitionGUI> utilNodeTransitionsIn = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.toNode.Equals(utilNode));
+                        List<TransitionGUI> utilNodeTransitionsOut = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(utilNode));
+
+                        transitionsIn.AddRange(utilNodeTransitionsIn);
+                        transitionsOut.AddRange(utilNodeTransitionsOut);
+                        break;
+                }
+            }
+
+            // Delete the current element and load the one from the RedoSteps to replace it 
             Delete(currentElem, currentElem.parent, true);
             currentElem = LoadElem(NodeEditorUtilities.LoadRedoStep(), currentElem.parent, false);
+
+            // We reconnect the transitions if the parent is not the main page
+            if (currentElem.parent)
+            {
+                BaseNode node = null;
+
+                switch (currentElem.parent.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        node = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                        break;
+                    case nameof(BehaviourTree):
+                        node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                        break;
+                    case nameof(UtilitySystem):
+                        node = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                        break;
+                }
+
+                foreach (TransitionGUI trans in transitionsIn)
+                {
+                    trans.toNode = node;
+
+                    if (currentElem.parent is FSM)
+                        ((FSM)currentElem.parent).CheckConnected();
+                }
+
+                foreach (TransitionGUI trans in transitionsOut)
+                {
+                    trans.fromNode = node;
+
+                    if (currentElem.parent is FSM)
+                        ((FSM)currentElem.parent).CheckConnected();
+                }
+            }
         }
     }
 
