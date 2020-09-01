@@ -2749,7 +2749,9 @@ public class NodeEditor : EditorWindow
                             }
                             else
                             {
-                                if (elem is StateNode)
+                                ((BaseNode)elem).parent = currentElem;
+
+                                if (((BaseNode)elem).subElem is null)
                                 {
                                     newElem = (StateNode)elem;
 
@@ -2757,7 +2759,7 @@ public class NodeEditor : EditorWindow
                                 }
                                 else
                                 {
-                                    ((BaseNode)elem).parent = currentElem;
+                                    ((BaseNode)elem).subElem.parent = currentElem;
                                     ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
                                     newElem = CreateInstance<StateNode>();
@@ -2818,7 +2820,9 @@ public class NodeEditor : EditorWindow
                             }
                             else
                             {
-                                if (elem is BehaviourNode)
+                                ((BaseNode)elem).parent = currentElem;
+
+                                if (((BaseNode)elem).subElem is null)
                                 {
                                     newElem = (BehaviourNode)elem;
 
@@ -2826,7 +2830,7 @@ public class NodeEditor : EditorWindow
                                 }
                                 else
                                 {
-                                    ((BaseNode)elem).parent = currentElem;
+                                    ((BaseNode)elem).subElem.parent = currentElem;
                                     ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
                                     newElem = CreateInstance<BehaviourNode>();
@@ -2878,7 +2882,9 @@ public class NodeEditor : EditorWindow
                             }
                             else
                             {
-                                if (elem is UtilityNode)
+                                ((BaseNode)elem).parent = currentElem;
+
+                                if (((BaseNode)elem).subElem is null)
                                 {
                                     newElem = (UtilityNode)elem;
 
@@ -2886,7 +2892,7 @@ public class NodeEditor : EditorWindow
                                 }
                                 else
                                 {
-                                    ((BaseNode)elem).parent = currentElem;
+                                    ((BaseNode)elem).subElem.parent = currentElem;
                                     ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
                                     newElem = CreateInstance<UtilityNode>();
