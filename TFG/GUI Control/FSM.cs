@@ -243,7 +243,10 @@ public class FSM : ClickableElement
         {
             if (deleteTransitions)
             {
-                foreach (TransitionGUI nodeTransition in transitions.Where(t => t.fromNode.Equals(node) || t.toNode.Equals(node)))
+                List<TransitionGUI> nodeTransitionsList = transitions.Where(t => t.fromNode.Equals(node) || t.toNode.Equals(node)).ToList();
+
+                // We have to use a temp list because we are deleting its elements in the middle of the loop
+                foreach (TransitionGUI nodeTransition in nodeTransitionsList)
                 {
                     DeleteTransition(nodeTransition);
                 }
