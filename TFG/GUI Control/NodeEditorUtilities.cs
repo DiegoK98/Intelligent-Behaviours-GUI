@@ -7,6 +7,7 @@ using System.Text;
 using System.Xml.Serialization;
 using UnityEditor;
 using UnityEngine;
+using Microsoft.CSharp;
 
 public class NodeEditorUtilities
 {
@@ -485,8 +486,7 @@ public class NodeEditorUtilities
         string templateText = string.Empty;
 
         string folderPath = pathName.Substring(0, pathName.LastIndexOf("/") + 1);
-
-        UTF8Encoding encoding = new UTF8Encoding(true, false);
+        string scriptName = pathName.Substring(pathName.LastIndexOf("/") + 1).Replace(".cs", "");
 
         if (File.Exists(templatePath))
         {
@@ -502,7 +502,9 @@ public class NodeEditorUtilities
                 // Replace the tags with the corresponding parts
                 List<ClickableElement> subElems = new List<ClickableElement>();
 
-                templateText = templateText.Replace("#SCRIPTNAME#", CleanName(elem.elementName));
+                templateText = templateText.Replace("#SCRIPTNAME#", CleanName(scriptName));
+
+                templateText = templateText.Replace("#FSMNAME#", CleanName(elem.elementName));
 
                 switch (elem.GetType().ToString())
                 {
@@ -544,6 +546,8 @@ public class NodeEditorUtilities
             /// templateText = templateText.Replace("#NEWTAG#", "MyText");
 
             // Write procedures
+            UTF8Encoding encoding = new UTF8Encoding(true, false);
+
             StreamWriter writer = new StreamWriter(Path.GetFullPath(pathName), false, encoding);
             writer.Write(templateText);
             writer.Close();
@@ -630,10 +634,23 @@ public class NodeEditorUtilities
         string result;
         var numberChars = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
         var spacesAndNewlines = new[] { ' ', '\n' };
+        var keywords = new[]
+        {
+            "bool", "byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong", "double", "float", "decimal",
+            "string", "char", "void", "object", "typeof", "sizeof", "null", "true", "false", "if", "else", "while", "for", "foreach", "do", "switch",
+            "case", "default", "lock", "try", "throw", "catch", "finally", "goto", "break", "continue", "return", "public", "private", "internal",
+            "protected", "static", "readonly", "sealed", "const", "fixed", "stackalloc", "volatile", "new", "override", "abstract", "virtual",
+            "event", "extern", "ref", "out", "in", "is", "as", "params", "__arglist", "__makeref", "__reftype", "__refvalue", "this", "base",
+            "namespace", "using", "class", "struct", "interface", "enum", "delegate", "checked", "unchecked", "unsafe", "operator", "implicit", "explicit"
+        };
 
         result = name.Trim(spacesAndNewlines);
         result = string.Concat(result.Where(c => !char.IsWhiteSpace(c) && !char.IsPunctuation(c) && !char.IsSymbol(c)));
         result = result.TrimStart(numberChars);
+
+        // If result is a keyword, we add @ before it which makes it a valid identifier
+        if (keywords.Contains(result))
+            result = "@" + result;
 
         return result;
     }
