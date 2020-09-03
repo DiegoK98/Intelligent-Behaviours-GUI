@@ -1451,7 +1451,16 @@ public class NodeEditorUtilities
                     break;
                 case utilityType.Curve:
                     UtilityNode prevFactor = node.GetWeightsAndFactors().Select(k => k.Value).FirstOrDefault();
-                    string prevFactorName = CleanName(prevFactor.nodeName);
+                    string prevFactorName;
+
+                    if (prevFactor)
+                    {
+                        prevFactorName = CleanName(prevFactor.nodeName);
+                    }
+                    else
+                    {
+                        prevFactorName = "null";
+                    }
 
                     switch (node.curveType)
                     {

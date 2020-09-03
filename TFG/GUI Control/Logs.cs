@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The numbers in these enums define the priority
 public enum Error
 {
     NoEntryState = 4,
@@ -17,7 +18,7 @@ public enum Warning
     WeightZero = 1,
 }
 
-public class ConsoleLogs
+public class Logs
 {
     /// <summary>
     /// Transforms the <paramref name="error"/> into a pre-defined message
@@ -63,7 +64,7 @@ public class ConsoleLogs
                 prompt += "A Leaf Node cannot be the root of the Behaviour Tree";
                 break;
             case Warning.NoFactors:
-                prompt += "At least one Action node does not have any Factors connected to it, meaning it will be ignored";
+                prompt += "At least one Node does not have any Factors connected to it, meaning that line of Action will be ignored";
                 break;
             case Warning.UnconnectedNode:
                 prompt += "At least one State node is disconnected from the entry state, meaning it will be ignored";

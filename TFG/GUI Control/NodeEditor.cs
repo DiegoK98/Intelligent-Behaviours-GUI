@@ -243,7 +243,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
-            if (((UtilitySystem)currentElem).nodes.Exists(n => ((UtilityNode)n).type == utilityType.Action && !((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(n))))
+            if (((UtilitySystem)currentElem).nodes.Exists(n => ((UtilityNode)n).type != utilityType.Variable && !((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(n))))
             {
                 currentElem.AddWarning(Warning.NoFactors);
             }
@@ -2509,7 +2509,7 @@ public class NodeEditor : EditorWindow
         {
             if ((int)warning.Value > currentPriority)
             {
-                maxPriorityErrorOrWarning = ConsoleLogs.WarningToString(warning.Value, warning.Key);
+                maxPriorityErrorOrWarning = Logs.WarningToString(warning.Value, warning.Key);
                 currentPriority = (int)warning.Value;
             }
         }
@@ -2522,7 +2522,7 @@ public class NodeEditor : EditorWindow
             if ((int)error.Value > currentPriority)
             {
                 errorShown = true;
-                maxPriorityErrorOrWarning = ConsoleLogs.ErrorToString(error.Value, error.Key);
+                maxPriorityErrorOrWarning = Logs.ErrorToString(error.Value, error.Key);
                 currentPriority = (int)error.Value;
             }
         }
