@@ -1164,73 +1164,72 @@ public class NodeEditorUtilities
 
         if (node.type > behaviourType.Leaf)
         {
-            TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
-
-            string nodeName = "null";
-
-            if (decoratorConnection?.toNode)
-            {
-                TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
-                string subNodeName = "null";
-
-                if (decoratorConnectionsub)
-                {
-                    subNodeName = CleanName(decoratorConnectionsub.toNode.nodeName);
-                }
-
-                switch (((BehaviourNode)decoratorConnection.toNode).type)
-                {
-                    case behaviourType.LoopN:
-                        nodeName = "LoopN_" + subNodeName;
-                        break;
-                    case behaviourType.LoopUntilFail:
-                        nodeName = "LoopUntilFail_" + subNodeName;
-                        break;
-                    case behaviourType.Inverter:
-                        nodeName = "Inverter_" + subNodeName;
-                        break;
-                    case behaviourType.DelayT:
-                        nodeName = "Timer_" + subNodeName;
-                        break;
-                    case behaviourType.Succeeder:
-                        nodeName = "Succeeder_" + subNodeName;
-                        break;
-                    case behaviourType.Conditional:
-                        nodeName = "Conditional_" + subNodeName;
-                        break;
-                    default:
-                        nodeName = CleanName(decoratorConnection.toNode.nodeName);
-                        break;
-                }
-            }
+            string nodeName = GetDecoratorName(elem, node);
+            string subNodeName;
 
             switch (node.type)
             {
                 case behaviourType.LoopN:
-                    string loopNodeName = "LoopN_" + nodeName;
-                    result += "LoopDecoratorNode " + loopNodeName + " = " + machineName + ".CreateLoopNode(\"" + loopNodeName + "\", " + nodeName + ", " + node.Nloops + ");\n" + tab + tab;
+                    subNodeName = nodeName.TrimStart("LoopN_".ToCharArray());
+                    result += "LoopDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopNode(\"" + nodeName + "\", " + subNodeName + ", " + node.Nloops + ");\n" + tab + tab;
                     break;
                 case behaviourType.LoopUntilFail:
-                    string loopUntilNodeName = "LoopUntilFail_" + nodeName;
-                    result += "LoopUntilFailDecoratorNode " + loopUntilNodeName + " = " + machineName + ".CreateLoopUntilFailNode(\"" + loopUntilNodeName + "\", " + nodeName + ");\n" + tab + tab;
+                    subNodeName = nodeName.TrimStart("LoopUntilFail_".ToCharArray());
+                    result += "LoopUntilFailDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopUntilFailNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.Inverter:
-                    string InverterNodeName = "Inverter_" + nodeName;
-                    result += "InverterDecoratorNode " + InverterNodeName + " = " + machineName + ".CreateInverterNode(\"" + InverterNodeName + "\", " + nodeName + ");\n" + tab + tab;
+                    subNodeName = nodeName.TrimStart("Inverter_".ToCharArray());
+                    result += "InverterDecoratorNode " + nodeName + " = " + machineName + ".CreateInverterNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.DelayT:
-                    string TimerNodeName = "Timer_" + nodeName;
-                    result += "TimerDecoratorNode " + TimerNodeName + " = " + machineName + ".CreateTimerNode(\"" + TimerNodeName + "\", " + nodeName + ", " + node.delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
+                    subNodeName = nodeName.TrimStart("Timer_".ToCharArray());
+                    result += "TimerDecoratorNode " + nodeName + " = " + machineName + ".CreateTimerNode(\"" + nodeName + "\", " + subNodeName + ", " + node.delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
                     break;
                 case behaviourType.Succeeder:
-                    string SucceederNodeName = "Succeeder_" + nodeName;
-                    result += "SucceederDecoratorNode " + SucceederNodeName + " = " + machineName + ".CreateSucceederNode(\"" + SucceederNodeName + "\", " + nodeName + ");\n" + tab + tab;
+                    subNodeName = nodeName.TrimStart("Succeeder_".ToCharArray());
+                    result += "SucceederDecoratorNode " + nodeName + " = " + machineName + ".CreateSucceederNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.Conditional:
-                    string ConditionalNodeName = "Conditional_" + nodeName;
-                    result += "ConditionalDecoratorNode " + ConditionalNodeName + " = " + machineName + ".CreateConditionalNode(\"" + ConditionalNodeName + "\", " + nodeName + ", null /*Change this for a perception*/);\n" + tab + tab;
+                    subNodeName = nodeName.TrimStart("Conditional_".ToCharArray());
+                    result += "ConditionalDecoratorNode " + nodeName + " = " + machineName + ".CreateConditionalNode(\"" + nodeName + "\", " + subNodeName + ", null /*Change this for a perception*/);\n" + tab + tab;
                     break;
             }
+        }
+    }
+
+    /// <summary>
+    /// Returns the name of the Decorator <paramref name="node"/>
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    private static string GetDecoratorName(ClickableElement elem, BehaviourNode node)
+    {
+        if (node.type <= behaviourType.Leaf)
+        {
+            return CleanName(node.nodeName);
+        }
+
+        TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
+
+        string subNodeName = decoratorConnection ? GetDecoratorName(elem, (BehaviourNode)decoratorConnection.toNode) : "null";
+
+        switch (node.type)
+        {
+            case behaviourType.LoopN:
+                return "LoopN_" + subNodeName;
+            case behaviourType.LoopUntilFail:
+                return "LoopUntilFail_" + subNodeName;
+            case behaviourType.Inverter:
+                return "Inverter_" + subNodeName;
+            case behaviourType.DelayT:
+                return "Timer_" + subNodeName;
+            case behaviourType.Succeeder:
+                return "Succeeder_" + subNodeName;
+            case behaviourType.Conditional:
+                return "Conditional_" + subNodeName;
+            default:
+                return "Unknown_" + subNodeName;
         }
     }
 
@@ -1348,70 +1347,7 @@ public class NodeEditorUtilities
 
                 if (node.type > behaviourType.Leaf)
                 {
-                    TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
-
-                    string nodeName = "null";
-
-                    if (decoratorConnection?.toNode)
-                    {
-                        TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
-                        string subNodeName = "null";
-
-                        if (decoratorConnectionsub)
-                        {
-                            subNodeName = CleanName(decoratorConnectionsub.toNode.nodeName);
-                        }
-
-                        switch (((BehaviourNode)decoratorConnection.toNode).type)
-                        {
-                            case behaviourType.LoopN:
-                                nodeName = "LoopN_" + subNodeName;
-                                break;
-                            case behaviourType.LoopUntilFail:
-                                nodeName = "LoopUntilFail_" + subNodeName;
-                                break;
-                            case behaviourType.Inverter:
-                                nodeName = "Inverter_" + subNodeName;
-                                break;
-                            case behaviourType.DelayT:
-                                nodeName = "Timer_" + subNodeName;
-                                break;
-                            case behaviourType.Succeeder:
-                                nodeName = "Succeeder_" + subNodeName;
-                                break;
-                            case behaviourType.Conditional:
-                                nodeName = "Conditional_" + subNodeName;
-                                break;
-                            default:
-                                nodeName = CleanName(decoratorConnection.toNode.nodeName);
-                                break;
-                        }
-                    }
-
-                    switch (node.type)
-                    {
-                        case behaviourType.LoopN:
-                            rootName = "LoopN_" + nodeName;
-                            break;
-                        case behaviourType.LoopUntilFail:
-                            rootName = "LoopUntilFail_" + nodeName;
-                            break;
-                        case behaviourType.Inverter:
-                            rootName = "Inverter_" + nodeName;
-                            break;
-                        case behaviourType.DelayT:
-                            rootName = "Timer_" + nodeName;
-                            break;
-                        case behaviourType.Succeeder:
-                            rootName = "Succeeder_" + nodeName;
-                            break;
-                        case behaviourType.Conditional:
-                            rootName = "Conditional_" + nodeName;
-                            break;
-                        default:
-                            rootName = "Null_" + nodeName;
-                            break;
-                    }
+                    rootName = GetDecoratorName(elem, node);
                 }
                 else
                 {
