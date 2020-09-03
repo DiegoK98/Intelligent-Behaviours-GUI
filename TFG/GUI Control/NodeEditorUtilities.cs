@@ -1365,23 +1365,25 @@ public class NodeEditorUtilities
     #region Utility System
 
     /// <summary>
-    /// Writes all the declaration and initialization from a list of type T. The content of .Add() at the initialization, can be defined with <paramref name="func"/>
+    /// Writes all the declaration and initialization from a list of type <typeparamref name="TypeInput"/>. The content of .Add() at the initialization, can be defined with <paramref name="func"/>
     /// </summary>
-    /// <typeparam name="T">Type of the <paramref name="preexistingList"/> elements</typeparam>
-    /// <typeparam name="TResult">Type of the resulting list</typeparam>
+    /// <typeparam name="TypeInput">Type of the <paramref name="preexistingList"/> elements</typeparam>
+    /// <typeparam name="TypeResult">Type of the resulting list</typeparam>
     /// <param name="listName"></param>
     /// <param name="preexistingList"></param>
     /// <param name="func">The string of code that will be written inside the Add() for each element like this: "resultList.Add(" + func + ")"</param>
     /// <returns></returns>
-    private static string CreateList<T, TResult>(string listName, List<T> preexistingList, Func<T, string> func)
+    private static string WriteList<TypeInput, TypeResult>(string listName, List<TypeInput> preexistingList, Func<TypeInput, string> func)
     {
         string result = string.Empty;
 
-        result += "List<" + typeof(TResult) + "> " + listName + " = new List<" + typeof(TResult) + ">();\n" + tab + tab;
-        foreach (T elem in preexistingList)
+        result += "List<" + typeof(TypeResult) + "> " + listName + " = new List<" + typeof(TypeResult) + ">\n" + tab + tab;
+        result += "{\n" + tab + tab;
+        foreach (TypeInput elem in preexistingList)
         {
-            result += listName + ".Add(" + func(elem) + ");\n" + tab + tab;
+            result += tab + func(elem) + ",\n" + tab + tab;
         }
+        result += "};\n" + tab + tab;
 
         result += "\n" + tab + tab;
 
@@ -1403,6 +1405,16 @@ public class NodeEditorUtilities
         {
             string factorName = CleanName(node.nodeName);
 
+            if (node.type != utilityType.Action)
+                result += "Factor " + factorName + " = null;\n" + tab + tab;
+        }
+
+        result += "\n" + tab + tab;
+
+        foreach (UtilityNode node in ((UtilitySystem)elem).nodes)
+        {
+            string factorName = CleanName(node.nodeName);
+
             switch (node.type)
             {
                 case utilityType.Variable:
@@ -1415,17 +1427,17 @@ public class NodeEditorUtilities
                     switch (node.fusionType)
                     {
                         case fusionType.Weighted:
-                            result += CreateList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
-                            result += CreateList<float, float>(weightsListName, node.GetWeightsAndFactors().Select(k => k.Key).ToList(), (float weightElem) => weightElem.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f");
-                            result += "Factor " + factorName + " = " + "new WeightedSumFusion(" + factorsListName + ", " + weightsListName + ");\n" + tab + tab;
+                            result += WriteList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
+                            result += WriteList<float, float>(weightsListName, node.GetWeightsAndFactors().Select(k => k.Key).ToList(), (float weightElem) => weightElem.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f");
+                            result += factorName + " = " + "new WeightedSumFusion(" + factorsListName + ", " + weightsListName + ");\n" + tab + tab;
                             break;
                         case fusionType.GetMax:
-                            result += CreateList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
-                            result += "Factor " + factorName + " = " + "new MaxFusion(" + factorsListName + ");\n" + tab + tab;
+                            result += WriteList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
+                            result += factorName + " = " + "new MaxFusion(" + factorsListName + ");\n" + tab + tab;
                             break;
                         case fusionType.GetMin:
-                            result += CreateList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
-                            result += "Factor " + factorName + " = " + "new MinFusion(" + factorsListName + ");\n" + tab + tab;
+                            result += WriteList<UtilityNode, Factor>(factorsListName, node.GetWeightsAndFactors().Select(k => k.Value).ToList(), (UtilityNode nodeElem) => CleanName(nodeElem.nodeName));
+                            result += factorName + " = " + "new MinFusion(" + factorsListName + ");\n" + tab + tab;
                             break;
                     }
                     break;
@@ -1436,15 +1448,15 @@ public class NodeEditorUtilities
                     switch (node.curveType)
                     {
                         case curveType.Linear:
-                            result += "Factor " + factorName + " = " + "new LinearCurve(" + prevFactorName + ", " + node.slope + ", " + node.displY + ");\n" + tab + tab;
+                            result += factorName + " = " + "new LinearCurve(" + prevFactorName + ", " + node.slope + ", " + node.displY + ");\n" + tab + tab;
                             break;
                         case curveType.Exponential:
-                            result += "Factor " + factorName + " = " + "new ExpCurve(" + prevFactorName + ", " + node.exp + ", " + node.displX + ", " + node.displY + ");\n" + tab + tab;
+                            result += factorName + " = " + "new ExpCurve(" + prevFactorName + ", " + node.exp + ", " + node.displX + ", " + node.displY + ");\n" + tab + tab;
                             break;
                         case curveType.LinearParts:
                             string pointsListName = factorName + "Points";
-                            result += CreateList<Vector2, Point2D>(pointsListName, node.points, (Vector2 point) => "new Point2D(" + point.x + ", " + point.y + ")");
-                            result += "Factor " + factorName + " = " + "new LinearPartsCurve(" + prevFactorName + ", " + pointsListName + ");\n" + tab + tab;
+                            result += WriteList<Vector2, Point2D>(pointsListName, node.points, (Vector2 point) => "new Point2D(" + point.x + ", " + point.y + ")");
+                            result += factorName + " = " + "new LinearPartsCurve(" + prevFactorName + ", " + pointsListName + ");\n" + tab + tab;
                             break;
                     }
                     break;

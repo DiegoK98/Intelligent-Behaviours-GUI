@@ -577,7 +577,6 @@ public class UtilityNode : BaseNode
         return result;
     }
 
-    // TODO Ordenar la lista para que cuadre con la lista de factors asociada
     /// <summary>
     /// Returns a list of all the weights associated with this Fusion node
     /// </summary>
@@ -594,23 +593,4 @@ public class UtilityNode : BaseNode
 
         return weightsFactorPair;
     }
-
-    ///// <summary>
-    ///// Updates the value of the weights accordingly
-    ///// </summary>
-    //public void WeightsUpdate(string id)
-    //{
-    //    List<TransitionGUI> weightedTransitions = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).ToList();
-    //    float sumOfWeights = weightedTransitions.Sum(t => t.weight);
-
-    //    if (sumOfWeights != 1)
-    //    {
-    //        foreach (TransitionGUI transition in weightedTransitions.Where(t => t.identificator != id))
-    //        {
-    //            transition.weight += (1 - sumOfWeights) * transition.weight / weightedTransitions.Where(t => t.identificator != id).Sum(t => t.weight);
-
-    //            transition.weight = (float)decimal.Round((decimal)transition.weight, 2);
-    //        }
-    //    }
-    //}
 }
