@@ -502,7 +502,6 @@ public class UtilityNode : BaseNode
             new Vector3(rect.xMin + 0.5f * rect.width, rect.yMax - rect.height, 0));
     }
 
-    // TODO
     /// <summary>
     /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="UtilityNode"/>
     /// </summary>

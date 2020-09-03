@@ -53,7 +53,6 @@ public class UtilitySystem : ClickableElement
         windowRect = new Rect(posx, posy, width, height);
     }
 
-    // TODO
     /// <summary>
     /// Creates and returns an <see cref="XMLElement"/> that corresponds to this <see cref="BehaviourTree"/>
     /// </summary>

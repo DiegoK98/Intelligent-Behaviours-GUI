@@ -154,7 +154,6 @@ public class PerceptionGUI : GUIElement
         throw new NotImplementedException();
     }
 
-    // TODO
     /// <summary>
     /// Creates a copy of this <see cref="PerceptionGUI"/>
     /// </summary>
