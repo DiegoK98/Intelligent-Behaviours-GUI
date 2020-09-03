@@ -31,6 +31,19 @@ public abstract class GUIElement : ScriptableObject
     public abstract string GetTypeString();
 
     /// <summary>
+    /// Compares this <see cref="GUIElement"/> with <paramref name="other"/>
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    public override bool Equals(object other)
+    {
+        if (this.identificator != ((GUIElement)other).identificator)
+            return false;
+
+        return true;
+    }
+
+    /// <summary>
     /// Draws all elements inside the <see cref="GUIElement"/>
     /// </summary>
     public abstract void DrawWindow();

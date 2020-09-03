@@ -356,7 +356,7 @@ public class TransitionGUI : GUIElement
                                 string auxName = currentPerception.elemName;
 
                                 FSM selectedFSM = subFSMsList.Where(e => e.elementName == auxName).FirstOrDefault();
-                                List<StateNode> subStatesList = selectedFSM ? selectedFSM.states.Where(s => s.subElem == null).ToList() : new List<StateNode>();
+                                List<BaseNode> subStatesList = selectedFSM ? selectedFSM.nodes.Where(s => s.subElem == null).ToList() : new List<BaseNode>();
 
                                 GUI.enabled = subStatesList.Count > 0;
 
@@ -495,25 +495,6 @@ public class TransitionGUI : GUIElement
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
-    }
-
-    /// <summary>
-    /// Compares this <see cref="TransitionGUI"/> with <paramref name="other"/>
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
-    {
-        if (!base.Equals(other))
-            return false;
-        if (this.transitionName != ((TransitionGUI)other).transitionName)
-            return false;
-        if (this.identificator != ((TransitionGUI)other).identificator)
-            return false;
-        if (!fromNode.Equals(((TransitionGUI)other).fromNode) || !toNode.Equals(((TransitionGUI)other).toNode))
-            return false;
-
-        return true;
     }
 
     /// <summary>

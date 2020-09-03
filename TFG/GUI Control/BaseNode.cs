@@ -48,23 +48,6 @@ public abstract class BaseNode : GUIElement
     }
 
     /// <summary>
-    /// Compares this <see cref="BaseNode"/> with <paramref name="other"/>
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
-    {
-        if (!base.Equals(other))
-            return false;
-        if (this.nodeName != ((BaseNode)other).nodeName)
-            return false;
-        if (this.identificator != ((BaseNode)other).identificator)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
     /// Draws all the elements inside the <see cref="BaseNode"/>
     /// </summary>
     public override abstract void DrawWindow();

@@ -13,23 +13,13 @@ public class FSM : ClickableElement
     private StateNode EntryState;
 
     /// <summary>
-    /// List of <see cref="StateNode"/> that form this <see cref="FSM"/>
-    /// </summary>
-    public List<StateNode> states = new List<StateNode>();
-
-    /// <summary>
-    /// List of <see cref="TransitionGUI"/> that connect the <see cref="states"/>
-    /// </summary>
-    public List<TransitionGUI> transitions = new List<TransitionGUI>();
-
-    /// <summary>
     /// Returns true if this <see cref="FSM"/> has an <see cref="EntryState"/>
     /// </summary>
     public bool HasEntryState
     {
         get
         {
-            return EntryState != null && states.Contains(EntryState);
+            return EntryState != null && nodes.Contains(EntryState);
         }
     }
 
@@ -97,7 +87,7 @@ public class FSM : ClickableElement
             elemType = this.GetType().ToString(),
             windowPosX = this.windowRect.x,
             windowPosY = this.windowRect.y,
-            nodes = states.ConvertAll((node) =>
+            nodes = nodes.ConvertAll((node) =>
             {
                 return node.ToXMLElement();
             }),
@@ -130,12 +120,12 @@ public class FSM : ClickableElement
             windowRect = new Rect(this.windowRect)
         };
 
-        ((FSM)result).states = this.states.Select(o => (StateNode)o.CopyElement(result)).ToList();
+        ((FSM)result).nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
         ((FSM)result).transitions = this.transitions.Select(o =>
-        (TransitionGUI)o.CopyElement(((FSM)result).states.Find(n => n.identificator == o.fromNode.identificator),
-                                     ((FSM)result).states.Find(n => n.identificator == o.toNode.identificator))).ToList();
+        (TransitionGUI)o.CopyElement(((FSM)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
+                                     ((FSM)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
-        foreach (StateNode elem in ((FSM)result).states)
+        foreach (StateNode elem in ((FSM)result).nodes)
         {
             if (elem.type == stateType.Entry)
             {
@@ -156,30 +146,13 @@ public class FSM : ClickableElement
     }
 
     /// <summary>
-    /// Compares this <see cref="FSM"/> with <paramref name="other"/>
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
-    {
-        if (!base.Equals(other))
-            return false;
-        if (this.elementName != ((FSM)other).elementName)
-            return false;
-        if (this.identificator != ((FSM)other).identificator)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
     /// Add <paramref name="node"/> as an <see cref="EntryState"/>
     /// </summary>
     /// <param name="node"></param>
     public void AddEntryState(StateNode node)
     {
         node.type = stateType.Entry;
-        states.Add(node);
+        nodes.Add(node);
         EntryState = node;
     }
 
@@ -239,7 +212,7 @@ public class FSM : ClickableElement
     /// <param name="node"></param>
     public void DeleteNode(StateNode node, bool deleteTransitions = true)
     {
-        if (states.Remove(node))
+        if (nodes.Remove(node))
         {
             if (deleteTransitions)
             {
@@ -283,12 +256,12 @@ public class FSM : ClickableElement
         {
             baseNode = EntryState;
 
-            foreach (StateNode elem in states.FindAll(o => o.type != stateType.Entry))
+            foreach (StateNode elem in nodes.FindAll(o => ((StateNode)o).type != stateType.Entry))
             {
                 elem.type = stateType.Unconnected;
             }
 
-            if (!states.Contains(baseNode))
+            if (!nodes.Contains(baseNode))
                 return;
         }
         else if (baseNode.type == stateType.Unconnected)
@@ -325,7 +298,7 @@ public class FSM : ClickableElement
     {
         List<ClickableElement> result = new List<ClickableElement>();
 
-        foreach (StateNode node in states)
+        foreach (StateNode node in nodes)
         {
             if (node.subElem != null)
             {

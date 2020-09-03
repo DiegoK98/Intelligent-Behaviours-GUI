@@ -169,7 +169,7 @@ public class BehaviourNode : BaseNode
                 delayTime = this.delayTime,
                 Nloops = this.Nloops,
 
-                nodes = parentTree.connections.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
+                nodes = parentTree.transitions.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
                 {
                     return node.ToXMLElement(parentTree);
                 }),

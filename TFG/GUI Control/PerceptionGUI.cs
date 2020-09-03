@@ -65,21 +65,6 @@ public class PerceptionGUI : GUIElement
     public PerceptionGUI secondChild;
 
     /// <summary>
-    /// Compares this <see cref="PerceptionGUI"/> with <paramref name="other"/>
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
-    {
-        if (!base.Equals(other))
-            return false;
-        if (this.identificator != ((PerceptionGUI)other).identificator)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
     /// Returns the <see cref="perceptionType"/> properly written
     /// </summary>
     /// <returns></returns>

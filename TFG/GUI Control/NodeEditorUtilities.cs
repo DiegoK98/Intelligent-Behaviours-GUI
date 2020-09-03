@@ -978,7 +978,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (StateNode node in ((FSM)elem).states)
+        foreach (StateNode node in ((FSM)elem).nodes)
         {
             string nodeName = CleanName(node.nodeName);
 
@@ -1096,7 +1096,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => n.type <= behaviourType.Leaf))
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => ((BehaviourNode)n).type <= behaviourType.Leaf))
         {
             string nodeName = CleanName(node.nodeName);
 
@@ -1140,7 +1140,7 @@ public class NodeEditorUtilities
         // Decorator nodes
         // We check every node from the root so it is written in order in the generated code
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => o.isRoot))
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => ((BehaviourNode)o).isRoot))
         {
             RecursiveDecorators(ref result, machineName, elem, node);
         }
@@ -1157,20 +1157,20 @@ public class NodeEditorUtilities
     /// <param name="node"></param>
     private static void RecursiveDecorators(ref string result, string machineName, ClickableElement elem, BehaviourNode node)
     {
-        foreach (BehaviourNode childNode in ((BehaviourTree)elem).connections.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
+        foreach (BehaviourNode childNode in ((BehaviourTree)elem).transitions.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
         {
             RecursiveDecorators(ref result, machineName, elem, childNode);
         }
 
         if (node.type > behaviourType.Leaf)
         {
-            TransitionGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
+            TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
 
             string nodeName = "null";
 
             if (decoratorConnection?.toNode)
             {
-                TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).connections.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
+                TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
                 string subNodeName = "";
 
                 if (decoratorConnectionsub)
@@ -1249,20 +1249,20 @@ public class NodeEditorUtilities
         string className = CleanName(elem.elementName);
         string result = string.Empty;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.Where(n => n.type < behaviourType.Leaf && ((BehaviourTree)elem).ChildrenCount(n) > 0))
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.Where(n => ((BehaviourNode)n).type < behaviourType.Leaf && ((BehaviourTree)elem).ChildrenCount((BehaviourNode)n) > 0))
         {
             string baseNodeName = CleanName(node.nodeName);
             result += "\n" + tab + tab;
-            foreach (BehaviourNode toNode in ((BehaviourTree)elem).connections.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode))
+            foreach (BehaviourNode toNode in ((BehaviourTree)elem).transitions.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode))
             {
                 string toNodeName = CleanName(toNode.nodeName);
-                TransitionGUI decoratorConnection = ((BehaviourTree)elem).connections.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
+                TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
 
                 string nodeName = "null";
 
                 if (decoratorConnection?.toNode)
                 {
-                    TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).connections.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
+                    TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
                     string subNodeName = "";
 
                     if (decoratorConnectionsub)
@@ -1467,7 +1467,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (UtilityNode node in ((UtilitySystem)elem).nodes.Where(n => n.type == utilityType.Action))
+        foreach (UtilityNode node in ((UtilitySystem)elem).nodes.Where(n => ((UtilityNode)n).type == utilityType.Action))
         {
             string nodeName = CleanName(node.nodeName);
 
@@ -1527,7 +1527,7 @@ public class NodeEditorUtilities
         switch (elem.GetType().ToString())
         {
             case nameof(FSM):
-                foreach (StateNode node in ((FSM)elem).states)
+                foreach (BaseNode node in elem.nodes)
                 {
                     if (node.subElem != null)
                     {
@@ -1546,7 +1546,7 @@ public class NodeEditorUtilities
                 }
                 break;
             case nameof(BehaviourTree):
-                foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => n.type == behaviourType.Leaf))
+                foreach (BaseNode node in elem.nodes.Where(n => ((BehaviourNode)n).type == behaviourType.Leaf))
                 {
                     if (node.subElem != null)
                     {
@@ -1573,7 +1573,7 @@ public class NodeEditorUtilities
                 }
                 break;
             case nameof(UtilitySystem):
-                foreach (UtilityNode node in ((UtilitySystem)elem).nodes)
+                foreach (BaseNode node in elem.nodes.Where(n => ((UtilityNode)n).type == utilityType.Action))
                 {
                     if (node.subElem != null)
                     {

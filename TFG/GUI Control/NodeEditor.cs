@@ -210,7 +210,7 @@ public class NodeEditor : EditorWindow
                 currentElem.RemoveError(Error.NoEntryState);
             }
 
-            if (((FSM)currentElem).states.Exists(n => n.type == stateType.Unconnected))
+            if (((FSM)currentElem).nodes.Exists(n => ((StateNode)n).type == stateType.Unconnected))
             {
                 currentElem.AddWarning(Warning.UnconnectedNode);
             }
@@ -222,7 +222,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is BehaviourTree)
         {
-            if (((BehaviourTree)currentElem).nodes.Where(n => n.isRoot).Count() > 1)
+            if (((BehaviourTree)currentElem).nodes.Where(n => ((BehaviourNode)n).isRoot).Count() > 1)
             {
                 currentElem.AddError(Error.MoreThanOneRoot);
             }
@@ -243,7 +243,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is UtilitySystem)
         {
-            if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Action && !((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n))))
+            if (((UtilitySystem)currentElem).nodes.Exists(n => ((UtilityNode)n).type == utilityType.Action && !((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(n))))
             {
                 currentElem.AddWarning(Warning.NoFactors);
             }
@@ -252,7 +252,7 @@ public class NodeEditor : EditorWindow
                 currentElem.RemoveWarning(Warning.NoFactors);
             }
 
-            if (((UtilitySystem)currentElem).nodes.Exists(n => n.type == utilityType.Fusion && n.fusionType == fusionType.Weighted && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(n) && t.weight == 0)))
+            if (((UtilitySystem)currentElem).nodes.Exists(n => ((UtilityNode)n).type == utilityType.Fusion && ((UtilityNode)n).fusionType == fusionType.Weighted && ((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(n) && t.weight == 0)))
             {
                 currentElem.AddWarning(Warning.WeightZero);
             }
@@ -309,7 +309,7 @@ public class NodeEditor : EditorWindow
                                 {
                                     menu.AddItem(new GUIContent("Make Transition"), false, ContextCallback, new string[] { "makeTransition", selectIndex.ToString() });
 
-                                    if (!((FSM)currentElem).isEntryState(((FSM)currentElem).states[selectIndex]))
+                                    if (!((FSM)currentElem).isEntryState((StateNode)((FSM)currentElem).nodes[selectIndex]))
                                     {
                                         menu.AddItem(new GUIContent("Convert to Entry State"), false, ContextCallback, new string[] { "entryState", selectIndex.ToString() });
                                     }
@@ -382,7 +382,7 @@ public class NodeEditor : EditorWindow
                                 }
                                 else if (clickedOnWindow)
                                 {
-                                    if (((UtilitySystem)currentElem).nodes[selectIndex].type != utilityType.Action)
+                                    if (((UtilityNode)((UtilitySystem)currentElem).nodes[selectIndex]).type != utilityType.Action)
                                     {
                                         menu.AddItem(new GUIContent("Connect Node"), false, ContextCallback, new string[] { "connectNode", selectIndex.ToString() });
                                         menu.AddSeparator("");
@@ -405,7 +405,7 @@ public class NodeEditor : EditorWindow
                         ClickableElement element = null;
                         if (currentElem is FSM && clickedOnWindow)
                         {
-                            element = ((FSM)currentElem).states[selectIndex].subElem;
+                            element = ((FSM)currentElem).nodes[selectIndex].subElem;
                         }
                         else if (currentElem is BehaviourTree && clickedOnLeaf)
                         {
@@ -502,14 +502,14 @@ public class NodeEditor : EditorWindow
                     }
                     if (currentElem is UtilitySystem)
                     {
-                        selNode = ((UtilitySystem)currentElem).connections[selectIndex];
+                        selNode = ((UtilitySystem)currentElem).transitions[selectIndex];
                     }
                 }
                 else if (clickedOnWindow)
                 {
                     if (currentElem is FSM)
                     {
-                        selNode = ((FSM)currentElem).states[selectIndex];
+                        selNode = ((FSM)currentElem).nodes[selectIndex];
                     }
                     else if (currentElem is BehaviourTree)
                     {
@@ -532,7 +532,7 @@ public class NodeEditor : EditorWindow
                     focusedObjects.Remove(selNode);
                     if (currentElem is BehaviourTree)
                     {
-                        focusedObjects.Remove(((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(selNode)).FirstOrDefault());
+                        focusedObjects.Remove(((BehaviourTree)currentElem).transitions.Where(c => c.toNode.Equals(selNode)).FirstOrDefault());
                     }
                 }
                 else if (selNode)
@@ -541,7 +541,14 @@ public class NodeEditor : EditorWindow
 
                     if (currentElem is BehaviourTree)
                     {
-                        GUIElement transToAdd = ((BehaviourTree)currentElem).connections.Where(c => c.toNode.Equals(selNode)).FirstOrDefault();
+                        GUIElement transToAdd = ((BehaviourTree)currentElem).transitions.Where(c => c.toNode.Equals(selNode)).FirstOrDefault();
+                        if (transToAdd)
+                            focusedObjects.Add(transToAdd);
+                    }
+
+                    if (currentElem is UtilitySystem)
+                    {
+                        GUIElement transToAdd = ((UtilitySystem)currentElem).transitions.Where(c => c.toNode.Equals(selNode)).FirstOrDefault();
                         if (transToAdd)
                             focusedObjects.Add(transToAdd);
                     }
@@ -574,14 +581,14 @@ public class NodeEditor : EditorWindow
                 {
                     if (makeTransitionMode)
                     {
-                        if (clickedOnWindow && !((FSM)currentElem).states[selectIndex].Equals(selectednode))
+                        if (clickedOnWindow && !((FSM)currentElem).nodes[selectIndex].Equals(selectednode))
                         {
-                            if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
+                            if (!((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(((FSM)currentElem).nodes[selectIndex])))
                             {
                                 NodeEditorUtilities.GenerateUndoStep(currentElem);
 
                                 TransitionGUI transition = CreateInstance<TransitionGUI>();
-                                transition.InitTransitionGUI(currentElem, selectednode, ((FSM)currentElem).states[selectIndex]);
+                                transition.InitTransitionGUI(currentElem, selectednode, ((FSM)currentElem).nodes[selectIndex]);
 
                                 ((FSM)currentElem).AddTransition(transition);
                             }
@@ -601,12 +608,12 @@ public class NodeEditor : EditorWindow
                     if (reconnectTransitionMode)
                     {
                         if (clickedOnWindow
-                            && !(((FSM)currentElem).states[selectIndex].Equals(selectedTransition.toNode) || ((FSM)currentElem).states[selectIndex].Equals(selectedTransition.fromNode))
-                            && !((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(((FSM)currentElem).states[selectIndex])))
+                            && !(((FSM)currentElem).nodes[selectIndex].Equals(selectedTransition.toNode) || ((FSM)currentElem).nodes[selectIndex].Equals(selectedTransition.fromNode))
+                            && !((FSM)currentElem).transitions.Exists(t => t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(((FSM)currentElem).nodes[selectIndex])))
                         {
                             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
-                            selectedTransition.toNode = ((FSM)currentElem).states[selectIndex];
+                            selectedTransition.toNode = ((FSM)currentElem).nodes[selectIndex];
 
                             ((FSM)currentElem).CheckConnected();
                         }
@@ -631,7 +638,7 @@ public class NodeEditor : EditorWindow
                         TransitionGUI transition = CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(currentElem, selectednode, toCreateNode);
 
-                        ((BehaviourTree)currentElem).connections.Add(transition);
+                        ((BehaviourTree)currentElem).transitions.Add(transition);
 
                         makeAttachedNode = false;
                         selectednode = null;
@@ -641,13 +648,13 @@ public class NodeEditor : EditorWindow
                     }
                     if (makeConnectionMode)
                     {
-                        if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, ((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourTree)currentElem).nodes[selectIndex].type == behaviourType.Leaf))
+                        if (clickedOnWindow && !((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)((BehaviourTree)currentElem).nodes[selectIndex]) && !decoratorWithOneChild && !(((BehaviourNode)((BehaviourTree)currentElem).nodes[selectIndex]).type == behaviourType.Leaf))
                         {
                             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
                             transition.InitTransitionGUI(currentElem, ((BehaviourTree)currentElem).nodes[selectIndex], selectednode);
-                            ((BehaviourTree)currentElem).connections.Add(transition);
+                            ((BehaviourTree)currentElem).transitions.Add(transition);
 
                             ((BehaviourNode)selectednode).isRoot = false;
                         }
@@ -671,7 +678,7 @@ public class NodeEditor : EditorWindow
                         TransitionGUI transition = CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(currentElem, toCreateNode, selectednode);
 
-                        ((UtilitySystem)currentElem).connections.Add(transition);
+                        ((UtilitySystem)currentElem).transitions.Add(transition);
 
                         makeAttachedNode = false;
                         selectednode = null;
@@ -681,13 +688,13 @@ public class NodeEditor : EditorWindow
                     }
                     if (makeConnectionMode)
                     {
-                        if (clickedOnWindow && !((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, ((UtilitySystem)currentElem).nodes[selectIndex]) && !actionWithOneFactor && !curveWithOneFactor && !(((UtilitySystem)currentElem).nodes[selectIndex].type == utilityType.Variable))
+                        if (clickedOnWindow && !((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)((UtilitySystem)currentElem).nodes[selectIndex]) && !actionWithOneFactor && !curveWithOneFactor && !(((UtilityNode)((UtilitySystem)currentElem).nodes[selectIndex]).type == utilityType.Variable))
                         {
                             NodeEditorUtilities.GenerateUndoStep(currentElem);
 
                             TransitionGUI transition = CreateInstance<TransitionGUI>();
                             transition.InitTransitionGUI(currentElem, selectednode, ((UtilitySystem)currentElem).nodes[selectIndex]);
-                            ((UtilitySystem)currentElem).connections.Add(transition);
+                            ((UtilitySystem)currentElem).transitions.Add(transition);
                         }
 
                         makeConnectionMode = false;
@@ -850,12 +857,12 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
-            for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
+            for (int i = 0; i < ((FSM)currentElem).nodes.Count; i++)
             {
                 // Write how many errors are in this element
                 string errorAbb = "";
-                int errorCount = ((FSM)currentElem).states[i].subElem ? ((FSM)currentElem).states[i].subElem.GetErrors().Count : 0;
-                int warningCount = ((FSM)currentElem).states[i].subElem ? ((FSM)currentElem).states[i].subElem.GetWarnings().Count : 0;
+                int errorCount = ((FSM)currentElem).nodes[i].subElem ? ((FSM)currentElem).nodes[i].subElem.GetErrors().Count : 0;
+                int warningCount = ((FSM)currentElem).nodes[i].subElem ? ((FSM)currentElem).nodes[i].subElem.GetWarnings().Count : 0;
 
                 if (errorCount + warningCount > 0)
                 {
@@ -875,11 +882,11 @@ public class NodeEditor : EditorWindow
                     errorAbb += ")";
                 }
 
-                ((FSM)currentElem).states[i].windowRect = GUI.Window(i, ((FSM)currentElem).states[i].windowRect, DrawNodeWindow, ((FSM)currentElem).states[i].GetTypeString() + errorAbb, new GUIStyle(Styles.SubTitleText)
+                ((FSM)currentElem).nodes[i].windowRect = GUI.Window(i, ((FSM)currentElem).nodes[i].windowRect, DrawNodeWindow, ((FSM)currentElem).nodes[i].GetTypeString() + errorAbb, new GUIStyle(Styles.SubTitleText)
                 {
                     normal = new GUIStyleState()
                     {
-                        background = GetBackground(((FSM)currentElem).states[i])
+                        background = GetBackground(((FSM)currentElem).nodes[i])
                     }
                 });
             }
@@ -925,7 +932,7 @@ public class NodeEditor : EditorWindow
                 Rect transitionRect = new Rect(pos.x - 75, pos.y - 15, elem.width, elem.height);
                 transitionRect.position += offset;
 
-                elem.windowRect = GUI.Window(i + ((FSM)currentElem).states.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
+                elem.windowRect = GUI.Window(i + ((FSM)currentElem).nodes.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
                 {
                     normal = new GUIStyleState()
                     {
@@ -940,7 +947,7 @@ public class NodeEditor : EditorWindow
             for (int i = 0; i < ((BehaviourTree)currentElem).nodes.Count; i++)
             {
                 string displayName = "";
-                if (((BehaviourTree)currentElem).nodes[i].type > behaviourType.Selector)
+                if (((BehaviourNode)((BehaviourTree)currentElem).nodes[i]).type > behaviourType.Selector)
                     displayName = ((BehaviourTree)currentElem).nodes[i].GetTypeString();
 
                 // Write how many errors are in this element
@@ -980,7 +987,7 @@ public class NodeEditor : EditorWindow
             for (int i = 0; i < ((UtilitySystem)currentElem).nodes.Count; i++)
             {
                 string displayName = "";
-                if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Action)
+                if (((UtilityNode)((UtilitySystem)currentElem).nodes[i]).type == utilityType.Action)
                 {
                     displayName = ((UtilitySystem)currentElem).nodes[i].GetTypeString();
 
@@ -1016,7 +1023,7 @@ public class NodeEditor : EditorWindow
                 });
             }
 
-            foreach (TransitionGUI elem in ((UtilitySystem)currentElem).connections.Where(t => ((UtilityNode)t.toNode).type == utilityType.Fusion && ((UtilityNode)t.toNode).fusionType == fusionType.Weighted))
+            foreach (TransitionGUI elem in ((UtilitySystem)currentElem).transitions.Where(t => ((UtilityNode)t.toNode).type == utilityType.Fusion && ((UtilityNode)t.toNode).fusionType == fusionType.Weighted))
             {
                 if (elem.fromNode is null || elem.toNode is null)
                     break;
@@ -1025,7 +1032,7 @@ public class NodeEditor : EditorWindow
                                           elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
                 Rect transitionRect = new Rect(pos.x, pos.y - 30, 70, 25);
 
-                elem.windowRect = GUI.Window(((UtilitySystem)currentElem).connections.IndexOf(elem) + ((UtilitySystem)currentElem).nodes.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
+                elem.windowRect = GUI.Window(((UtilitySystem)currentElem).transitions.IndexOf(elem) + ((UtilitySystem)currentElem).nodes.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
                 {
                     alignment = TextAnchor.MiddleCenter,
                     normal = new GUIStyleState()
@@ -1047,7 +1054,7 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
-            foreach (BaseNode node in ((FSM)currentElem).states)
+            foreach (BaseNode node in ((FSM)currentElem).nodes)
             {
                 if (currentElem.CheckNameExisting(node.nodeName, 1))
                     repeatedNames = true;
@@ -1124,9 +1131,9 @@ public class NodeEditor : EditorWindow
 
         if (currentElem is FSM)
         {
-            for (int i = 0; i < ((FSM)currentElem).states.Count; i++)
+            for (int i = 0; i < ((FSM)currentElem).nodes.Count; i++)
             {
-                if (((FSM)currentElem).states[i].windowRect.Contains(mousePos))
+                if (((FSM)currentElem).nodes[i].windowRect.Contains(mousePos))
                 {
                     selectIndex = i;
                     clickedOnWindow = 1;
@@ -1154,13 +1161,13 @@ public class NodeEditor : EditorWindow
                     selectIndex = i;
                     clickedOnWindow = 1;
 
-                    if (((BehaviourTree)currentElem).connections.Exists(t => t.toNode.Equals(((BehaviourTree)currentElem).nodes[i])))
+                    if (((BehaviourTree)currentElem).transitions.Exists(t => t.toNode.Equals(((BehaviourTree)currentElem).nodes[i])))
                         nodeWithAscendants = 1;
 
-                    if (((BehaviourTree)currentElem).nodes[i].type == behaviourType.Leaf)
+                    if (((BehaviourNode)((BehaviourTree)currentElem).nodes[i]).type == behaviourType.Leaf)
                         clickedOnLeaf = 1;
 
-                    else if (((BehaviourTree)currentElem).nodes[i].type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(((BehaviourTree)currentElem).nodes[i])))
+                    else if (((BehaviourNode)((BehaviourTree)currentElem).nodes[i]).type >= behaviourType.LoopN && ((BehaviourTree)currentElem).transitions.Exists(t => t.fromNode.Equals(((BehaviourTree)currentElem).nodes[i])))
                         decoratorWithOneChild = 1;
 
                     break;
@@ -1177,22 +1184,22 @@ public class NodeEditor : EditorWindow
                     selectIndex = i;
                     clickedOnWindow = 1;
 
-                    if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Variable)
+                    if (((UtilityNode)((UtilitySystem)currentElem).nodes[i]).type == utilityType.Variable)
                         clickedOnVariable = 1;
 
-                    else if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
+                    else if (((UtilityNode)((UtilitySystem)currentElem).nodes[i]).type == utilityType.Action && ((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
                         actionWithOneFactor = 1;
 
-                    else if (((UtilitySystem)currentElem).nodes[i].type == utilityType.Curve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
+                    else if (((UtilityNode)((UtilitySystem)currentElem).nodes[i]).type == utilityType.Curve && ((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(((UtilitySystem)currentElem).nodes[i])))
                         curveWithOneFactor = 1;
 
                     break;
                 }
             }
 
-            for (int i = 0; i < ((UtilitySystem)currentElem).connections.Count; i++)
+            for (int i = 0; i < ((UtilitySystem)currentElem).transitions.Count; i++)
             {
-                if (((UtilitySystem)currentElem).connections[i].windowRect.Contains(mousePos))
+                if (((UtilitySystem)currentElem).transitions[i].windowRect.Contains(mousePos))
                 {
                     selectIndex = i;
                     clickedOnTransition = 1;
@@ -1496,7 +1503,7 @@ public class NodeEditor : EditorWindow
             {
                 if (currentElem is BehaviourTree)
                 {
-                    if (((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)elem) || selectednode.Equals(elem) || ((BehaviourNode)elem).type == behaviourType.Leaf || ((BehaviourNode)elem).type >= behaviourType.LoopN && ((BehaviourTree)currentElem).connections.Exists(t => t.fromNode.Equals(elem)))
+                    if (((BehaviourTree)currentElem).ConnectedCheck((BehaviourNode)selectednode, (BehaviourNode)elem) || selectednode.Equals(elem) || ((BehaviourNode)elem).type == behaviourType.Leaf || ((BehaviourNode)elem).type >= behaviourType.LoopN && ((BehaviourTree)currentElem).transitions.Exists(t => t.fromNode.Equals(elem)))
                     {
                         //Make it look transparent when not connectable to connect mode
                         for (int i = 0; i < pixels.Length; i++)
@@ -1511,8 +1518,8 @@ public class NodeEditor : EditorWindow
                     {
                         if (((UtilitySystem)currentElem).ConnectedCheck((UtilityNode)selectednode, (UtilityNode)elem) ||
                             selectednode.Equals(elem) || ((UtilityNode)elem).type == utilityType.Variable ||
-                            ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)) ||
-                            ((UtilityNode)elem).type == utilityType.Curve && ((UtilitySystem)currentElem).connections.Exists(t => t.toNode.Equals(elem)))
+                            ((UtilityNode)elem).type == utilityType.Action && ((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(elem)) ||
+                            ((UtilityNode)elem).type == utilityType.Curve && ((UtilitySystem)currentElem).transitions.Exists(t => t.toNode.Equals(elem)))
                         {
                             //Make it look transparent when not connectable to connect mode
                             for (int i = 0; i < pixels.Length; i++)
@@ -1562,11 +1569,11 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawNodeWindow(int id)
     {
-        if (currentElem is FSM && ((FSM)currentElem).states.Count > id)
+        if (currentElem is FSM && ((FSM)currentElem).nodes.Count > id)
         {
-            ((FSM)currentElem).states[id].DrawWindow();
-            if (((FSM)currentElem).states[id].subElem != null)
-                ((FSM)currentElem).states[id].subElem.elementName = ((FSM)currentElem).states[id].nodeName;
+            ((FSM)currentElem).nodes[id].DrawWindow();
+            if (((FSM)currentElem).nodes[id].subElem != null)
+                ((FSM)currentElem).nodes[id].subElem.elementName = ((FSM)currentElem).nodes[id].nodeName;
         }
         if (currentElem is BehaviourTree && ((BehaviourTree)currentElem).nodes.Count > id)
         {
@@ -1602,13 +1609,13 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawTransitionBox(int id)
     {
-        if (currentElem is FSM && ((FSM)currentElem).transitions.Count > id - ((FSM)currentElem).states.Count)
+        if (currentElem is FSM && ((FSM)currentElem).transitions.Count > id - ((FSM)currentElem).nodes.Count)
         {
-            ((FSM)currentElem).transitions[id - ((FSM)currentElem).states.Count].DrawBox();
+            ((FSM)currentElem).transitions[id - ((FSM)currentElem).nodes.Count].DrawBox();
         }
-        if (currentElem is UtilitySystem && ((UtilitySystem)currentElem).connections.Count > id - ((UtilitySystem)currentElem).nodes.Count)
+        if (currentElem is UtilitySystem && ((UtilitySystem)currentElem).transitions.Count > id - ((UtilitySystem)currentElem).nodes.Count)
         {
-            ((UtilitySystem)currentElem).connections[id - ((UtilitySystem)currentElem).nodes.Count].DrawBox();
+            ((UtilitySystem)currentElem).transitions[id - ((UtilitySystem)currentElem).nodes.Count].DrawBox();
         }
 
         GUI.DragWindow();
@@ -1810,21 +1817,8 @@ public class NodeEditor : EditorWindow
 
         if (elem is ClickableElement && parentElement)
         {
-            switch (parentElement.GetType().ToString())
-            {
-                case nameof(FSM):
-                    StateNode state = ((FSM)parentElement).states.Find(n => n.subElem && n.subElem.Equals(elem));
-                    Delete(state, parentElement, true);
-                    break;
-                case nameof(BehaviourTree):
-                    BehaviourNode node = ((BehaviourTree)parentElement).nodes.Find(n => n.subElem && n.subElem.Equals(elem));
-                    Delete(node, parentElement, true);
-                    break;
-                case nameof(UtilitySystem):
-                    UtilityNode utilNode = ((UtilitySystem)parentElement).nodes.Find(n => n.subElem && n.subElem.Equals(elem));
-                    Delete(utilNode, parentElement, true);
-                    break;
-            }
+            BaseNode state = parentElement.nodes.Find(n => n.subElem && n.subElem.Equals(elem));
+            Delete(state, parentElement, true);
 
             return;
         }
@@ -1880,26 +1874,12 @@ public class NodeEditor : EditorWindow
                 break;
 
             case nameof(FSM):
-                Elements.Remove((ClickableElement)elem);
-                editorNamer.RemoveName(elem.identificator);
-
-                focusedObjects.Remove(elem);
-
-                break;
-
             case nameof(BehaviourTree):
-                Elements.Remove((ClickableElement)elem);
-                editorNamer.RemoveName(elem.identificator);
-
-                focusedObjects.Remove(elem);
-
-                break;
             case nameof(UtilitySystem):
                 Elements.Remove((ClickableElement)elem);
                 editorNamer.RemoveName(elem.identificator);
 
                 focusedObjects.Remove(elem);
-
                 break;
         }
     }
@@ -2064,7 +2044,7 @@ public class NodeEditor : EditorWindow
             }
             else
             {
-                ((FSM)currentElem).states.Add(node);
+                ((FSM)currentElem).nodes.Add(node);
             }
         }
 
@@ -2123,7 +2103,7 @@ public class NodeEditor : EditorWindow
             }
             else
             {
-                ((FSM)currentElem).states.Add(node);
+                ((FSM)currentElem).nodes.Add(node);
             }
         }
 
@@ -2182,7 +2162,7 @@ public class NodeEditor : EditorWindow
             }
             else
             {
-                ((FSM)currentElem).states.Add(node);
+                ((FSM)currentElem).nodes.Add(node);
             }
         }
 
@@ -2225,7 +2205,7 @@ public class NodeEditor : EditorWindow
         }
         else
         {
-            ((FSM)currentElem).states.Add(node);
+            ((FSM)currentElem).nodes.Add(node);
         }
     }
 
@@ -2371,7 +2351,7 @@ public class NodeEditor : EditorWindow
         makeTransitionMode = true;
 
         if (currentElem is FSM)
-            selectednode = ((FSM)currentElem).states[selectIndex];
+            selectednode = ((FSM)currentElem).nodes[selectIndex];
 
         if (currentElem is BehaviourTree)
             selectednode = ((BehaviourTree)currentElem).nodes[selectIndex];
@@ -2435,7 +2415,7 @@ public class NodeEditor : EditorWindow
             }
             else
             {
-                PopupWindow.InitDelete(((FSM)currentElem).states[selectIndex]);
+                PopupWindow.InitDelete(((FSM)currentElem).nodes[selectIndex]);
             }
         }
 
@@ -2462,7 +2442,7 @@ public class NodeEditor : EditorWindow
     {
         NodeEditorUtilities.GenerateUndoStep(currentElem);
 
-        ((FSM)currentElem).SetAsEntry(((FSM)currentElem).states[selectIndex]);
+        ((FSM)currentElem).SetAsEntry((StateNode)((FSM)currentElem).nodes[selectIndex]);
     }
 
     /// <summary>
@@ -2472,9 +2452,9 @@ public class NodeEditor : EditorWindow
     {
         NodeEditorUtilities.GenerateUndoStep(currentElem);
 
-        BehaviourNode selNode = ((BehaviourTree)currentElem).nodes[selectIndex];
+        BehaviourNode selNode = (BehaviourNode)((BehaviourTree)currentElem).nodes[selectIndex];
 
-        foreach (TransitionGUI tr in ((BehaviourTree)currentElem).connections.FindAll(t => t.toNode.Equals(selNode)))
+        foreach (TransitionGUI tr in ((BehaviourTree)currentElem).transitions.FindAll(t => t.toNode.Equals(selNode)))
         {
             ((BehaviourTree)currentElem).DeleteConnection(tr);
         }
@@ -2609,18 +2589,18 @@ public class NodeEditor : EditorWindow
             {
                 if (((BaseNode)elem).subElem is FSM)
                 {
-                    ReIdentifyElements(((FSM)((BaseNode)elem).subElem).states.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((FSM)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
                     ReIdentifyElements(((FSM)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
                 }
                 if (((BaseNode)elem).subElem is BehaviourTree)
                 {
                     ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).connections.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
                 }
                 if (((BaseNode)elem).subElem is UtilitySystem)
                 {
                     ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                    ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).connections.Cast<GUIElement>().ToList());
+                    ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
                 }
             }
         }
@@ -2718,60 +2698,63 @@ public class NodeEditor : EditorWindow
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
-                    foreach (GUIElement elem in clipboard)
+                    foreach (GUIElement elem in clipboard.Where(e => !(e is TransitionGUI)))
                     {
-                        if (elem is TransitionGUI)
-                        {
-                            if (((TransitionGUI)elem).fromNode is StateNode && ((TransitionGUI)elem).toNode is StateNode)
-                            {
-                                ((TransitionGUI)elem).sender = this;
+                        StateNode newElem;
 
-                                ((FSM)currentElem).transitions.Add((TransitionGUI)elem);
-                                ((TransitionGUI)elem).transitionName = currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
-                            }
+                        if (elem is ClickableElement)
+                        {
+                            ((ClickableElement)elem).parent = currentElem;
+                            ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+
+                            newElem = CreateInstance<StateNode>();
+                            newElem.InitStateNode(currentElem, stateType.Unconnected, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
                         }
                         else
                         {
-                            StateNode newElem;
+                            ((BaseNode)elem).parent = currentElem;
 
-                            if (elem is ClickableElement)
+                            if (((BaseNode)elem).subElem is null)
                             {
-                                ((ClickableElement)elem).parent = currentElem;
-                                ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+                                newElem = (StateNode)elem;
 
-                                newElem = CreateInstance<StateNode>();
-                                newElem.InitStateNode(currentElem, stateType.Unconnected, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
+                                newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
                             }
                             else
                             {
-                                ((BaseNode)elem).parent = currentElem;
+                                ((BaseNode)elem).subElem.parent = currentElem;
+                                ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
-                                if (((BaseNode)elem).subElem is null)
-                                {
-                                    newElem = (StateNode)elem;
-
-                                    newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
-                                }
-                                else
-                                {
-                                    ((BaseNode)elem).subElem.parent = currentElem;
-                                    ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
-
-                                    newElem = CreateInstance<StateNode>();
-                                    newElem.InitStateNode(currentElem, stateType.Unconnected, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
-                                }
+                                newElem = CreateInstance<StateNode>();
+                                newElem.InitStateNode(currentElem, stateType.Unconnected, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
                             }
+                        }
 
-                            newElem.type = stateType.Unconnected;
+                        newElem.type = stateType.Unconnected;
 
-                            ((FSM)currentElem).states.Add(newElem);
+                        ((FSM)currentElem).nodes.Add(newElem);
 
-                            if (!((FSM)currentElem).HasEntryState)
-                            {
-                                ((FSM)currentElem).SetAsEntry(newElem);
-                            }
+                        if (!((FSM)currentElem).HasEntryState)
+                        {
+                            ((FSM)currentElem).SetAsEntry(newElem);
+                        }
 
                             ((FSM)currentElem).CheckConnected();
+                    }
+
+                    // We paste transitions after to make sure we can refer to the nodes that they connect
+                    foreach (TransitionGUI transition in clipboard.Where(e => e is TransitionGUI))
+                    {
+                        if (transition.fromNode is StateNode && transition.toNode is StateNode)
+                        {
+                            transition.sender = this;
+                            transition.transitionName = currentElem.elementNamer.AddName(transition.identificator, transition.transitionName);
+
+                            // We reassign the connecting nodes. This is to fix a bug that made them look unconnected
+                            transition.fromNode = ((FSM)currentElem).nodes.Find(s => s.Equals(transition.fromNode));
+                            transition.toNode = ((FSM)currentElem).nodes.Find(s => s.Equals(transition.toNode));
+
+                            ((FSM)currentElem).transitions.Add(transition);
                         }
                     }
                 }
@@ -2789,51 +2772,54 @@ public class NodeEditor : EditorWindow
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
-                    foreach (GUIElement elem in clipboard)
+                    foreach (GUIElement elem in clipboard.Where(n => !(n is TransitionGUI)))
                     {
-                        if (elem is TransitionGUI)
-                        {
-                            if (((TransitionGUI)elem).fromNode is BehaviourNode && ((TransitionGUI)elem).toNode is BehaviourNode)
-                            {
-                                ((TransitionGUI)elem).sender = this;
+                        BehaviourNode newElem;
 
-                                ((BehaviourTree)currentElem).connections.Add((TransitionGUI)elem);
-                                ((TransitionGUI)elem).transitionName = currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
-                            }
+                        if (elem is ClickableElement)
+                        {
+                            ((ClickableElement)elem).parent = currentElem;
+                            ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+
+                            newElem = CreateInstance<BehaviourNode>();
+                            newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
                         }
                         else
                         {
-                            BehaviourNode newElem;
+                            ((BaseNode)elem).parent = currentElem;
 
-                            if (elem is ClickableElement)
+                            if (((BaseNode)elem).subElem is null)
                             {
-                                ((ClickableElement)elem).parent = currentElem;
-                                ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+                                newElem = (BehaviourNode)elem;
 
-                                newElem = CreateInstance<BehaviourNode>();
-                                newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
+                                newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
                             }
                             else
                             {
-                                ((BaseNode)elem).parent = currentElem;
+                                ((BaseNode)elem).subElem.parent = currentElem;
+                                ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
-                                if (((BaseNode)elem).subElem is null)
-                                {
-                                    newElem = (BehaviourNode)elem;
-
-                                    newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
-                                }
-                                else
-                                {
-                                    ((BaseNode)elem).subElem.parent = currentElem;
-                                    ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
-
-                                    newElem = CreateInstance<BehaviourNode>();
-                                    newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
-                                }
+                                newElem = CreateInstance<BehaviourNode>();
+                                newElem.InitBehaviourNode(currentElem, behaviourType.Leaf, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
                             }
+                        }
 
-                            ((BehaviourTree)currentElem).nodes.Add(newElem);
+                        ((BehaviourTree)currentElem).nodes.Add(newElem);
+                    }
+
+                    // We paste transitions after to make sure we can refer to the nodes that they connect
+                    foreach (TransitionGUI transition in clipboard.Where(n => n is TransitionGUI))
+                    {
+                        if (transition.fromNode is BehaviourNode && (transition.toNode is BehaviourNode))
+                        {
+                            transition.sender = this;
+                            transition.transitionName = currentElem.elementNamer.AddName(transition.identificator, transition.transitionName);
+
+                            // We reassign the connecting nodes. This is to fix a bug that made them look unconnected
+                            transition.fromNode = ((BehaviourTree)currentElem).nodes.Find(s => s.Equals(transition.fromNode));
+                            transition.toNode = ((BehaviourTree)currentElem).nodes.Find(s => s.Equals(transition.toNode));
+
+                            ((BehaviourTree)currentElem).transitions.Add(transition);
                         }
                     }
                 }
@@ -2851,51 +2837,54 @@ public class NodeEditor : EditorWindow
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
-                    foreach (GUIElement elem in clipboard)
+                    foreach (GUIElement elem in clipboard.Where(n => !(n is TransitionGUI)))
                     {
-                        if (elem is TransitionGUI)
-                        {
-                            if (((TransitionGUI)elem).fromNode is UtilityNode && ((TransitionGUI)elem).toNode is UtilityNode)
-                            {
-                                ((TransitionGUI)elem).sender = this;
+                        UtilityNode newElem;
 
-                                ((UtilitySystem)currentElem).connections.Add((TransitionGUI)elem);
-                                ((TransitionGUI)elem).transitionName = currentElem.elementNamer.AddName(elem.identificator, ((TransitionGUI)elem).transitionName);
-                            }
+                        if (elem is ClickableElement)
+                        {
+                            ((ClickableElement)elem).parent = currentElem;
+                            ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+
+                            newElem = CreateInstance<UtilityNode>();
+                            newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
                         }
                         else
                         {
-                            UtilityNode newElem;
+                            ((BaseNode)elem).parent = currentElem;
 
-                            if (elem is ClickableElement)
+                            if (((BaseNode)elem).subElem is null)
                             {
-                                ((ClickableElement)elem).parent = currentElem;
-                                ((ClickableElement)elem).elementName = currentElem.elementNamer.AddName(elem.identificator, ((ClickableElement)elem).elementName);
+                                newElem = (UtilityNode)elem;
 
-                                newElem = CreateInstance<UtilityNode>();
-                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((ClickableElement)elem).windowRect.x, ((ClickableElement)elem).windowRect.y, (ClickableElement)elem, elem.identificator);
+                                newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
                             }
                             else
                             {
-                                ((BaseNode)elem).parent = currentElem;
+                                ((BaseNode)elem).subElem.parent = currentElem;
+                                ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
 
-                                if (((BaseNode)elem).subElem is null)
-                                {
-                                    newElem = (UtilityNode)elem;
-
-                                    newElem.nodeName = currentElem.elementNamer.AddName(newElem.identificator, newElem.nodeName);
-                                }
-                                else
-                                {
-                                    ((BaseNode)elem).subElem.parent = currentElem;
-                                    ((BaseNode)elem).subElem.elementName = currentElem.elementNamer.AddName(((BaseNode)elem).subElem.identificator, ((BaseNode)elem).subElem.elementName);
-
-                                    newElem = CreateInstance<UtilityNode>();
-                                    newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
-                                }
+                                newElem = CreateInstance<UtilityNode>();
+                                newElem.InitUtilityNode(currentElem, utilityType.Action, ((BaseNode)elem).windowRect.x, ((BaseNode)elem).windowRect.y, ((BaseNode)elem).subElem, elem.identificator);
                             }
+                        }
 
-                            ((UtilitySystem)currentElem).nodes.Add(newElem);
+                        ((UtilitySystem)currentElem).nodes.Add(newElem);
+                    }
+
+                    // We paste transitions after to make sure we can refer to the nodes that they connect
+                    foreach (TransitionGUI transition in clipboard.Where(n => n is TransitionGUI))
+                    {
+                        if (transition.fromNode is UtilityNode && transition.toNode is UtilityNode)
+                        {
+                            transition.sender = this;
+                            transition.transitionName = currentElem.elementNamer.AddName(transition.identificator, transition.transitionName);
+
+                            // We reassign the connecting nodes. This is to fix a bug that made them look unconnected
+                            transition.fromNode = ((UtilitySystem)currentElem).nodes.Find(s => s.Equals(transition.fromNode));
+                            transition.toNode = ((UtilitySystem)currentElem).nodes.Find(s => s.Equals(transition.toNode));
+
+                            ((UtilitySystem)currentElem).transitions.Add(transition);
                         }
                     }
                 }
@@ -2927,60 +2916,19 @@ public class NodeEditor : EditorWindow
             // We save the node's transitions to reconnect them later if the parent is not the main page
             if (currentElem.parent)
             {
-                switch (currentElem.parent.GetType().ToString())
-                {
-                    case nameof(FSM):
-                        StateNode state = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                BaseNode node = currentElem.parent.nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
 
-                        List<TransitionGUI> stateTransitionsIn = ((FSM)currentElem.parent).transitions.FindAll(t => t.toNode.Equals(state));
-                        List<TransitionGUI> stateTransitionsOut = ((FSM)currentElem.parent).transitions.FindAll(t => t.fromNode.Equals(state));
+                List<TransitionGUI> nodeTransitionsIn = currentElem.parent.transitions.FindAll(t => t.toNode.Equals(node));
+                List<TransitionGUI> nodeTransitionsOut = currentElem.parent.transitions.FindAll(t => t.fromNode.Equals(node));
 
-                        transitionsIn.AddRange(stateTransitionsIn);
-                        transitionsOut.AddRange(stateTransitionsOut);
-                        break;
-                    case nameof(BehaviourTree):
-                        BehaviourNode node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                transitionsIn.AddRange(nodeTransitionsIn);
+                transitionsOut.AddRange(nodeTransitionsOut);
 
-                        List<TransitionGUI> nodeTransitionsIn = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.toNode.Equals(node));
-                        List<TransitionGUI> nodeTransitionsOut = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(node));
+                // Delete the current element and load the one from the UndoSteps to replace it
+                Delete(currentElem, currentElem.parent, true);
+                currentElem = LoadElem(NodeEditorUtilities.LoadUndoStep(), currentElem.parent, false);
 
-                        transitionsIn.AddRange(nodeTransitionsIn);
-                        transitionsOut.AddRange(nodeTransitionsOut);
-                        break;
-                    case nameof(UtilitySystem):
-                        UtilityNode utilNode = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
-
-                        List<TransitionGUI> utilNodeTransitionsIn = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.toNode.Equals(utilNode));
-                        List<TransitionGUI> utilNodeTransitionsOut = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(utilNode));
-
-                        transitionsIn.AddRange(utilNodeTransitionsIn);
-                        transitionsOut.AddRange(utilNodeTransitionsOut);
-                        break;
-                }
-            }
-
-            // Delete the current element and load the one from the UndoSteps to replace it 
-            Delete(currentElem, currentElem.parent, true);
-            currentElem = LoadElem(NodeEditorUtilities.LoadUndoStep(), currentElem.parent, false);
-
-            // We reconnect the transitions if the parent is not the main page
-            if (currentElem.parent)
-            {
-                BaseNode node = null;
-
-                switch (currentElem.parent.GetType().ToString())
-                {
-                    case nameof(FSM):
-                        node = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
-                        break;
-                    case nameof(BehaviourTree):
-                        node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
-                        break;
-                    case nameof(UtilitySystem):
-                        node = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
-                        break;
-                }
-
+                // We reconnect the transitions if the parent is not the main page
                 foreach (TransitionGUI trans in transitionsIn)
                 {
                     trans.toNode = node;
@@ -2996,6 +2944,12 @@ public class NodeEditor : EditorWindow
                     if (currentElem.parent is FSM)
                         ((FSM)currentElem.parent).CheckConnected();
                 }
+            }
+            else
+            {
+                // Delete the current element and load the one from the UndoSteps to replace it
+                Delete(currentElem, currentElem.parent, true);
+                currentElem = LoadElem(NodeEditorUtilities.LoadUndoStep(), currentElem.parent, false);
             }
         }
     }
@@ -3015,59 +2969,19 @@ public class NodeEditor : EditorWindow
             // We save the node's transitions to reconnect them later if the parent is not the main page
             if (currentElem.parent)
             {
-                switch (currentElem.parent.GetType().ToString())
-                {
-                    case nameof(FSM):
-                        StateNode state = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                BaseNode node = currentElem.parent.nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
 
-                        List<TransitionGUI> stateTransitionsIn = ((FSM)currentElem.parent).transitions.FindAll(t => t.toNode.Equals(state));
-                        List<TransitionGUI> stateTransitionsOut = ((FSM)currentElem.parent).transitions.FindAll(t => t.fromNode.Equals(state));
+                List<TransitionGUI> stateTransitionsIn = currentElem.parent.transitions.FindAll(t => t.toNode.Equals(node));
+                List<TransitionGUI> stateTransitionsOut = currentElem.parent.transitions.FindAll(t => t.fromNode.Equals(node));
 
-                        transitionsIn.AddRange(stateTransitionsIn);
-                        transitionsOut.AddRange(stateTransitionsOut);
-                        break;
-                    case nameof(BehaviourTree):
-                        BehaviourNode node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+                transitionsIn.AddRange(stateTransitionsIn);
+                transitionsOut.AddRange(stateTransitionsOut);
 
-                        List<TransitionGUI> nodeTransitionsIn = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.toNode.Equals(node));
-                        List<TransitionGUI> nodeTransitionsOut = ((BehaviourTree)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(node));
+                // Delete the current element and load the one from the RedoSteps to replace it
+                Delete(currentElem, currentElem.parent, true);
+                currentElem = LoadElem(NodeEditorUtilities.LoadRedoStep(), currentElem.parent, false);
 
-                        transitionsIn.AddRange(nodeTransitionsIn);
-                        transitionsOut.AddRange(nodeTransitionsOut);
-                        break;
-                    case nameof(UtilitySystem):
-                        UtilityNode utilNode = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
-
-                        List<TransitionGUI> utilNodeTransitionsIn = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.toNode.Equals(utilNode));
-                        List<TransitionGUI> utilNodeTransitionsOut = ((UtilitySystem)currentElem.parent).connections.FindAll(t => t.fromNode.Equals(utilNode));
-
-                        transitionsIn.AddRange(utilNodeTransitionsIn);
-                        transitionsOut.AddRange(utilNodeTransitionsOut);
-                        break;
-                }
-            }
-
-            // Delete the current element and load the one from the RedoSteps to replace it 
-            Delete(currentElem, currentElem.parent, true);
-            currentElem = LoadElem(NodeEditorUtilities.LoadRedoStep(), currentElem.parent, false);
-
-            // We reconnect the transitions if the parent is not the main page
-            if (currentElem.parent)
-            {
-                BaseNode node = null;
-
-                switch (currentElem.parent.GetType().ToString())
-                {
-                    case nameof(FSM):
-                        node = ((FSM)currentElem.parent).states.Find(n => n.subElem && n.subElem.Equals(currentElem));
-                        break;
-                    case nameof(BehaviourTree):
-                        node = ((BehaviourTree)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
-                        break;
-                    case nameof(UtilitySystem):
-                        node = ((UtilitySystem)currentElem.parent).nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
-                        break;
-                }
+                // We reconnect the transitions if the parent is not the main page
 
                 foreach (TransitionGUI trans in transitionsIn)
                 {
@@ -3084,6 +2998,12 @@ public class NodeEditor : EditorWindow
                     if (currentElem.parent is FSM)
                         ((FSM)currentElem.parent).CheckConnected();
                 }
+            }
+            else
+            {
+                // Delete the current element and load the one from the RedoSteps to replace it
+                Delete(currentElem, currentElem.parent, true);
+                currentElem = LoadElem(NodeEditorUtilities.LoadRedoStep(), currentElem.parent, false);
             }
         }
     }
@@ -3118,15 +3038,7 @@ public class NodeEditor : EditorWindow
 
                 if (element)
                 {
-                    switch (element.GetType().ToString())
-                    {
-                        case nameof(FSM):
-                            return RecursiveContains(elem, ((FSM)element).states.Cast<GUIElement>().ToList());
-                        case nameof(BehaviourTree):
-                            return RecursiveContains(elem, ((BehaviourTree)element).nodes.Cast<GUIElement>().ToList());
-                        case nameof(UtilitySystem):
-                            return RecursiveContains(elem, ((UtilitySystem)element).nodes.Cast<GUIElement>().ToList());
-                    }
+                    return RecursiveContains(elem, element.nodes.Cast<GUIElement>().ToList());
                 }
             }
 

@@ -171,7 +171,7 @@ public class XMLElement
                     }
                     else
                     {
-                        fsm.states.Add(state);
+                        fsm.nodes.Add(state);
                     }
                     break;
                 default:
@@ -182,8 +182,8 @@ public class XMLElement
 
         foreach (XMLElement trans in this.transitions)
         {
-            BaseNode node1 = fsm.states.Where(n => n.identificator == trans.fromId).FirstOrDefault();
-            BaseNode node2 = fsm.states.Where(n => n.identificator == trans.toId).FirstOrDefault();
+            BaseNode node1 = fsm.nodes.Where(n => n.identificator == trans.fromId).FirstOrDefault();
+            BaseNode node2 = fsm.nodes.Where(n => n.identificator == trans.toId).FirstOrDefault();
             if (node1 != null && node2 != null)
                 fsm.AddTransition(trans.ToTransitionGUI(fsm, node1, node2));
         }
@@ -202,7 +202,7 @@ public class XMLElement
                     }
                     else
                     {
-                        ((FSM)parent).states.Add(state);
+                        ((FSM)parent).nodes.Add(state);
                     }
                     break;
                 case nameof(BehaviourTree):
@@ -216,7 +216,7 @@ public class XMLElement
                         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(parent, selectedNode, node);
 
-                        ((BehaviourTree)parent).connections.Add(transition);
+                        ((BehaviourTree)parent).transitions.Add(transition);
 
                         selectedNode = node;
                     }
@@ -306,7 +306,7 @@ public class XMLElement
                     }
                     else
                     {
-                        ((FSM)parent).states.Add(state);
+                        ((FSM)parent).nodes.Add(state);
                     }
                     break;
                 case nameof(BehaviourTree):
@@ -320,7 +320,7 @@ public class XMLElement
                         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(parent, selectedNode, node);
 
-                        ((BehaviourTree)parent).connections.Add(transition);
+                        ((BehaviourTree)parent).transitions.Add(transition);
 
                         selectedNode = node;
                     }
@@ -367,7 +367,7 @@ public class XMLElement
                     TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                     transition.InitTransitionGUI(currentTree, selectedNode, nodeBT);
 
-                    currentTree.connections.Add(transition);
+                    currentTree.transitions.Add(transition);
                 }
                 else
                 {
@@ -425,7 +425,7 @@ public class XMLElement
             BaseNode node1 = utilSystem.nodes.Where(n => n.identificator == trans.fromId).FirstOrDefault();
             BaseNode node2 = utilSystem.nodes.Where(n => n.identificator == trans.toId).FirstOrDefault();
             if (node1 != null && node2 != null)
-                utilSystem.connections.Add(trans.ToTransitionGUI(utilSystem, node1, node2));
+                utilSystem.transitions.Add(trans.ToTransitionGUI(utilSystem, node1, node2));
         }
 
         if (parent)
@@ -442,7 +442,7 @@ public class XMLElement
                     }
                     else
                     {
-                        ((FSM)parent).states.Add(state);
+                        ((FSM)parent).nodes.Add(state);
                     }
                     break;
                 case nameof(BehaviourTree):
@@ -456,7 +456,7 @@ public class XMLElement
                         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(parent, selectedNode, node);
 
-                        ((BehaviourTree)parent).connections.Add(transition);
+                        ((BehaviourTree)parent).transitions.Add(transition);
 
                         selectedNode = node;
                     }

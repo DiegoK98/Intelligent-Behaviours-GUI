@@ -8,16 +8,6 @@ using UnityEngine;
 public class UtilitySystem : ClickableElement
 {
     /// <summary>
-    /// List of <see cref="BehaviourNode"/> that belong to this <see cref="BehaviourTree"/>
-    /// </summary>
-    public List<UtilityNode> nodes = new List<UtilityNode>();
-
-    /// <summary>
-    /// List of <see cref="TransitionGUI"/> that connect the <see cref="nodes"/>
-    /// </summary>
-    public List<TransitionGUI> connections = new List<TransitionGUI>();
-
-    /// <summary>
     /// The Initializer for the <seealso cref="UtilitySystem"/>
     /// </summary>
     /// <param name="editor"></param>
@@ -81,7 +71,7 @@ public class UtilitySystem : ClickableElement
             {
                 return node.ToXMLElement(this);
             }),
-            transitions = connections.ConvertAll((conn) =>
+            transitions = transitions.ConvertAll((conn) =>
             {
                 return conn.ToXMLElement(this);
             }),
@@ -110,8 +100,8 @@ public class UtilitySystem : ClickableElement
             windowRect = new Rect(this.windowRect)
         };
 
-        ((UtilitySystem)result).nodes = this.nodes.Select(o => (UtilityNode)o.CopyElement(result)).ToList();
-        ((UtilitySystem)result).connections = this.connections.Select(o =>
+        ((UtilitySystem)result).nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
+        ((UtilitySystem)result).transitions = this.transitions.Select(o =>
         (TransitionGUI)o.CopyElement(((UtilitySystem)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
                                      ((UtilitySystem)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
@@ -128,28 +118,11 @@ public class UtilitySystem : ClickableElement
     }
 
     /// <summary>
-    /// Compares this <see cref="BehaviourTree"/> with <paramref name="other"/>
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
-    {
-        if (!base.Equals(other))
-            return false;
-        if (this.elementName != ((UtilitySystem)other).elementName)
-            return false;
-        if (this.identificator != ((UtilitySystem)other).identificator)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
     /// Draws all <see cref="TransitionGUI"/> curves for the <see cref="BehaviourTree"/>
     /// </summary>
     public void DrawCurves()
     {
-        foreach (TransitionGUI elem in connections)
+        foreach (TransitionGUI elem in transitions)
         {
             if (elem.fromNode is null || elem.toNode is null)
                 break;
@@ -171,7 +144,7 @@ public class UtilitySystem : ClickableElement
         {
             if (deleteTransitions)
             {
-                foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode) || node.Equals(t.toNode)))
+                foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode) || node.Equals(t.toNode)))
                 {
                     DeleteConnection(transition);
                 }
@@ -190,7 +163,7 @@ public class UtilitySystem : ClickableElement
     /// <param name="connection"></param>
     public void DeleteConnection(TransitionGUI connection)
     {
-        if (connections.Remove(connection))
+        if (transitions.Remove(connection))
         {
             elementNamer.RemoveName(connection.identificator);
         }
@@ -204,7 +177,7 @@ public class UtilitySystem : ClickableElement
     /// <returns></returns>
     public bool ConnectedCheck(UtilityNode start, UtilityNode end)
     {
-        foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.toNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => start.Equals(t.toNode)))
         {
             if (end.Equals((UtilityNode)transition.fromNode))
             {

@@ -8,16 +8,6 @@ using UnityEngine;
 public class BehaviourTree : ClickableElement
 {
     /// <summary>
-    /// List of <see cref="BehaviourNode"/> that belong to this <see cref="BehaviourTree"/>
-    /// </summary>
-    public List<BehaviourNode> nodes = new List<BehaviourNode>();
-
-    /// <summary>
-    /// List of <see cref="TransitionGUI"/> that connect the <see cref="nodes"/>
-    /// </summary>
-    public List<TransitionGUI> connections = new List<TransitionGUI>();
-
-    /// <summary>
     /// The Initializer for the <seealso cref="BehaviourNode"/>
     /// </summary>
     /// <param name="editor"></param>
@@ -76,7 +66,7 @@ public class BehaviourTree : ClickableElement
             elemType = this.GetType().ToString(),
             windowPosX = this.windowRect.x,
             windowPosY = this.windowRect.y,
-            nodes = nodes.FindAll(o => o.isRoot).ConvertAll((rootNode) =>
+            nodes = nodes.FindAll(o => ((BehaviourNode)o).isRoot).ConvertAll((rootNode) =>
             {
                 return rootNode.ToXMLElement(this);
             }),
@@ -105,8 +95,8 @@ public class BehaviourTree : ClickableElement
             windowRect = new Rect(this.windowRect)
         };
 
-        ((BehaviourTree)result).nodes = this.nodes.Select(o => (BehaviourNode)o.CopyElement(result)).ToList();
-        ((BehaviourTree)result).connections = this.connections.Select(o =>
+        ((BehaviourTree)result).nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
+        ((BehaviourTree)result).transitions = this.transitions.Select(o =>
         (TransitionGUI)o.CopyElement(((BehaviourTree)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
                                      ((BehaviourTree)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
@@ -123,28 +113,11 @@ public class BehaviourTree : ClickableElement
     }
 
     /// <summary>
-    /// Compares this <see cref="BehaviourTree"/> with <paramref name="other"/>
-    /// </summary>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    public override bool Equals(object other)
-    {
-        if (!base.Equals(other))
-            return false;
-        if (this.elementName != ((BehaviourTree)other).elementName)
-            return false;
-        if (this.identificator != ((BehaviourTree)other).identificator)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
     /// Draws all <see cref="TransitionGUI"/> curves for the <see cref="BehaviourTree"/>
     /// </summary>
     public void DrawCurves()
     {
-        foreach (TransitionGUI elem in connections)
+        foreach (TransitionGUI elem in transitions)
         {
             if (elem.fromNode is null || elem.toNode is null)
                 break;
@@ -166,14 +139,14 @@ public class BehaviourTree : ClickableElement
         {
             if (deleteTransitions)
             {
-                foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+                foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
                 {
-                    connections.Remove(transition);
+                    transitions.Remove(transition);
                     DeleteNode((BehaviourNode)transition.toNode);
                 }
-                foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.toNode)))
+                foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.toNode)))
                 {
-                    connections.Remove(transition);
+                    transitions.Remove(transition);
                 }
             }
 
@@ -190,7 +163,7 @@ public class BehaviourTree : ClickableElement
     /// <param name="connection"></param>
     public void DeleteConnection(TransitionGUI connection)
     {
-        if (connections.Remove(connection))
+        if (transitions.Remove(connection))
             elementNamer.RemoveName(connection.identificator);
     }
 
@@ -203,7 +176,7 @@ public class BehaviourTree : ClickableElement
     {
         int res = 0;
 
-        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
         {
             res += ChildrenCount((BehaviourNode)transition.toNode) + 1;
         }
@@ -226,7 +199,7 @@ public class BehaviourTree : ClickableElement
         }
         else
         {
-            node = nodes.Where(n => n.isRoot).FirstOrDefault();
+            node = (BehaviourNode)nodes.Where(n => ((BehaviourNode)n).isRoot).FirstOrDefault();
             if (!node)
             {
                 return false;
@@ -239,7 +212,7 @@ public class BehaviourTree : ClickableElement
         if (node.type < behaviourType.Leaf)
             return false;
 
-        foreach (TransitionGUI transition in connections.FindAll(t => node.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
         {
             return BadRootCheck((BehaviourNode)transition.toNode);
         }
@@ -255,7 +228,7 @@ public class BehaviourTree : ClickableElement
     /// <returns></returns>
     public bool ConnectedCheck(BehaviourNode start, BehaviourNode end)
     {
-        foreach (TransitionGUI transition in connections.FindAll(t => start.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => start.Equals(t.fromNode)))
         {
             if (end.Equals((BehaviourNode)transition.toNode))
             {

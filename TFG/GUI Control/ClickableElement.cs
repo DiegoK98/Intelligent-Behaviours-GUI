@@ -32,6 +32,16 @@ public abstract class ClickableElement : GUIElement
     public ClickableElement parent;
 
     /// <summary>
+    /// List of <see cref="BaseNode"/>
+    /// </summary>
+    public List<BaseNode> nodes = new List<BaseNode>();
+
+    /// <summary>
+    /// List of <see cref="TransitionGUI"/> that connect the <see cref="nodes"/>
+    /// </summary>
+    public List<TransitionGUI> transitions = new List<TransitionGUI>();
+
+    /// <summary>
     /// List of <see cref="Error"/> of this <see cref="ClickableElement"/>
     /// </summary>
     public List<Error> errors = new List<Error>();
@@ -90,42 +100,9 @@ public abstract class ClickableElement : GUIElement
         switch (this.GetType().ToString())
         {
             case nameof(FSM):
-                foreach (StateNode node in ((FSM)this).states)
-                {
-                    if (node.nodeName == name)
-                    {
-                        repeatedNames++;
-                    }
-                    if (node.subElem != null)
-                    {
-                        if (node.subElem.CheckNameExisting(name, 0))
-                            repeatedNames++;
-                    }
-                }
-                foreach (TransitionGUI transition in ((FSM)this).transitions)
-                {
-                    if (transition.transitionName == name)
-                    {
-                        repeatedNames++;
-                    }
-                }
-                break;
             case nameof(BehaviourTree):
-                foreach (BehaviourNode node in ((BehaviourTree)this).nodes)
-                {
-                    if (node.nodeName == name)
-                    {
-                        repeatedNames++;
-                    }
-                    if (node.subElem != null)
-                    {
-                        if (node.subElem.CheckNameExisting(name, 0))
-                            repeatedNames++;
-                    }
-                }
-                break;
             case nameof(UtilitySystem):
-                foreach (UtilityNode node in ((UtilitySystem)this).nodes)
+                foreach (BaseNode node in this.nodes)
                 {
                     if (node.nodeName == name)
                     {
@@ -137,6 +114,18 @@ public abstract class ClickableElement : GUIElement
                             repeatedNames++;
                     }
                 }
+
+                if (this is FSM)
+                {
+                    foreach (TransitionGUI transition in this.transitions)
+                    {
+                        if (transition.transitionName == name)
+                        {
+                            repeatedNames++;
+                        }
+                    }
+                }
+
                 break;
         }
 

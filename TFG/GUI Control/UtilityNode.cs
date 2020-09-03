@@ -586,7 +586,7 @@ public class UtilityNode : BaseNode
     public List<KeyValuePair<float, UtilityNode>> GetWeightsAndFactors()
     {
         List<KeyValuePair<float, UtilityNode>> weightsFactorPair = new List<KeyValuePair<float, UtilityNode>>();
-        List<TransitionGUI> transitions = ((UtilitySystem)parent).connections.Where(t => t.toNode.Equals(this)).ToList();
+        List<TransitionGUI> transitions = ((UtilitySystem)parent).transitions.Where(t => t.toNode.Equals(this)).ToList();
 
         foreach (TransitionGUI t in transitions)
         {
