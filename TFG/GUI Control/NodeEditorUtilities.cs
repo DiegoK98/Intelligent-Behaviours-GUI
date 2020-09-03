@@ -1171,15 +1171,11 @@ public class NodeEditorUtilities
             if (decoratorConnection?.toNode)
             {
                 TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
-                string subNodeName = "";
+                string subNodeName = "null";
 
                 if (decoratorConnectionsub)
                 {
                     subNodeName = CleanName(decoratorConnectionsub.toNode.nodeName);
-                }
-                else
-                {
-                    subNodeName = "null";
                 }
 
                 switch (((BehaviourNode)decoratorConnection.toNode).type)
@@ -1347,7 +1343,83 @@ public class NodeEditorUtilities
         foreach (BehaviourNode node in ((BehaviourTree)elem).nodes)
         {
             if (node.isRoot)
-                result += machineName + ".SetRootNode(" + CleanName(node.nodeName) + ");";
+            {
+                string rootName;
+
+                if (node.type > behaviourType.Leaf)
+                {
+                    TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
+
+                    string nodeName = "null";
+
+                    if (decoratorConnection?.toNode)
+                    {
+                        TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
+                        string subNodeName = "null";
+
+                        if (decoratorConnectionsub)
+                        {
+                            subNodeName = CleanName(decoratorConnectionsub.toNode.nodeName);
+                        }
+
+                        switch (((BehaviourNode)decoratorConnection.toNode).type)
+                        {
+                            case behaviourType.LoopN:
+                                nodeName = "LoopN_" + subNodeName;
+                                break;
+                            case behaviourType.LoopUntilFail:
+                                nodeName = "LoopUntilFail_" + subNodeName;
+                                break;
+                            case behaviourType.Inverter:
+                                nodeName = "Inverter_" + subNodeName;
+                                break;
+                            case behaviourType.DelayT:
+                                nodeName = "Timer_" + subNodeName;
+                                break;
+                            case behaviourType.Succeeder:
+                                nodeName = "Succeeder_" + subNodeName;
+                                break;
+                            case behaviourType.Conditional:
+                                nodeName = "Conditional_" + subNodeName;
+                                break;
+                            default:
+                                nodeName = CleanName(decoratorConnection.toNode.nodeName);
+                                break;
+                        }
+                    }
+
+                    switch (node.type)
+                    {
+                        case behaviourType.LoopN:
+                            rootName = "LoopN_" + nodeName;
+                            break;
+                        case behaviourType.LoopUntilFail:
+                            rootName = "LoopUntilFail_" + nodeName;
+                            break;
+                        case behaviourType.Inverter:
+                            rootName = "Inverter_" + nodeName;
+                            break;
+                        case behaviourType.DelayT:
+                            rootName = "Timer_" + nodeName;
+                            break;
+                        case behaviourType.Succeeder:
+                            rootName = "Succeeder_" + nodeName;
+                            break;
+                        case behaviourType.Conditional:
+                            rootName = "Conditional_" + nodeName;
+                            break;
+                        default:
+                            rootName = "Null_" + nodeName;
+                            break;
+                    }
+                }
+                else
+                {
+                    rootName = CleanName(node.nodeName);
+                }
+
+                result += machineName + ".SetRootNode(" + rootName + ");";
+            }
         }
 
         if (elem.parent is BehaviourTree)
