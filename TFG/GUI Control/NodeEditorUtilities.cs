@@ -1418,7 +1418,7 @@ public class NodeEditorUtilities
             switch (node.type)
             {
                 case utilityType.Variable:
-                    result += "Factor " + factorName + " = " + "new LeafVariable(() => /*Reference to desired variable*/, " + node.variableMax + ", " + node.variableMin + ");\n" + tab + tab;
+                    result += factorName + " = " + "new LeafVariable(() => /*Reference to desired variable*/0.0f, " + node.variableMax + ", " + node.variableMin + ");\n" + tab + tab;
                     break;
                 case utilityType.Fusion:
                     string factorsListName = factorName + "Factors";
