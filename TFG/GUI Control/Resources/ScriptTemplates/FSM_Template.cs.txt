@@ -7,7 +7,7 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     #region variables
 
-    private StateMachineEngine #FSMNAME##ENDING#;
+    private StateMachineEngine #ELEMNAME##ENDING#;
     #SUBELEM1#
     //Place your variables here
 
@@ -24,7 +24,7 @@ public class #SCRIPTNAME# : MonoBehaviour {
     // Update is called once per frame
     private void Update()
     {
-        #FSMNAME##ENDING#.Update();#SUBELEM3#
+        #ELEMNAME##ENDING#.Update();#SUBELEM3#
     }
 
     // Create your desired actions to be taken in each state

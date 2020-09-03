@@ -504,7 +504,7 @@ public class NodeEditorUtilities
 
                 templateText = templateText.Replace("#SCRIPTNAME#", CleanName(scriptName));
 
-                templateText = templateText.Replace("#FSMNAME#", CleanName(elem.elementName));
+                templateText = templateText.Replace("#ELEMNAME#", CleanName(elem.elementName));
 
                 switch (elem.GetType().ToString())
                 {

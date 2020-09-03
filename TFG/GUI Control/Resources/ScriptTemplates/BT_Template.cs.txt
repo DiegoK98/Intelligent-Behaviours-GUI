@@ -7,7 +7,7 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     #region variables
 
-    private BehaviourTreeEngine #SCRIPTNAME##ENDING#;
+    private BehaviourTreeEngine #ELEMNAME##ENDING#;
     #SUBELEM1#
     //Place your variables here
 
@@ -24,7 +24,7 @@ public class #SCRIPTNAME# : MonoBehaviour {
     // Update is called once per frame
     private void Update()
     {
-        #SCRIPTNAME##ENDING#.Update();#SUBELEM3#
+        #ELEMNAME##ENDING#.Update();#SUBELEM3#
     }
     
     // Create your desired actions for each leaf node
