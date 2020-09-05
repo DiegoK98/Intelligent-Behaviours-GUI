@@ -1,6 +1,6 @@
 # TFG-GUI-for-AI
 
-### Steps to use:
+### Steps to install:
 
 1. Download or clone the repository
 2. Take the folder called TFG and add it into your Unity Project's Assets folder
