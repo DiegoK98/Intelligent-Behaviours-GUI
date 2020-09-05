@@ -89,20 +89,18 @@ public class UtilitySystem : ClickableElement
     {
         ClickableElement parent = (ClickableElement)args[0];
 
-        GUIElement result = new UtilitySystem
-        {
-            identificator = this.identificator,
-            elementNamer = CreateInstance<UniqueNamer>(),
-            elementName = this.elementName,
-            parent = parent,
-            editor = this.editor,
-            windowRect = new Rect(this.windowRect)
-        };
+        UtilitySystem result = CreateInstance<UtilitySystem>();
+        result.identificator = this.identificator;
+        result.elementNamer = CreateInstance<UniqueNamer>();
+        result.elementName = this.elementName;
+        result.parent = parent;
+        result.editor = this.editor;
+        result.windowRect = new Rect(this.windowRect);
 
-        ((UtilitySystem)result).nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
-        ((UtilitySystem)result).transitions = this.transitions.Select(o =>
-        (TransitionGUI)o.CopyElement(((UtilitySystem)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
-                                     ((UtilitySystem)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
+        result.nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
+        result.transitions = this.transitions.Select(o =>
+        (TransitionGUI)o.CopyElement(result.nodes.Find(n => n.identificator == o.fromNode.identificator),
+                                     result.nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
         return result;
     }
@@ -119,7 +117,7 @@ public class UtilitySystem : ClickableElement
     /// <summary>
     /// Draws all <see cref="TransitionGUI"/> curves for the <see cref="BehaviourTree"/>
     /// </summary>
-    public void DrawCurves()
+    public override void DrawCurves()
     {
         foreach (TransitionGUI elem in transitions)
         {

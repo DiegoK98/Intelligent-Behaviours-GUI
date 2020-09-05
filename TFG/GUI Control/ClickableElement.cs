@@ -83,6 +83,11 @@ public abstract class ClickableElement : GUIElement
     }
 
     /// <summary>
+    /// Draws all <see cref="TransitionGUI"/> curves for the <see cref="ClickableElement"/>
+    /// </summary>
+    public abstract void DrawCurves();
+
+    /// <summary>
     /// Returns the list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/> 
     /// </summary>
     /// <returns>The list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/></returns>

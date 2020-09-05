@@ -161,23 +161,22 @@ public class PerceptionGUI : GUIElement
     /// <returns></returns>
     public override GUIElement CopyElement(params object[] args)
     {
-        GUIElement result = new PerceptionGUI
-        {
-            identificator = this.identificator,
-            windowRect = new Rect(this.windowRect),
-            type = this.type,
-            timerNumber = this.timerNumber,
-            customName = this.customName,
-            elemName = this.elemName,
-            stateName = this.stateName,
-            status = this.status,
-            openFoldout = this.openFoldout
-        };
+        PerceptionGUI result = CreateInstance<PerceptionGUI>();
+
+        result.identificator = this.identificator;
+        result.windowRect = new Rect(this.windowRect);
+        result.type = this.type;
+        result.timerNumber = this.timerNumber;
+        result.customName = this.customName;
+        result.elemName = this.elemName;
+        result.stateName = this.stateName;
+        result.status = this.status;
+        result.openFoldout = this.openFoldout;
 
         if (this.firstChild != null)
-            ((PerceptionGUI)result).firstChild = (PerceptionGUI)this.firstChild.CopyElement();
+            result.firstChild = (PerceptionGUI)this.firstChild.CopyElement();
         if (this.secondChild != null)
-            ((PerceptionGUI)result).secondChild = (PerceptionGUI)this.secondChild.CopyElement();
+            result.secondChild = (PerceptionGUI)this.secondChild.CopyElement();
 
         return result;
     }

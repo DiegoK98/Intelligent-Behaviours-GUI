@@ -550,28 +550,26 @@ public class UtilityNode : BaseNode
     {
         UtilitySystem parent = (UtilitySystem)args[0];
 
-        GUIElement result = new UtilityNode
-        {
-            identificator = this.identificator,
-            nodeName = this.nodeName,
-            parent = parent,
-            editor = editor,
-            windowRect = new Rect(this.windowRect),
-            type = this.type,
-            fusionType = this.fusionType,
-            curveType = this.curveType,
-            variableMax = this.variableMax,
-            variableMin = this.variableMin,
-            slope = this.slope,
-            exp = this.exp,
-            displX = this.displX,
-            displY = this.displY,
-            points = this.points
-        };
+        UtilityNode result = CreateInstance<UtilityNode>();
+        result.identificator = this.identificator;
+        result.nodeName = this.nodeName;
+        result.parent = parent;
+        result.editor = editor;
+        result.windowRect = new Rect(this.windowRect);
+        result.type = this.type;
+        result.fusionType = this.fusionType;
+        result.curveType = this.curveType;
+        result.variableMax = this.variableMax;
+        result.variableMin = this.variableMin;
+        result.slope = this.slope;
+        result.exp = this.exp;
+        result.displX = this.displX;
+        result.displY = this.displY;
+        result.points = this.points;
 
         if (this.subElem)
         {
-            ((UtilityNode)result).subElem = (ClickableElement)this.subElem.CopyElement(parent);
+            result.subElem = (ClickableElement)this.subElem.CopyElement(parent);
         }
 
         return result;

@@ -85,20 +85,19 @@ public class BehaviourTree : ClickableElement
     {
         ClickableElement parent = (ClickableElement)args[0];
 
-        GUIElement result = new BehaviourTree
-        {
-            identificator = this.identificator,
-            elementNamer = CreateInstance<UniqueNamer>(),
-            elementName = this.elementName,
-            parent = parent,
-            editor = this.editor,
-            windowRect = new Rect(this.windowRect)
-        };
+        BehaviourTree result = CreateInstance<BehaviourTree>();
 
-        ((BehaviourTree)result).nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
-        ((BehaviourTree)result).transitions = this.transitions.Select(o =>
-        (TransitionGUI)o.CopyElement(((BehaviourTree)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
-                                     ((BehaviourTree)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
+        result.identificator = this.identificator;
+        result.elementNamer = CreateInstance<UniqueNamer>();
+        result.elementName = this.elementName;
+        result.parent = parent;
+        result.editor = this.editor;
+        result.windowRect = new Rect(this.windowRect);
+
+        result.nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
+        result.transitions = this.transitions.Select(o =>
+        (TransitionGUI)o.CopyElement(result.nodes.Find(n => n.identificator == o.fromNode.identificator),
+                                     result.nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
 
         return result;
     }
@@ -115,7 +114,7 @@ public class BehaviourTree : ClickableElement
     /// <summary>
     /// Draws all <see cref="TransitionGUI"/> curves for the <see cref="BehaviourTree"/>
     /// </summary>
-    public void DrawCurves()
+    public override void DrawCurves()
     {
         foreach (TransitionGUI elem in transitions)
         {

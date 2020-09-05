@@ -161,18 +161,16 @@ public class TransitionGUI : GUIElement
             toNode = this.toNode;
         }
 
-        GUIElement result = new TransitionGUI
-        {
-            identificator = this.identificator,
-            transitionName = this.transitionName,
-            windowRect = new Rect(this.windowRect),
-            width = this.width,
-            height = this.height,
-            weight = this.weight,
-            fromNode = fromNode,
-            toNode = toNode,
-            rootPerception = (PerceptionGUI)rootPerception.CopyElement()
-        };
+        TransitionGUI result = CreateInstance<TransitionGUI>();
+        result.identificator = this.identificator;
+        result.transitionName = this.transitionName;
+        result.windowRect = new Rect(this.windowRect);
+        result.width = this.width;
+        result.height = this.height;
+        result.weight = this.weight;
+        result.fromNode = fromNode;
+        result.toNode = toNode;
+        result.rootPerception = (PerceptionGUI)rootPerception.CopyElement();
 
         return result;
     }

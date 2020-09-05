@@ -110,26 +110,25 @@ public class FSM : ClickableElement
     {
         ClickableElement parent = (ClickableElement)args[0];
 
-        GUIElement result = new FSM
-        {
-            identificator = this.identificator,
-            elementNamer = CreateInstance<UniqueNamer>(),
-            elementName = this.elementName,
-            parent = parent,
-            editor = this.editor,
-            windowRect = new Rect(this.windowRect)
-        };
+        FSM result = CreateInstance<FSM>();
 
-        ((FSM)result).nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
-        ((FSM)result).transitions = this.transitions.Select(o =>
-        (TransitionGUI)o.CopyElement(((FSM)result).nodes.Find(n => n.identificator == o.fromNode.identificator),
-                                     ((FSM)result).nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
+        result.identificator = this.identificator;
+        result.elementNamer = CreateInstance<UniqueNamer>();
+        result.elementName = this.elementName;
+        result.parent = parent;
+        result.editor = this.editor;
+        result.windowRect = new Rect(this.windowRect);
 
-        foreach (StateNode elem in ((FSM)result).nodes)
+        result.nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
+        result.transitions = this.transitions.Select(o =>
+        (TransitionGUI)o.CopyElement(result.nodes.Find(n => n.identificator == o.fromNode.identificator),
+                                     result.nodes.Find(n => n.identificator == o.toNode.identificator))).ToList();
+
+        foreach (StateNode elem in result.nodes)
         {
             if (elem.type == stateType.Entry)
             {
-                ((FSM)result).SetAsEntry(elem);
+                result.SetAsEntry(elem);
             }
         }
 
@@ -185,7 +184,7 @@ public class FSM : ClickableElement
     /// <summary>
     /// Draws all <see cref="transitions"/> curves for the <see cref="FSM"/>
     /// </summary>
-    public void DrawCurves()
+    public override void DrawCurves()
     {
         foreach (TransitionGUI elem in transitions)
         {

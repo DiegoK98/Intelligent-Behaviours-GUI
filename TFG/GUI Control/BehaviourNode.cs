@@ -191,22 +191,21 @@ public class BehaviourNode : BaseNode
     {
         BehaviourTree parent = (BehaviourTree)args[0];
 
-        GUIElement result = new BehaviourNode
-        {
-            identificator = this.identificator,
-            nodeName = this.nodeName,
-            parent = parent,
-            type = this.type,
-            windowRect = new Rect(this.windowRect),
-            isRoot = this.isRoot,
-            isRandom = this.isRandom,
-            delayTime = this.delayTime,
-            Nloops = this.Nloops
-        };
+        BehaviourNode result = CreateInstance<BehaviourNode>();
+
+        result.identificator = this.identificator;
+        result.nodeName = this.nodeName;
+        result.parent = parent;
+        result.type = this.type;
+        result.windowRect = new Rect(this.windowRect);
+        result.isRoot = this.isRoot;
+        result.isRandom = this.isRandom;
+        result.delayTime = this.delayTime;
+        result.Nloops = this.Nloops;
 
         if (this.subElem)
         {
-            ((BehaviourNode)result).subElem = (ClickableElement)this.subElem.CopyElement(parent);
+            result.subElem = (ClickableElement)this.subElem.CopyElement(parent);
         }
 
         return result;
