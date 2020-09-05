@@ -2549,20 +2549,22 @@ public class NodeEditor : EditorWindow
 
             if (elem is BaseNode && ((BaseNode)elem).subElem != null)
             {
-                if (((BaseNode)elem).subElem is FSM)
+                ((BaseNode)elem).subElem.identificator = GUIElement.UniqueID();
+
+                switch (((BaseNode)elem).subElem.GetType().ToString())
                 {
-                    ReIdentifyElements(((FSM)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                    ReIdentifyElements(((FSM)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
-                }
-                if (((BaseNode)elem).subElem is BehaviourTree)
-                {
-                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                    ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
-                }
-                if (((BaseNode)elem).subElem is UtilitySystem)
-                {
-                    ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                    ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                    case nameof(FSM):
+                        ReIdentifyElements(((FSM)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((FSM)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                        break;
+                    case nameof(BehaviourTree):
+                        ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                        break;
+                    case nameof(UtilitySystem):
+                        ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                        break;
                 }
             }
         }
