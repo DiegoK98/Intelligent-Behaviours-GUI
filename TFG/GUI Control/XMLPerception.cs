@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PerceptionXML
+public class XMLPerception
 {
     /// <summary>
-    /// Unique identificator of the <see cref="PerceptionXML"/>
+    /// Unique identificator of the <see cref="XMLPerception"/>
     /// </summary>
     public string Id;
 
@@ -46,17 +46,17 @@ public class PerceptionXML
     public bool openFoldout;
 
     /// <summary>
-    /// First <see cref="PerceptionXML"/> of an And Perception
+    /// First <see cref="XMLPerception"/> of an And Perception
     /// </summary>
-    public PerceptionXML firstChild;
+    public XMLPerception firstChild;
 
     /// <summary>
-    /// Second <see cref="PerceptionXML"/> of an And Perception
+    /// Second <see cref="XMLPerception"/> of an And Perception
     /// </summary>
-    public PerceptionXML secondChild;
+    public XMLPerception secondChild;
 
     /// <summary>
-    /// Creates and returns a <see cref="PerceptionGUI"/> that corresponds to this <see cref="PerceptionXML"/>
+    /// Creates and returns a <see cref="PerceptionGUI"/> that corresponds to this <see cref="XMLPerception"/>
     /// </summary>
     /// <returns></returns>
     public PerceptionGUI ToGUIElement()

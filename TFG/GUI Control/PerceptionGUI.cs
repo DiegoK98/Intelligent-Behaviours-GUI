@@ -119,12 +119,12 @@ public class PerceptionGUI : GUIElement
     }
 
     /// <summary>
-    /// Creates and returns a <see cref="PerceptionXML"/> that corresponds to this <see cref="PerceptionGUI"/>
+    /// Creates and returns a <see cref="XMLPerception"/> that corresponds to this <see cref="PerceptionGUI"/>
     /// </summary>
     /// <returns></returns>
-    public PerceptionXML ToPerceptionXML()
+    public XMLPerception ToPerceptionXML()
     {
-        PerceptionXML result = new PerceptionXML
+        XMLPerception result = new XMLPerception
         {
             Id = this.identificator,
             type = this.type,

@@ -127,9 +127,9 @@ public class XMLElement
     public string toId { get; set; }
 
     /// <summary>
-    /// The <see cref="PerceptionXML"/> of this <see cref="TransitionGUI"/>'s perception
+    /// The <see cref="XMLPerception"/> of this <see cref="TransitionGUI"/>'s perception
     /// </summary>
-    public PerceptionXML perception { get; set; }
+    public XMLPerception perception { get; set; }
 
     /// <summary>
     /// Weight for weighted Fusion nodes
