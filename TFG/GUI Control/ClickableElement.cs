@@ -5,12 +5,6 @@ using UnityEngine;
 
 public abstract class ClickableElement : GUIElement
 {
-    public enum elementType
-    {
-        FSM,
-        BT
-    }
-
     /// <summary>
     /// Width of the <see cref="ClickableElement.windowRect"/>
     /// </summary>
@@ -25,11 +19,6 @@ public abstract class ClickableElement : GUIElement
     /// Name of the <see cref="ClickableElement"/>
     /// </summary>
     public string elementName = "";
-
-    /// <summary>
-    /// The <see cref="ClickableElement"/> that this <see cref="ClickableElement"/> was created in, if it was. Null if it wasn't
-    /// </summary>
-    public ClickableElement parent;
 
     /// <summary>
     /// List of <see cref="BaseNode"/>

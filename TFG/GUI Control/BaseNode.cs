@@ -27,11 +27,6 @@ public abstract class BaseNode : GUIElement
     public static int height = 63;
 
     /// <summary>
-    /// The <see cref="ClickableElement"/> in which this <see cref="BaseNode"/> exists
-    /// </summary>
-    public ClickableElement parent;
-
-    /// <summary>
     /// The Initializer for the <seealso cref="BaseNode"/>
     /// </summary>
     public void InitBaseNode(ClickableElement parent, string id = null)

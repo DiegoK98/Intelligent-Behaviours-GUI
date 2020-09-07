@@ -1217,17 +1217,12 @@ public class NodeEditor : EditorWindow
             GenericMenu menu = new GenericMenu();
 
             menu.AddItem(new GUIContent("Manual de usuario"), false, () => Application.OpenURL("file:///" + Application.dataPath + "/Intelligent%20Behaviours%20GUI%20Package/Guia%20de%20uso.pdf"));
-            menu.AddSeparator("");
 
             if (currentElem != null)
             {
+                menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Save Element to file"), false, SaveElem, currentElem);
                 menu.AddItem(new GUIContent("Export Code"), false, ExportCode, currentElem);
-            }
-            else
-            {
-                menu.AddDisabledItem(new GUIContent("Save Element to file"), false);
-                menu.AddDisabledItem(new GUIContent("Export Code"), false);
             }
 
             menu.ShowAsContext();

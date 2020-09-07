@@ -16,6 +16,11 @@ public abstract class GUIElement : ScriptableObject
     public string identificator;
 
     /// <summary>
+    /// The <see cref="ClickableElement"/> that this <see cref="GUIElement"/> was created in, if it was. Null if it wasn't
+    /// </summary>
+    public ClickableElement parent;
+
+    /// <summary>
     /// Returns a unique <see cref="string"/>
     /// </summary>
     /// <returns></returns>

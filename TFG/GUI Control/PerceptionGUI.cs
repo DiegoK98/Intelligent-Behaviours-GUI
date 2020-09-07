@@ -55,12 +55,12 @@ public class PerceptionGUI : GUIElement
     public bool openFoldout;
 
     /// <summary>
-    /// First <see cref="PerceptionGUI"/> of an And Perception
+    /// First <see cref="PerceptionGUI"/> of an And/Or Perception
     /// </summary>
     public PerceptionGUI firstChild;
 
     /// <summary>
-    /// Second <see cref="PerceptionGUI"/> of an And Perception
+    /// Second <see cref="PerceptionGUI"/> of an And/Or Perception
     /// </summary>
     public PerceptionGUI secondChild;
 
