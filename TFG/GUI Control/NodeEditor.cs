@@ -190,6 +190,7 @@ public class NodeEditor : EditorWindow
         #region Errors and Warnings Control
 
         if (currentElem)
+        {
             switch (currentElem.GetType().ToString())
             {
                 case nameof(FSM):
@@ -252,6 +253,27 @@ public class NodeEditor : EditorWindow
                     }
                     break;
             }
+
+            // Check repeated names
+            bool repeatedNames = false;
+
+            foreach (BaseNode node in currentElem.nodes)
+            {
+                if (currentElem.CheckNameExisting(node.nodeName, 1))
+                    repeatedNames = true;
+            }
+
+            foreach (TransitionGUI transition in currentElem.transitions)
+            {
+                if (currentElem.CheckNameExisting(transition.transitionName, 1))
+                    repeatedNames = true;
+            }
+
+            if (repeatedNames)
+                currentElem.AddError(Error.RepeatedName);
+            else
+                currentElem.RemoveError(Error.RepeatedName);
+        }
 
         #endregion
 
@@ -1009,50 +1031,7 @@ public class NodeEditor : EditorWindow
 
         #endregion
 
-        // Check if there are repeated names
-        #region Repeated Names
-
-        bool repeatedNames = false;
-
-        if (currentElem is FSM)
-        {
-            foreach (BaseNode node in ((FSM)currentElem).nodes)
-            {
-                if (currentElem.CheckNameExisting(node.nodeName, 1))
-                    repeatedNames = true;
-            }
-
-            foreach (TransitionGUI transition in ((FSM)currentElem).transitions)
-            {
-                if (currentElem.CheckNameExisting(transition.transitionName, 1))
-                    repeatedNames = true;
-            }
-        }
-        else if (currentElem is BehaviourTree)
-        {
-            foreach (BaseNode node in ((BehaviourTree)currentElem).nodes)
-            {
-                if (currentElem.CheckNameExisting(node.nodeName, 1))
-                    repeatedNames = true;
-            }
-        }
-        else if (currentElem is UtilitySystem)
-        {
-            foreach (BaseNode node in ((UtilitySystem)currentElem).nodes)
-            {
-                if (currentElem.CheckNameExisting(node.nodeName, 1))
-                    repeatedNames = true;
-            }
-        }
-
-        if (repeatedNames)
-            currentElem.AddError(Error.RepeatedName);
-        else if (currentElem)
-            currentElem.RemoveError(Error.RepeatedName);
-
         Repaint();
-
-        #endregion
     }
 
     private void OnDestroy()
