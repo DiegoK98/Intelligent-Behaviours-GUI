@@ -8,18 +8,13 @@ using UnityEditor;
 public class FSM : ClickableElement
 {
     /// <summary>
-    /// The Entry State
-    /// </summary>
-    private StateNode EntryState;
-
-    /// <summary>
     /// Returns true if this <see cref="FSM"/> has an <see cref="EntryState"/>
     /// </summary>
     public bool HasEntryState
     {
         get
         {
-            return EntryState != null && nodes.Contains(EntryState);
+            return nodes.Any(n => ((StateNode)n).type == stateType.Entry);
         }
     }
 
@@ -152,7 +147,6 @@ public class FSM : ClickableElement
     {
         node.type = stateType.Entry;
         nodes.Add(node);
-        EntryState = node;
     }
 
     /// <summary>
@@ -162,11 +156,11 @@ public class FSM : ClickableElement
     public void SetAsEntry(StateNode node)
     {
         //Previous Entry Node set to Unconnected
-        if (EntryState)
-            EntryState.type = stateType.Unconnected;
+        StateNode entryState = (StateNode)nodes.Find(n => ((StateNode)n).type == stateType.Entry);
+        if (entryState)
+            entryState.type = stateType.Unconnected;
 
         node.type = stateType.Entry;
-        EntryState = node;
 
         CheckConnected();
     }
@@ -178,7 +172,7 @@ public class FSM : ClickableElement
     /// <returns></returns>
     public bool isEntryState(StateNode node)
     {
-        return node.Equals(EntryState);
+        return node.type == stateType.Entry;
     }
 
     /// <summary>
@@ -253,7 +247,7 @@ public class FSM : ClickableElement
     {
         if (baseNode == null)
         {
-            baseNode = EntryState;
+            baseNode = (StateNode)nodes.Find(n => ((StateNode)n).type == stateType.Entry);
 
             foreach (StateNode elem in nodes.FindAll(o => ((StateNode)o).type != stateType.Entry))
             {
