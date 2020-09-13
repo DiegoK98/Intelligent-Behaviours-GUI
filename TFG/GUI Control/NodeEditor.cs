@@ -2550,6 +2550,8 @@ public class NodeEditor : EditorWindow
     private void Copy()
     {
         clipboard = focusedObjects.Select(o => o.CopyElement(currentElem)).ToList();
+
+        // We update every transition's references to the nodes, because if we don't, apparently it caused a bug
         foreach (GUIElement elem in clipboard)
         {
             if (elem is TransitionGUI)
@@ -2594,7 +2596,6 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                    if (cutObjects.Count > 0)
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
@@ -2632,7 +2633,6 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                    if (cutObjects.Count > 0)
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
@@ -2708,7 +2708,6 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                    if (cutObjects.Count > 0)
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
@@ -2775,7 +2774,6 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                    if (cutObjects.Count > 0)
                         foreach (GUIElement elem in cutObjects)
                             Delete(elem, cutFromElement);
 
@@ -2953,7 +2951,7 @@ public class NodeEditor : EditorWindow
     }
 
     /// <summary>
-    /// Check if the elem is in the list. If it's not, check every list inside it recursively
+    /// Check if <paramref name="elem"/> is in <paramref name="list"/>. If it's not, check every list inside it recursively
     /// </summary>
     /// <param name="elem"></param>
     /// <param name="list"></param>
