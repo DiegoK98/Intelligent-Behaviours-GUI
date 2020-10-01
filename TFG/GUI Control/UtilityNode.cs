@@ -349,9 +349,9 @@ public class UtilityNode : BaseNode
 
                                 // The X button for deleting the point
                                 // If you don't press it it adds the element to the updated list, else it doesn't hence it will appear as it has been deleted
-                                if (!GUILayout.Button("x", new GUIStyle(GUI.skin.button)
+                                if (!GUILayout.Button("-", new GUIStyle(GUI.skin.button)
                                 {
-                                    padding = new RectOffset(0, 0, 0, 0),
+                                    padding = new RectOffset(2, 0, 0, 2),
                                     alignment = TextAnchor.MiddleCenter,
                                     fontSize = 15
                                 },
@@ -369,7 +369,7 @@ public class UtilityNode : BaseNode
                             GUILayout.BeginHorizontal();
                             if (GUILayout.Button("+", new GUIStyle(GUI.skin.button)
                             {
-                                padding = new RectOffset(0, 0, 0, 0),
+                                padding = new RectOffset(0, 0, 0, 3),
                                 alignment = TextAnchor.MiddleCenter,
                                 fontSize = 15
                             },

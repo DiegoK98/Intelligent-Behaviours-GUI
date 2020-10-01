@@ -2596,8 +2596,8 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                        foreach (GUIElement elem in cutObjects)
-                            Delete(elem, cutFromElement);
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
 
                     foreach (GUIElement elem in clipboard)
                     {
@@ -2633,8 +2633,8 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                        foreach (GUIElement elem in cutObjects)
-                            Delete(elem, cutFromElement);
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
 
                     foreach (GUIElement elem in clipboard.Where(e => !(e is TransitionGUI)))
                     {
@@ -2708,8 +2708,8 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                        foreach (GUIElement elem in cutObjects)
-                            Delete(elem, cutFromElement);
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
 
                     foreach (GUIElement elem in clipboard.Where(n => !(n is TransitionGUI)))
                     {
@@ -2774,8 +2774,8 @@ public class NodeEditor : EditorWindow
                 }
                 else
                 {
-                        foreach (GUIElement elem in cutObjects)
-                            Delete(elem, cutFromElement);
+                    foreach (GUIElement elem in cutObjects)
+                        Delete(elem, cutFromElement);
 
                     foreach (GUIElement elem in clipboard.Where(n => !(n is TransitionGUI)))
                     {

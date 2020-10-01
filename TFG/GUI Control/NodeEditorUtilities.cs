@@ -204,20 +204,8 @@ public class NodeEditorUtilities
     {
         uniqueNamer = ScriptableObject.CreateInstance<UniqueNamer>();
 
-        string path = "none";
+        string path = "Machine_Template.cs";
 
-        switch (elem.GetType().ToString())
-        {
-            case nameof(FSM):
-                path = "FSM_Template.cs";
-                break;
-            case nameof(BehaviourTree):
-                path = "BT_Template.cs";
-                break;
-            case nameof(UtilitySystem):
-                path = "US_Template.cs";
-                break;
-        }
         string[] guids = AssetDatabase.FindAssets(path);
         if (guids.Length == 0)
         {
@@ -503,30 +491,14 @@ public class NodeEditorUtilities
                 List<ClickableElement> subElems = new List<ClickableElement>();
 
                 templateText = templateText.Replace("#SCRIPTNAME#", CleanName(scriptName));
-
+                templateText = templateText.Replace("#MACHINE#", GetMachineName(elem));
                 templateText = templateText.Replace("#ELEMNAME#", CleanName(elem.elementName));
 
-                switch (elem.GetType().ToString())
-                {
-                    case nameof(FSM):
-                        templateText = templateText.Replace("#ENDING#", FSMEnding);
-                        templateText = templateText.Replace("#FSMCREATE#", GetCreateMethod(elem, false, ref subElems, folderPath));
-                        templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
-                        templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
-                        break;
-                    case nameof(BehaviourTree):
-                        templateText = templateText.Replace("#ENDING#", BTEnding);
-                        templateText = templateText.Replace("#BTCREATE#", GetCreateMethod(elem, false, ref subElems));
-                        templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
-                        templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
-                        break;
-                    case nameof(UtilitySystem):
-                        templateText = templateText.Replace("#ENDING#", USEnding);
-                        templateText = templateText.Replace("#USCREATE#", GetCreateMethod(elem, false, ref subElems));
-                        templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
-                        templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
-                        break;
-                }
+                templateText = templateText.Replace("#ENDING#", GetEnding(elem));
+                templateText = templateText.Replace("#CREATE#", GetCreateMethod(elem, false, ref subElems, folderPath));
+                templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
+                templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
+
                 templateText = templateText.Replace("#ACTIONS#", GetActionMethods(elem));
 
                 // SubFSM
@@ -653,6 +625,58 @@ public class NodeEditorUtilities
             result = "@" + result;
 
         return result;
+    }
+
+    /// <summary>
+    /// Returns the machine name
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <returns></returns>
+    private static string GetMachineName(ClickableElement elem)
+    {
+        string machineName = "";
+
+        // Fill the template with the content
+        switch (elem.GetType().ToString())
+        {
+            case nameof(FSM):
+                machineName = "StateMachine";
+                break;
+            case nameof(BehaviourTree):
+                machineName = "BehaviourTree";
+                break;
+            case nameof(UtilitySystem):
+                machineName = "UtilitySystem";
+                break;
+        }
+
+        return machineName;
+    }
+
+    /// <summary>
+    /// Returns the ending of the machine
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <returns></returns>
+    private static string GetEnding(ClickableElement elem)
+    {
+        string machineName = "";
+
+        // Fill the template with the content
+        switch (elem.GetType().ToString())
+        {
+            case nameof(FSM):
+                machineName = FSMEnding;
+                break;
+            case nameof(BehaviourTree):
+                machineName = BTEnding;
+                break;
+            case nameof(UtilitySystem):
+                machineName = USEnding;
+                break;
+        }
+
+        return machineName;
     }
 
     /// <summary>
