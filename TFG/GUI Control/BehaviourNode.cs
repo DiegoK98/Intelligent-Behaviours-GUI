@@ -47,6 +47,11 @@ public class BehaviourNode : BaseNode
     public bool isRandom = false;
 
     /// <summary>
+    /// Parameter for Sequence Nodes
+    /// </summary>
+    public bool isInfinite = false;
+
+    /// <summary>
     /// Returns the <see cref="behaviourType"/> properly written
     /// </summary>
     /// <returns></returns>
@@ -135,7 +140,13 @@ public class BehaviourNode : BaseNode
                 nodeName = CleanName(EditorGUILayout.TextArea(nodeName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)));
                 break;
             case behaviourType.LoopN:
-                int.TryParse(EditorGUILayout.TextField(Nloops.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out Nloops);
+                GUILayout.BeginArea(new Rect(windowRect.width * 0.65f, windowRect.height * 0.4f, windowRect.width * 0.5f, height * 0.3f));
+                isInfinite = GUILayout.Toggle(isInfinite, "∞", new GUIStyle(GUI.skin.toggle) { alignment = TextAnchor.MiddleLeft });
+                GUILayout.EndArea();
+                if (isInfinite)
+                    EditorGUILayout.TextField("∞", Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+                else
+                    int.TryParse(EditorGUILayout.TextField(Nloops.ToString(), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), out Nloops);
                 break;
             case behaviourType.DelayT:
                 float.TryParse(EditorGUILayout.TextField(delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out delayTime);
