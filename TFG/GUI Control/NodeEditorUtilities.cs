@@ -48,6 +48,7 @@ public class NodeEditorUtilities
         + tab + tab + "// States\n"
         + tab + tab + "#STATES#\n"
         + tab + tab + "// Transitions#TRANSITIONS#\n"
+        + tab + tab + "\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -68,6 +69,7 @@ public class NodeEditorUtilities
         + tab + tab + "#CHILDS#\n"
         + tab + tab + "// SetRoot\n"
         + tab + tab + "#SETROOT#\n"
+        + tab + tab + "\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -87,6 +89,7 @@ public class NodeEditorUtilities
         + tab + tab + "#FACTORS#\n"
         + tab + tab + "// ACTIONS\n"
         + tab + tab + "#ACTIONS#\n"
+        + tab + tab + "\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
