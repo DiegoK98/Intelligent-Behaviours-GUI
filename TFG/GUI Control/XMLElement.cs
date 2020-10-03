@@ -68,6 +68,11 @@ public class XMLElement
     public bool isRandom { get; set; }
 
     /// <summary>
+    /// Parameter for Sequence Nodes
+    /// </summary>
+    public bool isInfinite { get; set; }
+
+    /// <summary>
     /// Parameter for DelayT Nodes
     /// </summary>
     public float delayTime { get; set; }
@@ -358,7 +363,7 @@ public class XMLElement
                 break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
-                nodeBT.InitBehaviourNodeFromXML(currentTree, (behaviourType)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY, this.Id, this.name, this.delayTime, this.Nloops, this.isRandom);
+                nodeBT.InitBehaviourNodeFromXML(currentTree, (behaviourType)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY, this.Id, this.name, this.delayTime, this.Nloops, this.isRandom, this.isInfinite);
 
                 currentTree.nodes.Add(nodeBT);
 

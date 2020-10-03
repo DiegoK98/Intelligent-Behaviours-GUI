@@ -98,7 +98,7 @@ public class BehaviourNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitBehaviourNodeFromXML(ClickableElement parent, behaviourType type, float posx, float posy, string id, string name, float delayTime, int Nloops, bool isRandom, ClickableElement subElem = null)
+    public void InitBehaviourNodeFromXML(ClickableElement parent, behaviourType type, float posx, float posy, string id, string name, float delayTime, int Nloops, bool isRandom, bool isInfinite, ClickableElement subElem = null)
     {
         InitBaseNode(parent, id);
 
@@ -119,6 +119,7 @@ public class BehaviourNode : BaseNode
         this.delayTime = delayTime;
         this.Nloops = Nloops;
         this.isRandom = isRandom;
+        this.isInfinite = isInfinite;
     }
 
     /// <summary>
@@ -177,6 +178,7 @@ public class BehaviourNode : BaseNode
                 windowPosX = this.windowRect.x,
                 windowPosY = this.windowRect.y,
                 isRandom = this.isRandom,
+                isInfinite = this.isInfinite,
                 delayTime = this.delayTime,
                 Nloops = this.Nloops,
 
@@ -211,6 +213,7 @@ public class BehaviourNode : BaseNode
         result.windowRect = new Rect(this.windowRect);
         result.isRoot = this.isRoot;
         result.isRandom = this.isRandom;
+        result.isInfinite = this.isInfinite;
         result.delayTime = this.delayTime;
         result.Nloops = this.Nloops;
 

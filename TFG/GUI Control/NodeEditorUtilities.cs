@@ -721,7 +721,7 @@ public class NodeEditorUtilities
         templateSub = templateSub.Replace("#ISSUB#", isSubStr);
 
         if (isSub)
-            templateSub += "#SUBELEMCREATE#";
+            templateSub += "#SUBELEM_CREATE#";
 
         // Fill the template with the content
         switch (elem.GetType().ToString())
@@ -757,7 +757,7 @@ public class NodeEditorUtilities
         List<ClickableElement> subElemsCopy = new List<ClickableElement>();
         foreach (ClickableElement sub in subElems)
         {
-            templateText = templateText.Replace("#SUBELEMCREATE#", GetCreateMethod(sub, true, ref subElemsCopy));
+            templateText = templateText.Replace("#SUBELEM_CREATE#", GetCreateMethod(sub, true, ref subElemsCopy));
         }
         if (subElemsCopy.Count > 0)
         {
@@ -1192,7 +1192,7 @@ public class NodeEditorUtilities
             {
                 case behaviourType.LoopN:
                     subNodeName = nodeName.Remove(0, "LoopN_".ToCharArray().Count());
-                    result += "LoopDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopNode(\"" + nodeName + "\", " + subNodeName + ", " + node.Nloops + ");\n" + tab + tab;
+                    result += "LoopDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopNode(\"" + nodeName + "\", " + subNodeName + (node.isInfinite ? "" : ", " + node.Nloops) + ");\n" + tab + tab;
                     break;
                 case behaviourType.LoopUntilFail:
                     subNodeName = nodeName.Remove(0, "LoopUntilFail_".ToCharArray().Count());
