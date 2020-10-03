@@ -42,14 +42,14 @@ public class NodeEditorUtilities
     static readonly string FSMCreateTemplate = "\n"
         + tab + "private void Create#CREATENAME#()\n"
         + tab + "{\n"
-        + tab + tab + "#MACHNAME# = new StateMachineEngine(#ISSUB#);\n"
-        + tab + tab + "\n"
         + tab + tab + "// Perceptions\n"
         + tab + tab + "// Modify or add new Perceptions, see the guide for more\n"
         + tab + tab + "#PERCEPIONS#\n"
         + tab + tab + "// States\n"
         + tab + tab + "#STATES#\n"
         + tab + tab + "// Transitions#TRANSITIONS#\n"
+        + tab + tab + "// ExitTransitions\n"
+        + tab + tab + "#EXITS#\n"
         + tab + "}";
 
     /// <summary>
@@ -63,13 +63,13 @@ public class NodeEditorUtilities
     static readonly string BTCreateTemplate = "\n"
         + tab + "private void Create#CREATENAME#()\n"
         + tab + "{\n"
-        + tab + tab + "#MACHNAME# = new BehaviourTreeEngine(#ISSUB#);\n"
-        + tab + tab + "\n"
         + tab + tab + "// Nodes\n"
         + tab + tab + "#NODES#\n"
         + tab + tab + "#CHILDS#\n"
         + tab + tab + "// SetRoot\n"
         + tab + tab + "#SETROOT#\n"
+        + tab + tab + "// ExitTransitions\n"
+        + tab + tab + "#EXITS#\n"
         + tab + "}";
 
     /// <summary>
@@ -83,12 +83,12 @@ public class NodeEditorUtilities
     static readonly string USCreateTemplate = "\n"
         + tab + "private void Create#CREATENAME#()\n"
         + tab + "{\n"
-        + tab + tab + "#MACHNAME# = new UtilitySystemEngine(#ISSUB#);\n"
-        + tab + tab + "\n"
         + tab + tab + "// FACTORS\n"
         + tab + tab + "#FACTORS#\n"
         + tab + tab + "// ACTIONS\n"
         + tab + tab + "#ACTIONS#\n"
+        + tab + tab + "// ExitTransitions\n"
+        + tab + tab + "#EXITS#\n"
         + tab + "}";
 
     /// <summary>
@@ -492,9 +492,13 @@ public class NodeEditorUtilities
                 templateText = templateText.Replace("#MACHINENAME#", GetMachineName(elem));
                 templateText = templateText.Replace("#ELEMNAME#", CleanName(elem.elementName) + GetEnding(elem));
 
-                templateText = templateText.Replace("#CREATE#", GetCreateMethod(elem, false, ref subElems, folderPath));
+                string createMethod = GetCreateMethod(ref templateText, elem, false, ref subElems, folderPath); // We do this to be able to alter templateText from
+                templateText = templateText.Replace("#CREATE#", createMethod);                              // within GetCreateMethod without overriding it at Replace
+
                 templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
                 templateText = templateText.Replace("#SUBELEM_CREATE#", string.Empty);
+                templateText = templateText.Replace("#VAR_DECL#", string.Empty);
+                templateText = templateText.Replace("#MACHINE_INIT#", string.Empty);
 
                 templateText = templateText.Replace("#ACTIONS#", GetActionMethods(elem));
 
@@ -684,7 +688,7 @@ public class NodeEditorUtilities
     /// <param name="subElems"></param>
     /// <param name="folderPath"></param>
     /// <returns></returns>
-    private static string GetCreateMethod(ClickableElement elem, bool isSub, ref List<ClickableElement> subElems, string folderPath = null)
+    private static string GetCreateMethod(ref string templateText, ClickableElement elem, bool isSub, ref List<ClickableElement> subElems, string folderPath = null)
     {
         // Set the strings to what they need to be
         string className = CleanName(elem.elementName);
@@ -717,8 +721,8 @@ public class NodeEditorUtilities
 
         // Adjust the template names
         templateSub = templateSub.Replace("#CREATENAME#", createdName);
-        templateSub = templateSub.Replace("#MACHNAME#", machineName);
-        templateSub = templateSub.Replace("#ISSUB#", isSubStr);
+
+        templateText = templateText.Replace("#MACHINE_INIT#", machineName + " = new " + createName + "Engine(" + isSubStr + ");\n" + tab + tab + "#MACHINE_INIT#");
 
         if (isSub)
             templateSub += "#SUBELEM_CREATE#";
@@ -727,20 +731,22 @@ public class NodeEditorUtilities
         switch (elem.GetType().ToString())
         {
             case nameof(FSM):
-                templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(elem, engineEnding, folderPath));
-                templateSub = templateSub.Replace("#STATES#", GetStates(elem, engineEnding, ref subElems));
+                templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(ref templateText, elem, engineEnding, folderPath));
+                templateSub = templateSub.Replace("#STATES#", GetStates(ref templateText, elem, engineEnding, ref subElems));
                 templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
                 break;
             case nameof(BehaviourTree):
-                templateSub = templateSub.Replace("#NODES#", GetNodes(elem, engineEnding, ref subElems));
+                templateSub = templateSub.Replace("#NODES#", GetNodes(ref templateText, elem, engineEnding, ref subElems));
                 templateSub = templateSub.Replace("#CHILDS#", GetChilds(elem, ref subElems));
                 templateSub = templateSub.Replace("#SETROOT#", GetSetRoot(elem, engineEnding));
                 break;
             case nameof(UtilitySystem):
-                templateSub = templateSub.Replace("#FACTORS#", GetFactors(elem));
-                templateSub = templateSub.Replace("#ACTIONS#", GetActions(elem, engineEnding, ref subElems));
+                templateSub = templateSub.Replace("#FACTORS#", GetFactors(ref templateText, elem));
+                templateSub = templateSub.Replace("#ACTIONS#", GetActions(ref templateText, elem, engineEnding, ref subElems));
                 break;
         }
+
+        templateSub = templateSub.Replace("#EXITS#", GetExitTransitions(elem));
 
         return templateSub;
     }
@@ -757,7 +763,8 @@ public class NodeEditorUtilities
         List<ClickableElement> subElemsCopy = new List<ClickableElement>();
         foreach (ClickableElement sub in subElems)
         {
-            templateText = templateText.Replace("#SUBELEM_CREATE#", GetCreateMethod(sub, true, ref subElemsCopy));
+            string createMethod = GetCreateMethod(ref templateText, sub, true, ref subElemsCopy);
+            templateText = templateText.Replace("#SUBELEM_CREATE#", createMethod);
         }
         if (subElemsCopy.Count > 0)
         {
@@ -882,7 +889,7 @@ public class NodeEditorUtilities
     /// <param name="engineEnding"></param>
     /// <param name="folderPath"></param>
     /// <returns></returns>
-    private static string GetPerceptions(ClickableElement elem, string engineEnding, string folderPath = null)
+    private static string GetPerceptions(ref string templateText, ClickableElement elem, string engineEnding, string folderPath = null)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -892,7 +899,7 @@ public class NodeEditorUtilities
         {
             string transitionName = CleanName(transition.transitionName);
 
-            result += RecursivePerceptions(transition.rootPerception, transitionName, machineName, folderPath);
+            result += RecursivePerceptions(ref templateText, transition.rootPerception, transitionName, machineName, folderPath);
         }
 
         return result;
@@ -906,7 +913,7 @@ public class NodeEditorUtilities
     /// <param name="machineName"></param>
     /// <param name="folderPath"></param>
     /// <returns></returns>
-    private static string RecursivePerceptions(PerceptionGUI perception, string transitionName, string machineName, string folderPath)
+    private static string RecursivePerceptions(ref string templateText, PerceptionGUI perception, string transitionName, string machineName, string folderPath)
     {
         string res = "";
         string auxAndOr = "";
@@ -914,8 +921,8 @@ public class NodeEditorUtilities
         if (perception.type == perceptionType.And || perception.type == perceptionType.Or)
         {
             auxAndOr = perception.type.ToString();
-            res += RecursivePerceptions(perception.firstChild, transitionName, machineName, folderPath);
-            res += RecursivePerceptions(perception.secondChild, transitionName, machineName, folderPath);
+            res += RecursivePerceptions(ref templateText, perception.firstChild, transitionName, machineName, folderPath);
+            res += RecursivePerceptions(ref templateText, perception.secondChild, transitionName, machineName, folderPath);
         }
 
         string typeName;
@@ -949,7 +956,10 @@ public class NodeEditorUtilities
             typeName = perception.type.ToString();
         }
 
-        res += "Perception " + uniqueNamer.AddName(perception.identificator, typeName + "Perception") + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
+        string perceptionName = uniqueNamer.AddName(perception.identificator, typeName + "Perception");
+
+        templateText = templateText.Replace("#VAR_DECL#", "private Perception " + perceptionName + ";\n" + tab + "#VAR_DECL#");
+        res += perceptionName + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
 
         return res;
     }
@@ -993,7 +1003,7 @@ public class NodeEditorUtilities
     /// <param name="engineEnding"></param>
     /// <param name="subElems"></param>
     /// <returns></returns>
-    private static string GetStates(ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
+    private static string GetStates(ref string templateText, ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -1003,15 +1013,17 @@ public class NodeEditorUtilities
         {
             string nodeName = CleanName(node.nodeName);
 
+            templateText = templateText.Replace("#VAR_DECL#", "private State " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
             if (node.subElem is null)
             {
                 if (node.type == stateType.Entry)
                 {
-                    result += "State " + nodeName + " = " + machineName + ".CreateEntryState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateEntryState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
                 }
                 else
                 {
-                    result += "State " + nodeName + " = " + machineName + ".CreateState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateState(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ");\n" + tab + tab;
                 }
             }
             else
@@ -1031,7 +1043,7 @@ public class NodeEditorUtilities
                         break;
                 }
 
-                result += "State " + nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subEnding + ");\n" + tab + tab;
+                result += nodeName + " = " + machineName + ".CreateSubStateMachine(\"" + node.nodeName + "\", " + nodeName + subEnding + ");\n" + tab + tab;
                 subElems.Add(node.subElem);
             }
         }
@@ -1086,6 +1098,7 @@ public class NodeEditorUtilities
                         break;
                 }
 
+                // Exit de subMachine a esta FSM
                 result += "\n" + tab + tab + subClassName + subEnding + ".CreateExitTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
             }
             else
@@ -1093,9 +1106,6 @@ public class NodeEditorUtilities
                 result += "\n" + tab + tab + machineName + ".CreateTransition(\"" + transition.transitionName + "\", " + fromNodeName + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + toNodeName + ");";
             }
         }
-
-        if (elem.parent is BehaviourTree)
-            result += "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + machineName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, ReturnValues.Succeed);";
 
         return result;
     }
@@ -1111,7 +1121,7 @@ public class NodeEditorUtilities
     /// <param name="engineEnding"></param>
     /// <param name="subElems"></param>
     /// <returns></returns>
-    private static string GetNodes(ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
+    private static string GetNodes(ref string templateText, ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -1124,15 +1134,19 @@ public class NodeEditorUtilities
             switch (node.type)
             {
                 case behaviourType.Selector:
-                    result += "SelectorNode " + nodeName + " = " + machineName + ".CreateSelectorNode(\"" + node.nodeName + "\");\n" + tab + tab;
+                    templateText = templateText.Replace("#VAR_DECL#", "private SelectorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+                    result += nodeName + " = " + machineName + ".CreateSelectorNode(\"" + node.nodeName + "\");\n" + tab + tab;
                     break;
                 case behaviourType.Sequence:
-                    result += "SequenceNode " + nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", " + (node.isRandom ? "true" : "false") + ");\n" + tab + tab;
+                    templateText = templateText.Replace("#VAR_DECL#", "private SequenceNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+                    result += nodeName + " = " + machineName + ".CreateSequenceNode(\"" + node.nodeName + "\", " + (node.isRandom ? "true" : "false") + ");\n" + tab + tab;
                     break;
                 case behaviourType.Leaf:
+                    templateText = templateText.Replace("#VAR_DECL#", "private LeafNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     if (node.subElem is null)
                     {
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateLeafNode(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + nodeName + conditionsEnding + ");\n" + tab + tab;
+                        result += nodeName + " = " + machineName + ".CreateLeafNode(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + nodeName + conditionsEnding + ");\n" + tab + tab;
                     }
                     else
                     {
@@ -1151,7 +1165,7 @@ public class NodeEditorUtilities
                                 break;
                         }
 
-                        result += "LeafNode " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subEnding + ");\n" + tab + tab;
+                        result += nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + nodeName + subEnding + ");\n" + tab + tab;
                         subElems.Add(node.subElem);
                     }
                     break;
@@ -1163,7 +1177,7 @@ public class NodeEditorUtilities
 
         foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => ((BehaviourNode)o).isRoot))
         {
-            RecursiveDecorators(ref result, machineName, elem, node);
+            RecursiveDecorators(ref templateText, ref result, machineName, elem, node);
         }
 
         return result;
@@ -1176,11 +1190,11 @@ public class NodeEditorUtilities
     /// <param name="machineName"></param>
     /// <param name="elem"></param>
     /// <param name="node"></param>
-    private static void RecursiveDecorators(ref string result, string machineName, ClickableElement elem, BehaviourNode node)
+    private static void RecursiveDecorators(ref string templateText, ref string result, string machineName, ClickableElement elem, BehaviourNode node)
     {
         foreach (BehaviourNode childNode in ((BehaviourTree)elem).transitions.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
         {
-            RecursiveDecorators(ref result, machineName, elem, childNode);
+            RecursiveDecorators(ref templateText, ref result, machineName, elem, childNode);
         }
 
         if (node.type > behaviourType.Leaf)
@@ -1191,28 +1205,40 @@ public class NodeEditorUtilities
             switch (node.type)
             {
                 case behaviourType.LoopN:
+                    templateText = templateText.Replace("#VAR_DECL#", "private LoopDecoratorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     subNodeName = nodeName.Remove(0, "LoopN_".ToCharArray().Count());
-                    result += "LoopDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopNode(\"" + nodeName + "\", " + subNodeName + (node.isInfinite ? "" : ", " + node.Nloops) + ");\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateLoopNode(\"" + nodeName + "\", " + subNodeName + (node.isInfinite ? "" : ", " + node.Nloops) + ");\n" + tab + tab;
                     break;
                 case behaviourType.LoopUntilFail:
+                    templateText = templateText.Replace("#VAR_DECL#", "private LoopUntilFailDecoratorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     subNodeName = nodeName.Remove(0, "LoopUntilFail_".ToCharArray().Count());
-                    result += "LoopUntilFailDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopUntilFailNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateLoopUntilFailNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.Inverter:
+                    templateText = templateText.Replace("#VAR_DECL#", "private InverterDecoratorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     subNodeName = nodeName.Remove(0, "Inverter_".ToCharArray().Count());
-                    result += "InverterDecoratorNode " + nodeName + " = " + machineName + ".CreateInverterNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateInverterNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.DelayT:
+                    templateText = templateText.Replace("#VAR_DECL#", "private TimerDecoratorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     subNodeName = nodeName.Remove(0, "Timer_".ToCharArray().Count());
-                    result += "TimerDecoratorNode " + nodeName + " = " + machineName + ".CreateTimerNode(\"" + nodeName + "\", " + subNodeName + ", " + node.delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateTimerNode(\"" + nodeName + "\", " + subNodeName + ", " + node.delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
                     break;
                 case behaviourType.Succeeder:
+                    templateText = templateText.Replace("#VAR_DECL#", "private SucceederDecoratorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     subNodeName = nodeName.Remove(0, "Succeeder_".ToCharArray().Count());
-                    result += "SucceederDecoratorNode " + nodeName + " = " + machineName + ".CreateSucceederNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateSucceederNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.Conditional:
+                    templateText = templateText.Replace("#VAR_DECL#", "private ConditionalDecoratorNode " + nodeName + ";\n" + tab + "#VAR_DECL#");
+
                     subNodeName = nodeName.Remove(0, "Conditional_".ToCharArray().Count());
-                    result += "ConditionalDecoratorNode " + nodeName + " = " + machineName + ".CreateConditionalNode(\"" + nodeName + "\", " + subNodeName + ", null /*Change this for a perception*/);\n" + tab + tab;
+                    result += nodeName + " = " + machineName + ".CreateConditionalNode(\"" + nodeName + "\", " + subNodeName + ", null /*Change this for a perception*/);\n" + tab + tab;
                     break;
             }
         }
@@ -1379,11 +1405,34 @@ public class NodeEditorUtilities
             }
         }
 
-        if (elem.parent is BehaviourTree)
+        return result;
+    }
+
+    private static string GetExitTransitions(ClickableElement elem)
+    {
+        string result = string.Empty;
+
+        if (elem is BehaviourTree)
         {
-            result += "\n" + tab + tab +
-                      "\n" + tab + tab + "// Exit Transition" +
-                      "\n" + tab + tab + machineName + ".CreateExitTransition(\"" + machineName + " Exit" + "\");";
+            foreach (BaseNode node in elem.nodes.Where(n => n.subElem))
+            {
+                string className = CleanName(node.nodeName);
+
+                switch (node.subElem.GetType().ToString())
+                {
+                    case nameof(FSM):
+                        string FSMName = className + subFSMEnding;
+
+                        result += FSMName + ".CreateExitTransition(\"" + FSMName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, ReturnValues.Succeed);\n" + tab + tab;
+                        break;
+                    case nameof(BehaviourTree):
+                        string BTName = className + subBTEnding;
+
+                        result += BTName + ".CreateExitTransition(\"" + BTName + " Exit" + "\");\n" + tab + tab;
+                        break;
+                        // Case UtilitySystem is not contemplated
+                }
+            }
         }
 
         return result;
@@ -1425,7 +1474,7 @@ public class NodeEditorUtilities
     /// <param name="elem"></param>
     /// <param name="engineEnding"></param>
     /// <returns></returns>
-    private static string GetFactors(ClickableElement elem)
+    private static string GetFactors(ref string templateText, ClickableElement elem)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -1434,22 +1483,16 @@ public class NodeEditorUtilities
         {
             string factorName = CleanName(node.nodeName);
 
-            if (node.type != utilityType.Action)
-                result += "Factor " + factorName + " = null;\n" + tab + tab;
-        }
-
-        result += "\n" + tab + tab;
-
-        foreach (UtilityNode node in ((UtilitySystem)elem).nodes)
-        {
-            string factorName = CleanName(node.nodeName);
-
             switch (node.type)
             {
                 case utilityType.Variable:
+                    templateText = templateText.Replace("#VAR_DECL#", "private Factor " + factorName + ";\n" + tab + "#VAR_DECL#");
+
                     result += factorName + " = " + "new LeafVariable(() => /*Reference to desired variable*/0.0f, " + node.variableMax + ", " + node.variableMin + ");\n" + tab + tab;
                     break;
                 case utilityType.Fusion:
+                    templateText = templateText.Replace("#VAR_DECL#", "private Factor " + factorName + ";\n" + tab + "#VAR_DECL#");
+
                     string factorsListName = factorName + "Factors";
                     string weightsListName = factorName + "Weights";
 
@@ -1471,6 +1514,8 @@ public class NodeEditorUtilities
                     }
                     break;
                 case utilityType.Curve:
+                    templateText = templateText.Replace("#VAR_DECL#", "private Factor " + factorName + ";\n" + tab + "#VAR_DECL#");
+
                     UtilityNode prevFactor = node.GetWeightsAndFactors().Select(k => k.Value).FirstOrDefault();
                     string prevFactorName;
 
@@ -1511,7 +1556,7 @@ public class NodeEditorUtilities
     /// <param name="engineEnding"></param>
     /// <param name="subElems"></param>
     /// <returns></returns>
-    private static string GetActions(ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
+    private static string GetActions(ref string templateText, ClickableElement elem, string engineEnding, ref List<ClickableElement> subElems)
     {
         string className = CleanName(elem.elementName);
         string result = string.Empty;
@@ -1520,6 +1565,8 @@ public class NodeEditorUtilities
         foreach (UtilityNode node in ((UtilitySystem)elem).nodes.Where(n => ((UtilityNode)n).type == utilityType.Action))
         {
             string nodeName = CleanName(node.nodeName);
+
+            templateText = templateText.Replace("#VAR_DECL#", "private UtilityAction " + nodeName + ";\n" + tab + "#VAR_DECL#");
 
             UtilityNode prevFactor = node.GetWeightsAndFactors().Select(k => k.Value).FirstOrDefault();
             string prevFactorName;
@@ -1535,7 +1582,7 @@ public class NodeEditorUtilities
 
             if (node.subElem is null)
             {
-                result += "UtilityAction " + nodeName + " = " + machineName + ".CreateUtilityAction(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + prevFactorName + ");\n" + tab + tab;
+                result += nodeName + " = " + machineName + ".CreateUtilityAction(\"" + node.nodeName + "\", " + nodeName + actionsEnding + ", " + prevFactorName + ");\n" + tab + tab;
             }
             else
             {
@@ -1553,8 +1600,11 @@ public class NodeEditorUtilities
                         subEnding = subUSEnding;
                         break;
                 }
+                string subElemName = nodeName + subEnding;
 
-                result += "UtilityAction " + nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + prevFactorName + ", " + nodeName + subEnding + ");\n" + tab + tab;
+                result += nodeName + " = " + machineName + ".CreateSubBehaviour(\"" + node.nodeName + "\", " + prevFactorName + ", " + subElemName + ");\n" + tab + tab;
+                result += subElemName + ".CreateExitTransition(\"" + subElemName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, " + machineName + ");\n" + tab + tab;
+
                 subElems.Add(node.subElem);
             }
         }

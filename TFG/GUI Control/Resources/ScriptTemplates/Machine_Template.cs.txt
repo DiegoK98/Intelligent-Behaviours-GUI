@@ -9,6 +9,8 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     private #MACHINENAME#Engine #ELEMNAME#;
     #SUBELEM_DECL#
+
+    #VAR_DECL#
     //Place your variables here
 
     #endregion variables
@@ -16,6 +18,8 @@ public class #SCRIPTNAME# : MonoBehaviour {
     // Start is called before the first frame update
     private void Start()
     {
+        #MACHINE_INIT#
+
         #SUBELEM_INIT#Create#MACHINENAME#();
     }
     #SUBELEM_CREATE#
