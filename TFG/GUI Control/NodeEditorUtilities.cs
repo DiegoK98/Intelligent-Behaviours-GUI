@@ -471,8 +471,6 @@ public class NodeEditorUtilities
     /// <returns></returns>
     private static UnityEngine.Object CreateScriptFromTemplate(string pathName, string templatePath, object obj)
     {
-        string templateText = string.Empty;
-
         string folderPath = pathName.Substring(0, pathName.LastIndexOf("/") + 1);
         string scriptName = pathName.Substring(pathName.LastIndexOf("/") + 1).Replace(".cs", "");
 
@@ -480,7 +478,7 @@ public class NodeEditorUtilities
         {
             // Read procedures
             StreamReader reader = new StreamReader(templatePath);
-            templateText = reader.ReadToEnd();
+            string templateText = reader.ReadToEnd();
             reader.Close();
 
             if (obj is ClickableElement)
@@ -491,20 +489,19 @@ public class NodeEditorUtilities
                 List<ClickableElement> subElems = new List<ClickableElement>();
 
                 templateText = templateText.Replace("#SCRIPTNAME#", CleanName(scriptName));
-                templateText = templateText.Replace("#MACHINE#", GetMachineName(elem));
-                templateText = templateText.Replace("#ELEMNAME#", CleanName(elem.elementName));
+                templateText = templateText.Replace("#MACHINENAME#", GetMachineName(elem));
+                templateText = templateText.Replace("#ELEMNAME#", CleanName(elem.elementName) + GetEnding(elem));
 
-                templateText = templateText.Replace("#ENDING#", GetEnding(elem));
                 templateText = templateText.Replace("#CREATE#", GetCreateMethod(elem, false, ref subElems, folderPath));
                 templateText = GetAllSubElemsRecursive(templateText, ref subElems, folderPath);
-                templateText = templateText.Replace("#SUBELEMCREATE#", string.Empty);
+                templateText = templateText.Replace("#SUBELEM_CREATE#", string.Empty);
 
                 templateText = templateText.Replace("#ACTIONS#", GetActionMethods(elem));
 
                 // SubFSM
-                templateText = templateText.Replace("#SUBELEM1#", GetSubElemDecl(subElems));
-                templateText = templateText.Replace("#SUBELEM2#", GetSubElemInit(subElems));
-                templateText = templateText.Replace("#SUBELEM3#", GetSubElemUpdate(subElems));
+                templateText = templateText.Replace("#SUBELEM_DECL#", GetSubElemDecl(subElems));
+                templateText = templateText.Replace("#SUBELEM_INIT#", GetSubElemInit(subElems));
+                templateText = templateText.Replace("#SUBELEM_UPDATE#", GetSubElemUpdate(subElems));
             }
             else if (obj is string)
             {
@@ -640,13 +637,13 @@ public class NodeEditorUtilities
         switch (elem.GetType().ToString())
         {
             case nameof(FSM):
-                machineName = "StateMachine";
+                machineName = FSMCreateName;
                 break;
             case nameof(BehaviourTree):
-                machineName = "BehaviourTree";
+                machineName = BTCreateName;
                 break;
             case nameof(UtilitySystem):
-                machineName = "UtilitySystem";
+                machineName = USCreateName;
                 break;
         }
 
@@ -1194,27 +1191,27 @@ public class NodeEditorUtilities
             switch (node.type)
             {
                 case behaviourType.LoopN:
-                    subNodeName = nodeName.TrimStart("LoopN_".ToCharArray());
+                    subNodeName = nodeName.Remove(0, "LoopN_".ToCharArray().Count());
                     result += "LoopDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopNode(\"" + nodeName + "\", " + subNodeName + ", " + node.Nloops + ");\n" + tab + tab;
                     break;
                 case behaviourType.LoopUntilFail:
-                    subNodeName = nodeName.TrimStart("LoopUntilFail_".ToCharArray());
+                    subNodeName = nodeName.Remove(0, "LoopUntilFail_".ToCharArray().Count());
                     result += "LoopUntilFailDecoratorNode " + nodeName + " = " + machineName + ".CreateLoopUntilFailNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.Inverter:
-                    subNodeName = nodeName.TrimStart("Inverter_".ToCharArray());
+                    subNodeName = nodeName.Remove(0, "Inverter_".ToCharArray().Count());
                     result += "InverterDecoratorNode " + nodeName + " = " + machineName + ".CreateInverterNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.DelayT:
-                    subNodeName = nodeName.TrimStart("Timer_".ToCharArray());
+                    subNodeName = nodeName.Remove(0, "Timer_".ToCharArray().Count());
                     result += "TimerDecoratorNode " + nodeName + " = " + machineName + ".CreateTimerNode(\"" + nodeName + "\", " + subNodeName + ", " + node.delayTime.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f);\n" + tab + tab;
                     break;
                 case behaviourType.Succeeder:
-                    subNodeName = nodeName.TrimStart("Succeeder_".ToCharArray());
+                    subNodeName = nodeName.Remove(0, "Succeeder_".ToCharArray().Count());
                     result += "SucceederDecoratorNode " + nodeName + " = " + machineName + ".CreateSucceederNode(\"" + nodeName + "\", " + subNodeName + ");\n" + tab + tab;
                     break;
                 case behaviourType.Conditional:
-                    subNodeName = nodeName.TrimStart("Conditional_".ToCharArray());
+                    subNodeName = nodeName.Remove(0, "Conditional_".ToCharArray().Count());
                     result += "ConditionalDecoratorNode " + nodeName + " = " + machineName + ".CreateConditionalNode(\"" + nodeName + "\", " + subNodeName + ", null /*Change this for a perception*/);\n" + tab + tab;
                     break;
             }

@@ -7,8 +7,8 @@ public class #SCRIPTNAME# : MonoBehaviour {
 
     #region variables
 
-    private #MACHINE#Engine #ELEMNAME##ENDING#;
-    #SUBELEM1#
+    private #MACHINENAME#Engine #ELEMNAME#;
+    #SUBELEM_DECL#
     //Place your variables here
 
     #endregion variables
@@ -16,15 +16,15 @@ public class #SCRIPTNAME# : MonoBehaviour {
     // Start is called before the first frame update
     private void Start()
     {
-        #SUBELEM2#Create#MACHINE#();
+        #SUBELEM_INIT#Create#MACHINENAME#();
     }
-    #SUBELEMCREATE#
+    #SUBELEM_CREATE#
     #CREATE#
 
     // Update is called once per frame
     private void Update()
     {
-        #ELEMNAME##ENDING#.Update();#SUBELEM3#
+        #ELEMNAME#.Update();#SUBELEM_UPDATE#
     }
 
     // Create your desired actions
