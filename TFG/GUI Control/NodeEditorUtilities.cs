@@ -766,7 +766,7 @@ public class NodeEditorUtilities
         List<ClickableElement> subElemsCopy = new List<ClickableElement>();
         foreach (ClickableElement sub in subElems)
         {
-            string createMethod = GetCreateMethod(ref templateText, sub, true, ref subElemsCopy);
+            string createMethod = GetCreateMethod(ref templateText, sub, true, ref subElemsCopy, folderPath);
             templateText = templateText.Replace("#SUBELEM_CREATE#", createMethod);
         }
         if (subElemsCopy.Count > 0)
@@ -961,7 +961,7 @@ public class NodeEditorUtilities
 
         string perceptionName = uniqueNamer.AddName(perception.identificator, typeName + "Perception");
 
-        templateText = templateText.Replace("#VAR_DECL#", "private Perception " + perceptionName + ";\n" + tab + "#VAR_DECL#");
+        templateText = templateText.Replace("#VAR_DECL#", "private " + typeName + "Perception " + perceptionName + ";\n" + tab + "#VAR_DECL#");
         res += perceptionName + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
 
         return res;
