@@ -29,16 +29,6 @@ public class TransitionGUI : GUIElement
     public BaseNode toNode;
 
     /// <summary>
-    /// Rect from which to draw the curve
-    /// </summary>
-    public Rect fromRect;
-
-    /// <summary>
-    /// Rect which the curve will be headed to
-    /// </summary>
-    public Rect toRect;
-
-    /// <summary>
     /// Initial width of the <see cref="GUIElement.windowRect"/>
     /// </summary>
     public static int baseWidth = 200;
@@ -236,8 +226,12 @@ public class TransitionGUI : GUIElement
 
                         toolsMenu.AddItem(new GUIContent(i.ToString()), false, () =>
                         {
-                            ((BehaviourNode)fromNode).ReorderIndices((BehaviourNode)toNode, newId);
-                            ((BehaviourNode)toNode).index = newId;
+                            if (newId != ((BehaviourNode)toNode).index)
+                            {
+                                NodeEditorUtilities.GenerateUndoStep(sender.currentElem);
+                                ((BehaviourNode)fromNode).ReorderIndices((BehaviourNode)toNode, newId);
+                                ((BehaviourNode)toNode).index = newId;
+                            }
                         });
                     }
 

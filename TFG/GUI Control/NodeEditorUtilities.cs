@@ -898,7 +898,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (TransitionGUI transition in ((FSM)elem).transitions)
+        foreach (TransitionGUI transition in elem.transitions)
         {
             string transitionName = CleanName(transition.transitionName);
 
@@ -1012,7 +1012,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (StateNode node in ((FSM)elem).nodes)
+        foreach (StateNode node in elem.nodes)
         {
             string nodeName = CleanName(node.nodeName);
 
@@ -1066,7 +1066,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (TransitionGUI transition in ((FSM)elem).transitions)
+        foreach (TransitionGUI transition in elem.transitions)
         {
             string transitionName = CleanName(transition.transitionName);
             string fromNodeName = CleanName(transition.fromNode.nodeName);
@@ -1103,7 +1103,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(n => ((BehaviourNode)n).type <= behaviourType.Leaf))
+        foreach (BehaviourNode node in elem.nodes.FindAll(n => ((BehaviourNode)n).type <= behaviourType.Leaf))
         {
             string nodeName = CleanName(node.nodeName);
 
@@ -1151,7 +1151,7 @@ public class NodeEditorUtilities
         // Decorator nodes
         // We check every node from the root so it is written in order in the generated code
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.FindAll(o => ((BehaviourNode)o).isRoot))
+        foreach (BehaviourNode node in elem.nodes.FindAll(o => ((BehaviourNode)o).isRoot))
         {
             RecursiveDecorators(ref templateText, ref result, machineName, elem, node);
         }
@@ -1168,7 +1168,7 @@ public class NodeEditorUtilities
     /// <param name="node"></param>
     private static void RecursiveDecorators(ref string templateText, ref string result, string machineName, ClickableElement elem, BehaviourNode node)
     {
-        foreach (BehaviourNode childNode in ((BehaviourTree)elem).transitions.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
+        foreach (BehaviourNode childNode in elem.transitions.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
         {
             RecursiveDecorators(ref templateText, ref result, machineName, elem, childNode);
         }
@@ -1233,7 +1233,7 @@ public class NodeEditorUtilities
             return CleanName(node.nodeName);
         }
 
-        TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
+        TransitionGUI decoratorConnection = elem.transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
 
         string subNodeName = decoratorConnection ? GetDecoratorName(elem, (BehaviourNode)decoratorConnection.toNode) : "null";
 
@@ -1267,20 +1267,20 @@ public class NodeEditorUtilities
         string className = CleanName(elem.elementName);
         string result = string.Empty;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.Where(n => ((BehaviourNode)n).type < behaviourType.Leaf && ((BehaviourTree)elem).ChildrenCount((BehaviourNode)n, true) > 0))
+        foreach (BehaviourNode node in elem.nodes.Where(n => ((BehaviourNode)n).type < behaviourType.Leaf && ((BehaviourTree)elem).ChildrenCount((BehaviourNode)n, true) > 0))
         {
             string baseNodeName = CleanName(node.nodeName);
             result += "\n" + tab + tab;
-            foreach (BehaviourNode toNode in ((BehaviourTree)elem).transitions.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode).OrderBy(n => ((BehaviourNode)n).index))
+            foreach (BehaviourNode toNode in elem.transitions.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode).OrderBy(n => ((BehaviourNode)n).index))
             {
                 string toNodeName = CleanName(toNode.nodeName);
-                TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
+                TransitionGUI decoratorConnection = elem.transitions.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
 
                 string nodeName = "null";
 
                 if (decoratorConnection?.toNode)
                 {
-                    TransitionGUI decoratorConnectionsub = ((BehaviourTree)elem).transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
+                    TransitionGUI decoratorConnectionsub = elem.transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
                     string subNodeName = "";
 
                     if (decoratorConnectionsub)
@@ -1362,7 +1362,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes)
+        foreach (BehaviourNode node in elem.nodes)
         {
             if (node.isRoot)
             {
@@ -1490,7 +1490,7 @@ public class NodeEditorUtilities
         string className = CleanName(elem.elementName);
         string result = string.Empty;
 
-        foreach (UtilityNode node in ((UtilitySystem)elem).nodes)
+        foreach (UtilityNode node in elem.nodes)
         {
             string factorName = CleanName(node.nodeName);
 
@@ -1573,7 +1573,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (UtilityNode node in ((UtilitySystem)elem).nodes.Where(n => ((UtilityNode)n).type == utilityType.Action))
+        foreach (UtilityNode node in elem.nodes.Where(n => ((UtilityNode)n).type == utilityType.Action))
         {
             string nodeName = CleanName(node.nodeName);
 

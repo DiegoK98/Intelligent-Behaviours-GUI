@@ -2551,16 +2551,16 @@ public class NodeEditor : EditorWindow
                 switch (((BaseNode)elem).subElem.GetType().ToString())
                 {
                     case nameof(FSM):
-                        ReIdentifyElements(((FSM)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                        ReIdentifyElements(((FSM)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BaseNode)elem).subElem.nodes.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BaseNode)elem).subElem.transitions.Cast<GUIElement>().ToList());
                         break;
                     case nameof(BehaviourTree):
-                        ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                        ReIdentifyElements(((BehaviourTree)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BaseNode)elem).subElem.nodes.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BaseNode)elem).subElem.transitions.Cast<GUIElement>().ToList());
                         break;
                     case nameof(UtilitySystem):
-                        ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).nodes.Cast<GUIElement>().ToList());
-                        ReIdentifyElements(((UtilitySystem)((BaseNode)elem).subElem).transitions.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BaseNode)elem).subElem.nodes.Cast<GUIElement>().ToList());
+                        ReIdentifyElements(((BaseNode)elem).subElem.transitions.Cast<GUIElement>().ToList());
                         break;
                 }
             }
@@ -2873,9 +2873,6 @@ public class NodeEditor : EditorWindow
     {
         if (NodeEditorUtilities.undoStepsSaved > 0)
         {
-            List<TransitionGUI> transitionsIn = new List<TransitionGUI>();
-            List<TransitionGUI> transitionsOut = new List<TransitionGUI>();
-
             NodeEditorUtilities.GenerateRedoStep(currentElem);
 
             // We save the node's transitions to reconnect them later if the parent is not the main page
@@ -2883,20 +2880,19 @@ public class NodeEditor : EditorWindow
             {
                 BaseNode node = currentElem.parent.nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
 
-                List<TransitionGUI> nodeTransitionsIn = currentElem.parent.transitions.FindAll(t => t.toNode.Equals(node));
-                List<TransitionGUI> nodeTransitionsOut = currentElem.parent.transitions.FindAll(t => t.fromNode.Equals(node));
-
-                transitionsIn.AddRange(nodeTransitionsIn);
-                transitionsOut.AddRange(nodeTransitionsOut);
+                List<TransitionGUI> transitionsIn = currentElem.parent.transitions.FindAll(t => t.toNode.Equals(node));
+                List<TransitionGUI> transitionsOut = currentElem.parent.transitions.FindAll(t => t.fromNode.Equals(node));
 
                 // Delete the current element and load the one from the UndoSteps to replace it
                 Delete(currentElem, currentElem.parent, true);
                 currentElem = LoadElem(NodeEditorUtilities.LoadUndoStep(), currentElem.parent, false);
 
+                node = currentElem.parent.nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
+
                 // We reconnect the transitions if the parent is not the main page
                 foreach (TransitionGUI trans in transitionsIn)
                 {
-                    trans.toNode = node;
+                    currentElem.parent.transitions.FirstOrDefault(t => t.Equals(trans)).toNode = node;
 
                     if (currentElem.parent is FSM)
                         ((FSM)currentElem.parent).CheckConnected();
@@ -2904,7 +2900,7 @@ public class NodeEditor : EditorWindow
 
                 foreach (TransitionGUI trans in transitionsOut)
                 {
-                    trans.fromNode = node;
+                    currentElem.parent.transitions.FirstOrDefault(t => t.Equals(trans)).fromNode = node;
 
                     if (currentElem.parent is FSM)
                         ((FSM)currentElem.parent).CheckConnected();
@@ -2926,9 +2922,6 @@ public class NodeEditor : EditorWindow
     {
         if (NodeEditorUtilities.redoStepsSaved > 0)
         {
-            List<TransitionGUI> transitionsIn = new List<TransitionGUI>();
-            List<TransitionGUI> transitionsOut = new List<TransitionGUI>();
-
             NodeEditorUtilities.GenerateUndoStep(currentElem, false);
 
             // We save the node's transitions to reconnect them later if the parent is not the main page
@@ -2936,21 +2929,19 @@ public class NodeEditor : EditorWindow
             {
                 BaseNode node = currentElem.parent.nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
 
-                List<TransitionGUI> stateTransitionsIn = currentElem.parent.transitions.FindAll(t => t.toNode.Equals(node));
-                List<TransitionGUI> stateTransitionsOut = currentElem.parent.transitions.FindAll(t => t.fromNode.Equals(node));
-
-                transitionsIn.AddRange(stateTransitionsIn);
-                transitionsOut.AddRange(stateTransitionsOut);
+                List<TransitionGUI> transitionsIn = currentElem.parent.transitions.FindAll(t => t.toNode.Equals(node));
+                List<TransitionGUI> transitionsOut = currentElem.parent.transitions.FindAll(t => t.fromNode.Equals(node));
 
                 // Delete the current element and load the one from the RedoSteps to replace it
                 Delete(currentElem, currentElem.parent, true);
                 currentElem = LoadElem(NodeEditorUtilities.LoadRedoStep(), currentElem.parent, false);
 
-                // We reconnect the transitions if the parent is not the main page
+                node = currentElem.parent.nodes.Find(n => n.subElem && n.subElem.Equals(currentElem));
 
+                // We reconnect the transitions if the parent is not the main page
                 foreach (TransitionGUI trans in transitionsIn)
                 {
-                    trans.toNode = node;
+                    currentElem.parent.transitions.FirstOrDefault(t => t.Equals(trans)).toNode = node;
 
                     if (currentElem.parent is FSM)
                         ((FSM)currentElem.parent).CheckConnected();
@@ -2958,7 +2949,7 @@ public class NodeEditor : EditorWindow
 
                 foreach (TransitionGUI trans in transitionsOut)
                 {
-                    trans.fromNode = node;
+                    currentElem.parent.transitions.FirstOrDefault(t => t.Equals(trans)).fromNode = node;
 
                     if (currentElem.parent is FSM)
                         ((FSM)currentElem.parent).CheckConnected();

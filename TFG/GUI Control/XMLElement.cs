@@ -212,21 +212,21 @@ public class XMLElement
                     }
                     else
                     {
-                        ((FSM)parent).nodes.Add(state);
+                        parent.nodes.Add(state);
                     }
                     break;
                 case nameof(BehaviourTree):
                     BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
                     node.InitBehaviourNode(parent, behaviourType.Leaf, fsm.windowRect.x, fsm.windowRect.y, fsm);
 
-                    ((BehaviourTree)parent).nodes.Add(node);
+                    parent.nodes.Add(node);
 
                     if (selectedNode != null)
                     {
                         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(parent, selectedNode, node);
 
-                        ((BehaviourTree)parent).transitions.Add(transition);
+                        parent.transitions.Add(transition);
 
                         selectedNode = node;
                     }
@@ -235,7 +235,7 @@ public class XMLElement
                     UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
                     utilNode.InitUtilityNode(parent, utilityType.Action, fsm.windowRect.position.x, fsm.windowRect.position.y, fsm);
 
-                    ((UtilitySystem)parent).nodes.Add(utilNode);
+                    parent.nodes.Add(utilNode);
                     break;
             }
         }
@@ -316,21 +316,21 @@ public class XMLElement
                     }
                     else
                     {
-                        ((FSM)parent).nodes.Add(state);
+                        parent.nodes.Add(state);
                     }
                     break;
                 case nameof(BehaviourTree):
                     BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
                     node.InitBehaviourNode(parent, behaviourType.Leaf, bt.windowRect.x, bt.windowRect.y, bt);
 
-                    ((BehaviourTree)parent).nodes.Add(node);
+                    parent.nodes.Add(node);
 
                     if (selectedNode != null)
                     {
                         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(parent, selectedNode, node);
 
-                        ((BehaviourTree)parent).transitions.Add(transition);
+                        parent.transitions.Add(transition);
 
                         selectedNode = node;
                     }
@@ -339,7 +339,7 @@ public class XMLElement
                     UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
                     utilNode.InitUtilityNode(parent, utilityType.Action, bt.windowRect.position.x, bt.windowRect.position.y, bt);
 
-                    ((UtilitySystem)parent).nodes.Add(utilNode);
+                    parent.nodes.Add(utilNode);
                     break;
             }
         }
@@ -452,21 +452,21 @@ public class XMLElement
                     }
                     else
                     {
-                        ((FSM)parent).nodes.Add(state);
+                        parent.nodes.Add(state);
                     }
                     break;
                 case nameof(BehaviourTree):
                     BehaviourNode node = ScriptableObject.CreateInstance<BehaviourNode>();
                     node.InitBehaviourNode(parent, behaviourType.Leaf, utilSystem.windowRect.x, utilSystem.windowRect.y, utilSystem);
 
-                    ((BehaviourTree)parent).nodes.Add(node);
+                    parent.nodes.Add(node);
 
                     if (selectedNode != null)
                     {
                         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
                         transition.InitTransitionGUI(parent, selectedNode, node);
 
-                        ((BehaviourTree)parent).transitions.Add(transition);
+                        parent.transitions.Add(transition);
 
                         selectedNode = node;
                     }
@@ -475,7 +475,7 @@ public class XMLElement
                     UtilityNode utilNode = ScriptableObject.CreateInstance<UtilityNode>();
                     utilNode.InitUtilityNode(parent, utilityType.Action, utilSystem.windowRect.position.x, utilSystem.windowRect.position.y, utilSystem);
 
-                    ((UtilitySystem)parent).nodes.Add(utilNode);
+                    parent.nodes.Add(utilNode);
                     break;
             }
         }
