@@ -170,17 +170,42 @@ public class BehaviourTree : ClickableElement
     /// Returns how many children <paramref name="node"/> has
     /// </summary>
     /// <param name="node"></param>
+    /// <param name="deepCount"> True if it should count children of its children recursively to infinity </param>
     /// <returns>The number of children <paramref name="node"/> has</returns>
-    public int ChildrenCount(BehaviourNode node)
+    public int ChildrenCount(BehaviourNode node, bool deepCount = false)
     {
         int res = 0;
 
         foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
         {
-            res += ChildrenCount((BehaviourNode)transition.toNode) + 1;
+            res += 1;
+
+            if (deepCount)
+                res += ChildrenCount((BehaviourNode)transition.toNode, true);
         }
 
         return res;
+    }
+
+    /// <summary>
+    /// Returns all children <paramref name="node"/> has
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="deepCount"> True if it should count children of its children recursively to infinity </param>
+    /// <returns>The number of children <paramref name="node"/> has</returns>
+    public List<BehaviourNode> ChildrenGet(BehaviourNode node, bool deepCount = false)
+    {
+        List<BehaviourNode> children = new List<BehaviourNode>();
+
+        foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
+        {
+            children.Add((BehaviourNode)transition.toNode);
+
+            if (deepCount)
+                children.AddRange(ChildrenGet((BehaviourNode)transition.toNode, true));
+        }
+
+        return children;
     }
 
     /// <summary>

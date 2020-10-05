@@ -1267,11 +1267,11 @@ public class NodeEditorUtilities
         string className = CleanName(elem.elementName);
         string result = string.Empty;
 
-        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.Where(n => ((BehaviourNode)n).type < behaviourType.Leaf && ((BehaviourTree)elem).ChildrenCount((BehaviourNode)n) > 0))
+        foreach (BehaviourNode node in ((BehaviourTree)elem).nodes.Where(n => ((BehaviourNode)n).type < behaviourType.Leaf && ((BehaviourTree)elem).ChildrenCount((BehaviourNode)n, true) > 0))
         {
             string baseNodeName = CleanName(node.nodeName);
             result += "\n" + tab + tab;
-            foreach (BehaviourNode toNode in ((BehaviourTree)elem).transitions.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode))
+            foreach (BehaviourNode toNode in ((BehaviourTree)elem).transitions.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode).OrderBy(n => ((BehaviourNode)n).index))
             {
                 string toNodeName = CleanName(toNode.nodeName);
                 TransitionGUI decoratorConnection = ((BehaviourTree)elem).transitions.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();

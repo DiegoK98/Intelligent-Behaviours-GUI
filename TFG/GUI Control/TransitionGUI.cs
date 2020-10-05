@@ -90,6 +90,11 @@ public class TransitionGUI : GUIElement
 
         this.rootPerception = CreateInstance<PerceptionGUI>();
         this.rootPerception.InitPerceptionGUI(perceptionType.Push);
+
+        if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
+        {
+            ((BehaviourNode)toNode).index = ((BehaviourTree)parent).ChildrenCount((BehaviourNode)fromNode) + 1;
+        }
     }
 
     /// <summary>
@@ -190,52 +195,68 @@ public class TransitionGUI : GUIElement
     /// <param name="parent"></param>
     public void DrawBox()
     {
-        if (sender.currentElem is FSM)
+        switch (sender.currentElem.GetType().ToString())
         {
-            int heightAcc = 0;
-            int widthAcc = 0;
+            case nameof(FSM):
+                int heightAcc = 0;
+                int widthAcc = 0;
 
-            transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
+                transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
 
-            // Narrower area than the main rect
-            Rect areaRect = new Rect(baseWidth * 0.1f, 40, width * 0.8f, height);
+                // Narrower area than the main rect
+                Rect areaRect = new Rect(baseWidth * 0.1f, 40, width * 0.8f, height);
 
-            GUILayout.BeginArea(areaRect);
-            try
-            {
-                PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
-            }
-            finally
-            {
-                GUILayout.EndArea();
-            }
+                GUILayout.BeginArea(areaRect);
+                try
+                {
+                    PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
+                }
+                finally
+                {
+                    GUILayout.EndArea();
+                }
 
-            // Increase the size depending on the open foldouts
-            height = baseHeight + heightAcc;
-            width = baseWidth + widthAcc;
-        }
-        else if (sender.currentElem is UtilitySystem)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(10);
-            GUILayout.Label("W:", Styles.CenteredTitleText, GUILayout.Width(20), GUILayout.Height(25));
+                // Increase the size depending on the open foldouts
+                height = baseHeight + heightAcc;
+                width = baseWidth + widthAcc;
+                break;
+            case nameof(BehaviourTree):
+                // If the parent node is a non-random sequence we add an index selector
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(10);
+                GUILayout.Label("Order:", Styles.CenteredTitleText, GUILayout.Width(30), GUILayout.Height(20));
+                GUILayout.Space(5);
+                if (GUILayout.Button(((BehaviourNode)toNode).index.ToString(), EditorStyles.toolbarDropDown))
+                {
+                    GenericMenu toolsMenu = new GenericMenu();
 
-            // Check if the user changes the textArea
-            EditorGUI.BeginChangeCheck();
-            float.TryParse(EditorGUILayout.TextField(weight.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.CenteredTitleText, GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out weight);
-            if (EditorGUI.EndChangeCheck())
-            {
-                //if (weight < 0)
-                //    weight = 0;
-                //if (weight > 1)
-                //    weight = 1;
+                    for (int i = 1; i <= ((BehaviourTree)sender.currentElem).ChildrenCount((BehaviourNode)fromNode); i++)
+                    {
+                        int newId = i;
 
-                //((UtilityNode)toNode).WeightsUpdate(this.identificator);
+                        toolsMenu.AddItem(new GUIContent(i.ToString()), false, () =>
+                        {
+                            ((BehaviourNode)fromNode).ReorderIndices((BehaviourNode)toNode, newId);
+                            ((BehaviourNode)toNode).index = newId;
+                        });
+                    }
 
-                //weight = (float)decimal.Round((decimal)weight, 2);
-            }
+                    toolsMenu.DropDown(new Rect(0, Event.current.mousePosition.y, 0, 0));
+                    EditorGUIUtility.ExitGUI();
+                }
+                GUILayout.EndHorizontal();
+                break;
+            case nameof(UtilitySystem):
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(15);
+                GUILayout.Label("Weight:", Styles.CenteredTitleText, GUILayout.Width(20), GUILayout.Height(25));
 
-            GUILayout.EndHorizontal();
+                // Check if the user changes the textArea
+                float.TryParse(EditorGUILayout.TextField(weight.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.CenteredTitleText,
+                    GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out weight);
+
+                GUILayout.EndHorizontal();
+                break;
         }
     }
 

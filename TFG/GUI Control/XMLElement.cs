@@ -82,6 +82,11 @@ public class XMLElement
     /// </summary>
     public int Nloops { get; set; }
 
+    /// <summary>
+    /// Parameter for childs of Sequence Nodes
+    /// </summary>
+    public int index { get; set; }
+
     // Utility Nodes properties
 
     /// <summary>
@@ -363,7 +368,7 @@ public class XMLElement
                 break;
             case nameof(BehaviourNode):
                 BehaviourNode nodeBT = ScriptableObject.CreateInstance<BehaviourNode>();
-                nodeBT.InitBehaviourNodeFromXML(currentTree, (behaviourType)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY, this.Id, this.name, this.delayTime, this.Nloops, this.isRandom, this.isInfinite);
+                nodeBT.InitBehaviourNodeFromXML(currentTree, (behaviourType)Enum.Parse(typeof(behaviourType), this.secondType), this.windowPosX, this.windowPosY, this.Id, this.name, this.delayTime, this.Nloops, this.isRandom, this.isInfinite, this.index);
 
                 currentTree.nodes.Add(nodeBT);
 

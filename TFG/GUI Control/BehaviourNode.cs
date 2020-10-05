@@ -52,6 +52,16 @@ public class BehaviourNode : BaseNode
     public bool isInfinite = false;
 
     /// <summary>
+    /// Index of this node if its father is a non-random Sequence Node
+    /// </summary>
+    public int index;
+
+    /// <summary>
+    /// private children counter used for sequence nodes
+    /// </summary>
+    private int currentChildrenCount;
+
+    /// <summary>
     /// Returns the <see cref="behaviourType"/> properly written
     /// </summary>
     /// <returns></returns>
@@ -98,7 +108,7 @@ public class BehaviourNode : BaseNode
     /// <param name="posx"></param>
     /// <param name="posy"></param>
     /// <param name="subElem"></param>
-    public void InitBehaviourNodeFromXML(ClickableElement parent, behaviourType type, float posx, float posy, string id, string name, float delayTime, int Nloops, bool isRandom, bool isInfinite, ClickableElement subElem = null)
+    public void InitBehaviourNodeFromXML(ClickableElement parent, behaviourType type, float posx, float posy, string id, string name, float delayTime, int Nloops, bool isRandom, bool isInfinite, int index, ClickableElement subElem = null)
     {
         InitBaseNode(parent, id);
 
@@ -120,6 +130,7 @@ public class BehaviourNode : BaseNode
         this.Nloops = Nloops;
         this.isRandom = isRandom;
         this.isInfinite = isInfinite;
+        this.index = index;
     }
 
     /// <summary>
@@ -127,6 +138,18 @@ public class BehaviourNode : BaseNode
     /// </summary>
     public override void DrawWindow()
     {
+        // If this node is a non-random sequence, check if there's a new child or one was deleted, then ReIndex
+        if (this.type == behaviourType.Sequence && !this.isRandom)
+        {
+            List<BehaviourNode> children = ((BehaviourTree)parent).ChildrenGet(this).OrderBy(n => n.index).ToList();
+            int updatedChildrenCount = children.Count;
+
+            if (updatedChildrenCount != currentChildrenCount)
+                ReIndex(children);
+
+            currentChildrenCount = updatedChildrenCount;
+        }
+
         switch (type)
         {
             case behaviourType.Sequence:
@@ -181,6 +204,7 @@ public class BehaviourNode : BaseNode
                 isInfinite = this.isInfinite,
                 delayTime = this.delayTime,
                 Nloops = this.Nloops,
+                index = this.index,
 
                 nodes = parentTree.transitions.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
                 {
@@ -216,6 +240,7 @@ public class BehaviourNode : BaseNode
         result.isInfinite = this.isInfinite;
         result.delayTime = this.delayTime;
         result.Nloops = this.Nloops;
+        result.index = this.index;
 
         if (this.subElem)
         {
@@ -223,5 +248,42 @@ public class BehaviourNode : BaseNode
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Re-orders the incices based on the fact that one (<paramref name="nodeToChange"/>) was changed to a new index (<paramref name="newIndex"/>)
+    /// </summary>
+    /// <param name="nodeToChange"></param>
+    /// <param name="newIndex"></param>
+    public void ReorderIndices(BehaviourNode nodeToChange, int newIndex)
+    {
+        List<BehaviourNode> children = ((BehaviourTree)parent).ChildrenGet(this).OrderBy(n => n.index).ToList();
+
+        ReIndex(children);
+
+        if (newIndex < nodeToChange.index)
+            for (int i = newIndex - 1; i < nodeToChange.index - 1; i++)
+                children[i].index++;
+
+        if (newIndex > nodeToChange.index)
+            for (int i = newIndex - 1; i > nodeToChange.index - 1; i--)
+                children[i].index--;
+    }
+
+    /// <summary>
+    /// Rewrites the indices of the list <paramref name="children"/>
+    /// </summary>
+    /// <param name="children"></param>
+    public void ReIndex(List<BehaviourNode> children)
+    {
+        foreach (int id in children.Select(n => n.index))
+        {
+            if (children.FindAll(n => n.index == id).Count > 1 || id == 0 || id > children.Count)
+            {
+                for (int i = 0; i < children.Count; i++)
+                    children[i].index = i + 1;
+                break;
+            }
+        }
     }
 }
