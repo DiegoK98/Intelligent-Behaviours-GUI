@@ -375,7 +375,7 @@ public class XMLElement
                 if (selectedNode)
                 {
                     TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-                    transition.InitTransitionGUI(currentTree, selectedNode, nodeBT);
+                    transition.InitTransitionGUI(currentTree, selectedNode, nodeBT, true);
 
                     currentTree.transitions.Add(transition);
                 }

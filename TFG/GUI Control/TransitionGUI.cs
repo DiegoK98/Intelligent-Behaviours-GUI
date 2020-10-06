@@ -64,7 +64,7 @@ public class TransitionGUI : GUIElement
     /// <param name="name"></param>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    public void InitTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to)
+    public void InitTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to, bool comesFromXML = false)
     {
         this.sender = EditorWindow.GetWindow<NodeEditor>();
 
@@ -81,7 +81,11 @@ public class TransitionGUI : GUIElement
         this.rootPerception = CreateInstance<PerceptionGUI>();
         this.rootPerception.InitPerceptionGUI(perceptionType.Push);
 
-        if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
+        if (comesFromXML)
+        {
+            ((BehaviourNode)toNode).index = ((BehaviourNode)to).index;
+        }
+        else if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
         {
             ((BehaviourNode)toNode).index = ((BehaviourTree)parent).ChildrenCount((BehaviourNode)fromNode) + 1;
         }
@@ -110,6 +114,11 @@ public class TransitionGUI : GUIElement
         this.toNode = to;
 
         this.rootPerception = rootPerception;
+
+        if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
+        {
+            ((BehaviourNode)toNode).index = ((BehaviourNode)to).index;
+        }
     }
 
     /// <summary>
