@@ -186,16 +186,18 @@ public class FSM : ClickableElement
                 break;
 
             bool isDouble = false;
+            bool isLoop = false;
 
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
             if (transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
-            {
                 isDouble = true;
-            }
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), isDouble);
+            if (elem.fromNode.Equals(elem.toNode))
+                isLoop = true;
+
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), isDouble, isLoop);
         }
     }
 

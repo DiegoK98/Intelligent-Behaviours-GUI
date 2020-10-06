@@ -568,7 +568,7 @@ public class NodeEditor : EditorWindow
                         case nameof(FSM):
                             if (makeTransitionMode)
                             {
-                                if (clickedOnWindow && !currentElem.nodes[selectIndex].Equals(selectednode))
+                                if (clickedOnWindow)// && !currentElem.nodes[selectIndex].Equals(selectednode))
                                 {
                                     if (!currentElem.transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(currentElem.nodes[selectIndex])))
                                     {
@@ -595,7 +595,7 @@ public class NodeEditor : EditorWindow
                             if (reconnectTransitionMode)
                             {
                                 if (clickedOnWindow
-                                    && !(currentElem.nodes[selectIndex].Equals(selectedTransition.toNode) || currentElem.nodes[selectIndex].Equals(selectedTransition.fromNode))
+                                    && !currentElem.nodes[selectIndex].Equals(selectedTransition.toNode)
                                     && !currentElem.transitions.Exists(t => t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(currentElem.nodes[selectIndex])))
                                 {
                                     NodeEditorUtilities.GenerateUndoStep(currentElem);
@@ -853,7 +853,7 @@ public class NodeEditor : EditorWindow
                         //                                                     (<-)
                         if (currentElem.transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
                         {
-                            float ang = Vector2.SignedAngle((elem.toNode.windowRect.position - elem.fromNode.windowRect.position), Vector2.right);
+                            float ang = Vector2.SignedAngle(elem.toNode.windowRect.position - elem.fromNode.windowRect.position, Vector2.right);
 
                             if (ang > -45 && ang <= 45)
                             {
@@ -875,6 +875,13 @@ public class NodeEditor : EditorWindow
                                 offset.x = -pairTransitionsOffset;
                                 offset.y = pairTransitionsOffset;
                             }
+                        }
+
+                        // If it's a loop transition
+                        if (elem.fromNode.Equals(elem.toNode))
+                        {
+                            offset.x = 100;
+                            offset.y = 50;
                         }
 
                         Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
@@ -1850,7 +1857,7 @@ public class NodeEditor : EditorWindow
     /// <param name="end"></param>
     /// <param name="isFocused"></param>
     /// <param name="isDouble"></param>
-    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isDouble = false)
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isDouble = false, bool isLoop = false)
     {
         // We add an offset so the start and end points are centered in their respective nodes
 
@@ -1862,74 +1869,90 @@ public class NodeEditor : EditorWindow
 
         // Check which sides to put the curve on
 
-        float ang = Vector2.SignedAngle((end.position - start.position), Vector2.right);
+        float ang = Vector2.SignedAngle(end.position - start.position, Vector2.right);
         Vector3 direction = Vector3.right;
+        Vector3 startDirection;
+        Vector3 endDirection;
 
-        if (ang > -45 && ang <= 45)
+        if (isLoop)
         {
-            direction = Vector3.right;
+            startDirection = Vector3.right * 3;
+            endDirection = Vector3.down * 3;
 
             start.x += start.width / 2;
-            end.x -= end.width / 2;
-
-            if (isDouble)
-            {
-                start.y += pairTransitionsOffset;
-                end.y += pairTransitionsOffset;
-            }
-        }
-        else if (ang > 45 && ang <= 135)
-        {
-            direction = Vector3.down;
-
-            start.y -= start.height / 2;
             end.y += end.height / 2;
-
-            if (isDouble)
-            {
-                start.x += pairTransitionsOffset;
-                end.x += pairTransitionsOffset;
-            }
         }
-        else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
+        else
         {
-            direction = Vector3.left;
-
-            start.x -= start.width / 2;
-            end.x += end.width / 2;
-
-            if (isDouble)
+            if (ang > -45 && ang <= 45)
             {
-                start.y -= pairTransitionsOffset;
-                end.y -= pairTransitionsOffset;
+                direction = Vector3.right;
+
+                start.x += start.width / 2;
+                end.x -= end.width / 2;
+
+                if (isDouble)
+                {
+                    start.y += pairTransitionsOffset;
+                    end.y += pairTransitionsOffset;
+                }
             }
-        }
-        else if (ang > -135 && ang <= -45)
-        {
-            direction = Vector3.up;
-
-            start.y += start.height / 2;
-            end.y -= end.height / 2;
-
-            if (isDouble)
+            else if (ang > 45 && ang <= 135)
             {
-                start.x -= pairTransitionsOffset;
-                end.x -= pairTransitionsOffset;
+                direction = Vector3.down;
+
+                start.y -= start.height / 2;
+                end.y += end.height / 2;
+
+                if (isDouble)
+                {
+                    start.x += pairTransitionsOffset;
+                    end.x += pairTransitionsOffset;
+                }
             }
+            else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
+            {
+                direction = Vector3.left;
+
+                start.x -= start.width / 2;
+                end.x += end.width / 2;
+
+                if (isDouble)
+                {
+                    start.y -= pairTransitionsOffset;
+                    end.y -= pairTransitionsOffset;
+                }
+            }
+            else if (ang > -135 && ang <= -45)
+            {
+                direction = Vector3.up;
+
+                start.y += start.height / 2;
+                end.y -= end.height / 2;
+
+                if (isDouble)
+                {
+                    start.x -= pairTransitionsOffset;
+                    end.x -= pairTransitionsOffset;
+                }
+            }
+
+            startDirection = direction;
+            endDirection = direction;
         }
 
         // Draw curve
         // Curve parameters
         Vector3 startPos = new Vector3(start.x, start.y, 0);
         Vector3 endPos = new Vector3(end.x, end.y, 0);
-        Vector3 startTan = startPos + direction * 50;
-        Vector3 endTan = endPos - direction * 50;
+        Vector3 startTan = startPos + startDirection * 50;
+        Vector3 endTan = endPos - endDirection * 50;
 
         // Arrow parameters
-        Vector3 pos1 = endPos - direction * 10;
-        Vector3 pos2 = endPos - direction * 10;
+        Vector3 pos1 = endPos - endDirection.normalized * 10;
+        Vector3 pos2 = endPos - endDirection.normalized * 10;
 
-        if (direction == Vector3.up || direction == Vector3.down)
+        if (endDirection.normalized == Vector3.up || endDirection.normalized == Vector3.down)
         {
             pos1.x += 6;
             pos2.x -= 6;
