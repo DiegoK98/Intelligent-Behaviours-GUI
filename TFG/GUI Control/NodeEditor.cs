@@ -1748,13 +1748,13 @@ public class NodeEditor : EditorWindow
     /// </summary>
     void ExportCode(object elem)
     {
-        if (((ClickableElement)elem).GetErrors().Count != -1)
+        if (((ClickableElement)elem).GetErrors().Count == 0)
         {
             NodeEditorUtilities.GenerateElemScript((ClickableElement)elem);
         }
         else
         {
-            PopupWindow.InitExport();
+            PopupWindow.InitExport((ClickableElement)elem);
         }
     }
 

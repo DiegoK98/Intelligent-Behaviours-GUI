@@ -18,6 +18,8 @@ public class PopupWindow : EditorWindow
     /// </summary>
     static typeOfPopup PopupType;
 
+    static ClickableElement exportingElem;
+
     /// <summary>
     /// Type of the <see cref="ClickableElement"/> that will be deleted
     /// </summary>
@@ -80,11 +82,13 @@ public class PopupWindow : EditorWindow
     /// </summary>
     /// <param name="focusElem"></param>
     /// <param name="type"></param>
-    public static void InitExport()
+    public static void InitExport(ClickableElement elem)
     {
         var foo = senderEditor;
 
         PopupType = typeOfPopup.FailedExport;
+
+        exportingElem = elem;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
         window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
@@ -189,13 +193,21 @@ public class PopupWindow : EditorWindow
     /// </summary>
     private void ShowExportPopup()
     {
-        EditorGUILayout.LabelField("Fix all the errors", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+        EditorGUILayout.LabelField("Fix all the errors before exporting code", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
 
         GUILayout.Space(30);
 
+        //GUI.backgroundColor = Color.grey;
         if (GUILayout.Button("Ok"))
         {
             this.Close();
+        }
+
+        GUI.backgroundColor = Color.grey;
+        if (GUILayout.Button("Export anyway"))
+        {
+            this.Close();
+            NodeEditorUtilities.GenerateElemScript(exportingElem);
         }
     }
 
