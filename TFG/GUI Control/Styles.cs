@@ -61,6 +61,7 @@ public static class Styles
 
     public static GUIStyle WarningLabel = new GUIStyle(GUI.skin.label)
     {
+        fontStyle = FontStyle.Bold,
         normal = new GUIStyleState()
         {
             textColor = Color.red

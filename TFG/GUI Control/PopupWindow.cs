@@ -165,7 +165,7 @@ public class PopupWindow : EditorWindow
 
             if (numberOfSons > 0)
             {
-                EditorGUILayout.LabelField(numberOfSons + " child nodes will also be deleted", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+                EditorGUILayout.LabelField(numberOfSons + " child node/s will also be deleted", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
                 GUILayout.Space(20);
             }
         }
@@ -193,7 +193,7 @@ public class PopupWindow : EditorWindow
     /// </summary>
     private void ShowExportPopup()
     {
-        EditorGUILayout.LabelField("Fix all the errors before exporting code", EditorStyles.boldLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
+        EditorGUILayout.LabelField("Fix all the errors before exporting code", Styles.WarningLabel, GUILayout.Width(this.position.width - 10), GUILayout.ExpandHeight(true));
 
         GUILayout.Space(30);
 
