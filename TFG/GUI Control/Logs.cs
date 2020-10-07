@@ -7,7 +7,8 @@ public enum Error
 {
     NoEntryState = 4,
     MoreThanOneRoot = 3,
-    RepeatedName = 2
+    RepeatedName = 2,
+    NoExitTransition = 1,
 }
 
 public enum Warning
@@ -39,6 +40,9 @@ public class Logs
                 break;
             case Error.RepeatedName:
                 prompt += "You can't have two elements with the same name";
+                break;
+            case Error.NoExitTransition:
+                prompt += "You can't have a " + current.GetTypeString() + " inside a " + current.parent.GetTypeString() + " with no Exit Transition";
                 break;
             default:
                 prompt += "Unknown error :(";

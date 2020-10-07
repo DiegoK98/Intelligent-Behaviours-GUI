@@ -60,6 +60,38 @@ public abstract class ClickableElement : GUIElement
     /// </summary>
     public UniqueNamer elementNamer;
 
+    public bool HasExitTransition
+    {
+        get
+        {
+            return GetExitTransition() != null;
+        }
+    }
+
+    public bool NeedsExitTransition
+    {
+        get
+        {
+            if (HasExitTransition || parent is null)
+                return false;
+
+            switch (parent.GetType().ToString())
+            {
+                case nameof(FSM):
+                    return false;
+                case nameof(BehaviourTree):
+                    if (this is FSM)
+                        return true;
+                    else
+                        return false;
+                case nameof(UtilitySystem):
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
     /// <summary>
     /// The Initializer for the <seealso cref="ClickableElement"/>
     /// </summary>
@@ -103,7 +135,7 @@ public abstract class ClickableElement : GUIElement
         TransitionGUI exitTrans = transitions.Find(t => t.isExit);
         if (exitTrans)
         {
-            if(transitions.Remove(exitTrans))
+            if (transitions.Remove(exitTrans))
                 elementNamer.RemoveName(exitTrans.identificator);
         }
 

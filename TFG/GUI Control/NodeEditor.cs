@@ -259,6 +259,15 @@ public class NodeEditor : EditorWindow
                     break;
             }
 
+            if (currentElem.NeedsExitTransition)
+            {
+                currentElem.AddError(Error.NoExitTransition);
+            }
+            else
+            {
+                currentElem.RemoveError(Error.NoExitTransition);
+            }
+
             // Check repeated names
             bool repeatedNames = false;
 
