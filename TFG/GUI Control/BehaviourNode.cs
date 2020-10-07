@@ -206,7 +206,7 @@ public class BehaviourNode : BaseNode
                 Nloops = this.Nloops,
                 index = this.index,
 
-                nodes = parentTree.transitions.FindAll(o => this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
+                nodes = parentTree.transitions.FindAll(o => !o.isExit && this.Equals(o.fromNode)).Select(o => o.toNode).Cast<BehaviourNode>().ToList().ConvertAll((node) =>
                 {
                     return node.ToXMLElement(parentTree);
                 }),

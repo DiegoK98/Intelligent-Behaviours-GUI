@@ -146,6 +146,11 @@ public class XMLElement
     /// </summary>
     public float weight { get; set; }
 
+    /// <summary>
+    /// Wether this is an Exit transition or not
+    /// </summary>
+    public bool isExit { get; set; }
+
     // Conversion Methods
 
     /// <summary>
@@ -192,8 +197,8 @@ public class XMLElement
 
         foreach (XMLElement trans in this.transitions)
         {
-            BaseNode node1 = fsm.nodes.Where(n => n.identificator == trans.fromId).FirstOrDefault();
-            BaseNode node2 = fsm.nodes.Where(n => n.identificator == trans.toId).FirstOrDefault();
+            BaseNode node1 = fsm.nodes.Where(n => n.identificator == trans.fromId || n.subElem?.identificator == trans.fromId).FirstOrDefault();
+            BaseNode node2 = fsm.nodes.Where(n => n.identificator == trans.toId || n.subElem?.identificator == trans.toId).FirstOrDefault();
             if (node1 != null && node2 != null)
                 fsm.AddTransition(trans.ToTransitionGUI(fsm, node1, node2));
         }
@@ -264,7 +269,7 @@ public class XMLElement
     public TransitionGUI ToTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to)
     {
         TransitionGUI transition = ScriptableObject.CreateInstance<TransitionGUI>();
-        transition.InitTransitionGUIFromXML(parent, from, to, this.Id, this.name, this.perception.ToGUIElement(), this.weight);
+        transition.InitTransitionGUIFromXML(parent, from, to, this.Id, this.name, this.perception.ToGUIElement(), this.isExit, this.weight);
 
         return transition;
     }
@@ -300,6 +305,14 @@ public class XMLElement
                     Debug.LogError("Wrong content in saved data");
                     break;
             }
+        }
+
+        foreach (XMLElement trans in this.transitions)
+        {
+            BaseNode node1 = bt.nodes.Where(n => n.identificator == trans.fromId || n.subElem?.identificator == trans.fromId).FirstOrDefault();
+            BaseNode node2 = bt.nodes.Where(n => n.identificator == trans.toId || n.subElem?.identificator == trans.toId).FirstOrDefault();
+            if (node1 != null && node2 != null)
+                bt.transitions.Add(trans.ToTransitionGUI(bt, node1, node2));
         }
 
         if (parent)
@@ -432,8 +445,8 @@ public class XMLElement
 
         foreach (XMLElement trans in this.transitions)
         {
-            BaseNode node1 = utilSystem.nodes.Where(n => n.identificator == trans.fromId).FirstOrDefault();
-            BaseNode node2 = utilSystem.nodes.Where(n => n.identificator == trans.toId).FirstOrDefault();
+            BaseNode node1 = utilSystem.nodes.Where(n => n.identificator == trans.fromId || n.subElem?.identificator == trans.fromId).FirstOrDefault();
+            BaseNode node2 = utilSystem.nodes.Where(n => n.identificator == trans.toId || n.subElem?.identificator == trans.toId).FirstOrDefault();
             if (node1 != null && node2 != null)
                 utilSystem.transitions.Add(trans.ToTransitionGUI(utilSystem, node1, node2));
         }

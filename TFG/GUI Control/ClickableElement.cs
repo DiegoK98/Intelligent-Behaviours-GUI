@@ -40,10 +40,20 @@ public abstract class ClickableElement : GUIElement
     /// </summary>
     public List<Warning> warnings = new List<Warning>();
 
+    private NodeEditor privateEditor;
+
     /// <summary>
     /// Reference for <see cref="NodeEditor"/>
     /// </summary>
-    protected NodeEditor editor;
+    protected NodeEditor editor
+    {
+        get
+        {
+            if (!privateEditor)
+                privateEditor = EditorWindow.GetWindow<NodeEditor>();
+            return privateEditor;
+        }
+    }
 
     /// <summary>
     /// The <see cref="UniqueNamer"/> for managing the names of the elements inside this <see cref="ClickableElement"/>
@@ -56,6 +66,8 @@ public abstract class ClickableElement : GUIElement
     /// <param name="id"></param>
     protected void InitClickableElement(string id = null)
     {
+        var foo = editor;
+
         elementNamer = CreateInstance<UniqueNamer>();
         if (id == null)
             identificator = UniqueID();
@@ -81,6 +93,32 @@ public abstract class ClickableElement : GUIElement
     /// </summary>
     /// <returns>The list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/></returns>
     public abstract List<ClickableElement> GetSubElems();
+
+    /// <summary>
+    /// Add <paramref name="trans"/> as an Exit transition
+    /// </summary>
+    /// <param name="trans"></param>
+    public void AddAsExit(TransitionGUI trans)
+    {
+        TransitionGUI exitTrans = transitions.Find(t => t.isExit);
+        if (exitTrans)
+        {
+            if(transitions.Remove(exitTrans))
+                elementNamer.RemoveName(exitTrans.identificator);
+        }
+
+        trans.isExit = true;
+        transitions.Add(trans);
+    }
+
+    /// <summary>
+    /// Get the Exit transition
+    /// </summary>
+    /// <param name="trans"></param>
+    public TransitionGUI GetExitTransition()
+    {
+        return transitions.Find(t => t.isExit);
+    }
 
     /// <summary>
     /// Checks if <paramref name="name"/> exists more than <paramref name="threshold"/> times

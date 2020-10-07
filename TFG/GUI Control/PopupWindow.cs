@@ -26,7 +26,17 @@ public class PopupWindow : EditorWindow
     /// <summary>
     /// The <see cref="NodeEditor"/> window that is calling for this <see cref="PopupWindow"/> to be shown
     /// </summary>
-    static NodeEditor senderEditor;
+    private static NodeEditor privateEditor;
+
+    static NodeEditor senderEditor
+    {
+        get
+        {
+            if (!privateEditor)
+                privateEditor = EditorWindow.GetWindow<NodeEditor>();
+            return privateEditor;
+        }
+    }
 
     /// <summary>
     /// The List of <see cref="GUIElement"/> that will be deleted
@@ -52,7 +62,7 @@ public class PopupWindow : EditorWindow
     /// <param name="type"></param>
     public static void InitDelete(params GUIElement[] focusedElems)
     {
-        senderEditor = EditorWindow.GetWindow<NodeEditor>();
+        var foo = senderEditor;
 
         PopupType = typeOfPopup.Delete;
 
@@ -72,7 +82,7 @@ public class PopupWindow : EditorWindow
     /// <param name="type"></param>
     public static void InitExport()
     {
-        senderEditor = EditorWindow.GetWindow<NodeEditor>();
+        var foo = senderEditor;
 
         PopupType = typeOfPopup.FailedExport;
 
@@ -86,7 +96,7 @@ public class PopupWindow : EditorWindow
     /// </summary>
     public static void InitWarningPopup(string text)
     {
-        senderEditor = EditorWindow.GetWindow<NodeEditor>();
+        var foo = senderEditor;
 
         warningText = text;
 

@@ -29,7 +29,6 @@ public class FSM : ClickableElement
     {
         InitClickableElement();
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -58,7 +57,6 @@ public class FSM : ClickableElement
     {
         InitClickableElement(id);
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -111,7 +109,6 @@ public class FSM : ClickableElement
         result.elementNamer = CreateInstance<UniqueNamer>();
         result.elementName = this.elementName;
         result.parent = parent;
-        result.editor = this.editor;
         result.windowRect = new Rect(this.windowRect);
 
         result.nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
@@ -183,10 +180,17 @@ public class FSM : ClickableElement
         foreach (TransitionGUI elem in transitions)
         {
             if (elem.fromNode is null || elem.toNode is null)
+                continue;
+
+            if (elem.isExit && !(this.parent is BehaviourTree || this.parent is UtilitySystem))
+            {
+                DeleteTransition(elem);
                 break;
+            }
 
             bool isDouble = false;
             bool isLoop = false;
+            bool isExit = false;
 
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
@@ -197,7 +201,14 @@ public class FSM : ClickableElement
             if (elem.fromNode.Equals(elem.toNode))
                 isLoop = true;
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), isDouble, isLoop);
+            if (elem.isExit)
+            {
+                isExit = true;
+                isLoop = false;
+                isDouble = false;
+            }
+
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), isDouble, isLoop, isExit);
         }
     }
 
@@ -268,7 +279,7 @@ public class FSM : ClickableElement
             return;
         }
 
-        foreach (TransitionGUI nodeTransition in transitions.FindAll(t => t.fromNode.Equals(baseNode)))
+        foreach (TransitionGUI nodeTransition in transitions.FindAll(t => !t.isExit && t.fromNode && t.toNode && t.fromNode.Equals(baseNode)))
         {
             CheckConnected((StateNode)nodeTransition.toNode);
         }

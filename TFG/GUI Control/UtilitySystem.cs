@@ -19,7 +19,6 @@ public class UtilitySystem : ClickableElement
     {
         InitClickableElement();
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -42,7 +41,6 @@ public class UtilitySystem : ClickableElement
     {
         InitClickableElement(id);
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -94,7 +92,6 @@ public class UtilitySystem : ClickableElement
         result.elementNamer = CreateInstance<UniqueNamer>();
         result.elementName = this.elementName;
         result.parent = parent;
-        result.editor = this.editor;
         result.windowRect = new Rect(this.windowRect);
 
         result.nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
@@ -122,12 +119,18 @@ public class UtilitySystem : ClickableElement
         foreach (TransitionGUI elem in transitions)
         {
             if (elem.fromNode is null || elem.toNode is null)
+                continue;
+
+            if (elem.isExit && !(this.parent is UtilitySystem))
+            {
+                DeleteConnection(elem);
                 break;
+            }
 
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem));
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), false, false, elem.isExit);
         }
     }
 
@@ -174,7 +177,7 @@ public class UtilitySystem : ClickableElement
     /// <returns></returns>
     public bool ConnectedCheck(UtilityNode start, UtilityNode end)
     {
-        foreach (TransitionGUI transition in transitions.FindAll(t => start.Equals(t.toNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => !t.isExit && start.Equals(t.toNode)))
         {
             if (end.Equals((UtilityNode)transition.fromNode))
             {

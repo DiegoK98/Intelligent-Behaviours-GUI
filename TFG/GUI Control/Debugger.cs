@@ -4,5 +4,11 @@ using UnityEngine;
 
 public class Debugger : MonoBehaviour
 {
-    public static bool isDebug = false;
+    public static bool isDebug
+    {
+        get
+        {
+            return FindObjectOfType<Debugger>();
+        }
+    }
 }

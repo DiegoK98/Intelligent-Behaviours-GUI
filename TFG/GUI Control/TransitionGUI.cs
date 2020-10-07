@@ -13,10 +13,20 @@ public class TransitionGUI : GUIElement
     /// </summary>
     public string transitionName = "";
 
+    private NodeEditor privateEditor;
+
     /// <summary>
     /// Reference to the NodeEditor window
     /// </summary>
-    public NodeEditor sender;
+    public NodeEditor sender
+    {
+        get
+        {
+            if (!privateEditor)
+                privateEditor = EditorWindow.GetWindow<NodeEditor>();
+            return privateEditor;
+        }
+    }
 
     /// <summary>
     /// <see cref="BaseNode"/> that this transition comes from
@@ -58,6 +68,8 @@ public class TransitionGUI : GUIElement
     /// </summary>
     public float weight = 1.0f;
 
+    public bool isExit = false;
+
     /// <summary>
     /// The Initializer for the <seealso cref="TransitionGUI"/>
     /// </summary>
@@ -66,7 +78,7 @@ public class TransitionGUI : GUIElement
     /// <param name="to"></param>
     public void InitTransitionGUI(ClickableElement parent, BaseNode from, BaseNode to, bool comesFromXML = false)
     {
-        this.sender = EditorWindow.GetWindow<NodeEditor>();
+        var foo = sender;
 
         this.identificator = UniqueID();
 
@@ -97,9 +109,9 @@ public class TransitionGUI : GUIElement
     /// <param name="name"></param>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    public void InitTransitionGUIFromXML(ClickableElement parent, BaseNode from, BaseNode to, string id, string name, PerceptionGUI rootPerception, float weight = 1.0f)
+    public void InitTransitionGUIFromXML(ClickableElement parent, BaseNode from, BaseNode to, string id, string name, PerceptionGUI rootPerception, bool isExit, float weight = 1.0f)
     {
-        this.sender = EditorWindow.GetWindow<NodeEditor>();
+        var foo = sender;
 
         this.identificator = id;
 
@@ -114,6 +126,8 @@ public class TransitionGUI : GUIElement
         this.toNode = to;
 
         this.rootPerception = rootPerception;
+
+        this.isExit = isExit;
 
         if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
         {
@@ -136,9 +150,10 @@ public class TransitionGUI : GUIElement
             windowPosY = this.windowRect.y,
             Id = this.identificator,
             weight = this.weight,
-            fromId = this.fromNode.identificator,
-            toId = this.toNode.identificator,
-            perception = this.rootPerception.ToPerceptionXML()
+            fromId = this.fromNode?.identificator,
+            toId = this.toNode?.identificator,
+            perception = this.rootPerception.ToPerceptionXML(),
+            isExit = this.isExit
         };
 
         return result;
@@ -175,6 +190,7 @@ public class TransitionGUI : GUIElement
         result.fromNode = fromNode;
         result.toNode = toNode;
         result.rootPerception = (PerceptionGUI)rootPerception.CopyElement();
+        result.isExit = this.isExit;
 
         return result;
     }
@@ -186,81 +202,6 @@ public class TransitionGUI : GUIElement
     public override string GetTypeString()
     {
         return "Transition";
-    }
-
-    /// <summary>
-    /// Draws all the elements inside the <see cref="GUIElement.windowRect"/>
-    /// </summary>
-    /// <param name="parent"></param>
-    public void DrawBox()
-    {
-        switch (sender.currentElem.GetType().ToString())
-        {
-            case nameof(FSM):
-                int heightAcc = 0;
-                int widthAcc = 0;
-
-                transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
-
-                // Narrower area than the main rect
-                Rect areaRect = new Rect(baseWidth * 0.1f, 40, width * 0.8f, height);
-
-                GUILayout.BeginArea(areaRect);
-                try
-                {
-                    PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
-                }
-                finally
-                {
-                    GUILayout.EndArea();
-                }
-
-                // Increase the size depending on the open foldouts
-                height = baseHeight + heightAcc;
-                width = baseWidth + widthAcc;
-                break;
-            case nameof(BehaviourTree):
-                // If the parent node is a non-random sequence we add an index selector
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(10);
-                GUILayout.Label("Order:", Styles.CenteredTitleText, GUILayout.Width(30), GUILayout.Height(20));
-                GUILayout.Space(5);
-                if (GUILayout.Button(((BehaviourNode)toNode).index.ToString(), EditorStyles.toolbarDropDown))
-                {
-                    GenericMenu toolsMenu = new GenericMenu();
-
-                    for (int i = 1; i <= ((BehaviourTree)sender.currentElem).ChildrenCount((BehaviourNode)fromNode); i++)
-                    {
-                        int newId = i;
-
-                        toolsMenu.AddItem(new GUIContent(i.ToString()), false, () =>
-                        {
-                            if (newId != ((BehaviourNode)toNode).index)
-                            {
-                                NodeEditorUtilities.GenerateUndoStep(sender.currentElem);
-                                ((BehaviourNode)fromNode).ReorderIndices((BehaviourNode)toNode, newId);
-                                ((BehaviourNode)toNode).index = newId;
-                            }
-                        });
-                    }
-
-                    toolsMenu.DropDown(new Rect(0, Event.current.mousePosition.y, 0, 0));
-                    EditorGUIUtility.ExitGUI();
-                }
-                GUILayout.EndHorizontal();
-                break;
-            case nameof(UtilitySystem):
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(15);
-                GUILayout.Label("Weight:", Styles.CenteredTitleText, GUILayout.Width(20), GUILayout.Height(25));
-
-                // Check if the user changes the textArea
-                float.TryParse(EditorGUILayout.TextField(weight.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.CenteredTitleText,
-                    GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out weight);
-
-                GUILayout.EndHorizontal();
-                break;
-        }
     }
 
     /// <summary>
@@ -601,6 +542,90 @@ public class TransitionGUI : GUIElement
     /// </summary>
     public override void DrawWindow()
     {
-        throw new NotImplementedException();
+        switch (sender.currentElem.GetType().ToString())
+        {
+            case nameof(FSM):
+                DefaultPerceptionEditor();
+                break;
+            case nameof(BehaviourTree):
+                if (isExit)
+                {
+                    DefaultPerceptionEditor();
+                }
+                else {
+                    // If the parent node is a non-random sequence we add an index selector
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(10);
+                    GUILayout.Label("Order:", Styles.CenteredTitleText, GUILayout.Width(30), GUILayout.Height(20));
+                    GUILayout.Space(5);
+                    if (GUILayout.Button(((BehaviourNode)toNode).index.ToString(), EditorStyles.toolbarDropDown))
+                    {
+                        GenericMenu toolsMenu = new GenericMenu();
+
+                        for (int i = 1; i <= ((BehaviourTree)sender.currentElem).ChildrenCount((BehaviourNode)fromNode); i++)
+                        {
+                            int newId = i;
+
+                            toolsMenu.AddItem(new GUIContent(i.ToString()), false, () =>
+                            {
+                                if (newId != ((BehaviourNode)toNode).index)
+                                {
+                                    NodeEditorUtilities.GenerateUndoStep(sender.currentElem);
+                                    ((BehaviourNode)fromNode).ReorderIndices((BehaviourNode)toNode, newId);
+                                    ((BehaviourNode)toNode).index = newId;
+                                }
+                            });
+                        }
+
+                        toolsMenu.DropDown(new Rect(0, Event.current.mousePosition.y, 0, 0));
+                        EditorGUIUtility.ExitGUI();
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                break;
+            case nameof(UtilitySystem):
+                if (isExit)
+                {
+                    DefaultPerceptionEditor();
+                }
+                else
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(15);
+                    GUILayout.Label("Weight:", Styles.CenteredTitleText, GUILayout.Width(20), GUILayout.Height(25));
+
+                    // Check if the user changes the textArea
+                    float.TryParse(EditorGUILayout.TextField(weight.ToString(CultureInfo.CreateSpecificCulture("en-US")), Styles.CenteredTitleText,
+                        GUILayout.ExpandWidth(true), GUILayout.Height(25)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out weight);
+
+                    GUILayout.EndHorizontal();
+                }
+                break;
+        }
+    }
+
+    private void DefaultPerceptionEditor()
+    {
+        int heightAcc = 0;
+        int widthAcc = 0;
+
+        transitionName = CleanName(EditorGUILayout.TextArea(transitionName, Styles.TitleText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true), GUILayout.Height(25)));
+
+        // Narrower area than the main rect
+        Rect areaRect = new Rect(baseWidth * 0.1f, 40, width * 0.8f, height);
+
+        GUILayout.BeginArea(areaRect);
+        try
+        {
+            PerceptionFoldout(ref heightAcc, ref widthAcc, ref rootPerception);
+        }
+        finally
+        {
+            GUILayout.EndArea();
+        }
+
+        // Increase the size depending on the open foldouts
+        height = baseHeight + heightAcc;
+        width = baseWidth + widthAcc;
     }
 }

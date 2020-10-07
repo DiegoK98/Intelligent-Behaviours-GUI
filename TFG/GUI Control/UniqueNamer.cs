@@ -22,27 +22,25 @@ public class UniqueNamer : ScriptableObject
     /// <param name="name"></param>
     /// <param name="count"></param>
     /// <returns>The added name</returns>
-    public string AddName(string key, string name, int count = 0)
+    public string AddName(string key, string name, int count = 0, bool rename = false)
     {
         string nameToAdd = count > 0 ? name + count : name;
 
-        if (names.Contains(nameToAdd))
+        if (keys.Contains(key))
+        {
+            if (rename)
+                names[keys.IndexOf(key)] = nameToAdd;
+
+            return names[keys.IndexOf(key)];
+        }
+        else if (names.Contains(nameToAdd))
         {
             return AddName(key, name, ++count);
         }
         else
         {
-            int index = keys.IndexOf(key);
-
-            if (index >= 0)
-            {
-                names[index] = nameToAdd;
-            }
-            else
-            {
-                keys.Add(key);
-                names.Add(nameToAdd);
-            }
+            keys.Add(key);
+            names.Add(nameToAdd);
 
             return nameToAdd;
         }
@@ -55,15 +53,16 @@ public class UniqueNamer : ScriptableObject
     /// <returns></returns>
     public string GetName(string key)
     {
-        int index = keys.IndexOf(key);
+        int keyIndex = keys.IndexOf(key);
 
-        if (index >= 0)
+        if (keyIndex >= 0)
         {
-            return names[index];
+            return names[keyIndex];
         }
         else
         {
-            Debug.LogError("[OnGetName] Key not found");
+            if (Debugger.isDebug)
+                Debug.LogError("[OnGetName] Key not found");
             return null;
         }
     }
@@ -83,7 +82,8 @@ public class UniqueNamer : ScriptableObject
         }
         else
         {
-            Debug.LogError("[OnDelete] Key not found");
+            if (Debugger.isDebug)
+                Debug.LogError("[OnDelete] Key not found");
         }
     }
 }

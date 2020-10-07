@@ -49,6 +49,8 @@ public class NodeEditorUtilities
         + tab + tab + "#STATES#\n"
         + tab + tab + "// Transitions#TRANSITIONS#\n"
         + tab + tab + "\n"
+        + tab + tab + "// ExitPerceptions\n"
+        + tab + tab + "#EXIT_PERCEPIONS#\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -70,6 +72,8 @@ public class NodeEditorUtilities
         + tab + tab + "// SetRoot\n"
         + tab + tab + "#SETROOT#\n"
         + tab + tab + "\n"
+        + tab + tab + "// ExitPerceptions\n"
+        + tab + tab + "#EXIT_PERCEPIONS#\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -90,6 +94,8 @@ public class NodeEditorUtilities
         + tab + tab + "// ACTIONS\n"
         + tab + tab + "#ACTIONS#\n"
         + tab + tab + "\n"
+        + tab + tab + "// ExitPerceptions\n"
+        + tab + tab + "#EXIT_PERCEPIONS#\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -749,6 +755,7 @@ public class NodeEditorUtilities
                 break;
         }
 
+        templateSub = templateSub.Replace("#EXIT_PERCEPIONS#", GetExitPerceptions(ref templateText, elem, engineEnding, folderPath));
         templateSub = templateSub.Replace("#EXITS#", GetExitTransitions(elem, engineEnding));
 
         return templateSub;
@@ -883,6 +890,127 @@ public class NodeEditorUtilities
         return result;
     }
 
+    /// <summary>
+    /// Writes all the CreateExitTransition calls if necessary
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <returns></returns>
+    private static string GetExitTransitions(ClickableElement elem, string engineEnding)
+    {
+        string result = string.Empty;
+        string machineName = CleanName(elem.elementName) + engineEnding;
+
+        foreach (BaseNode node in elem.nodes.Where(n => n.subElem))
+        {
+            string className = CleanName(node.nodeName);
+            string nodeMachineName = className + "_UnknownMachine";
+
+            TransitionGUI exitTransition = node.subElem.GetExitTransition();
+            string exitNode = "null";
+            string perceptionName = "null";
+
+            if (exitTransition)
+            {
+                exitNode = CleanName(exitTransition.fromNode.nodeName);
+
+                string typeName;
+
+                if (exitTransition.rootPerception.type == perceptionType.Custom)
+                    typeName = CleanName(exitTransition.rootPerception.customName);
+                else
+                    typeName = exitTransition.rootPerception.type.ToString();
+
+                perceptionName = uniqueNamer.AddName(exitTransition.rootPerception.identificator, typeName + "Perception");
+            }
+
+            switch (elem.GetType().ToString())
+            {
+                // Parent machine is FSM
+                case nameof(FSM):
+                    switch (node.subElem.GetType().ToString())
+                    {
+                        case nameof(FSM):
+                            nodeMachineName = className + subFSMEnding;
+                            break;
+                        case nameof(BehaviourTree):
+                            nodeMachineName = className + subBTEnding;
+                            break;
+                        case nameof(UtilitySystem):
+                            nodeMachineName = className + subUSEnding;
+                            break;
+                    }
+
+                    TransitionGUI transition = elem.transitions.Where(t => !t.isExit && t.fromNode.Equals(node)).FirstOrDefault();
+                    result += nodeMachineName + ".CreateExitTransition(\"" + nodeMachineName + "Exit" + "\", " + className + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + CleanName(transition.toNode.nodeName) + ");\n" + tab + tab;
+                    break;
+
+                // Parent machine is BehaviourTree
+                case nameof(BehaviourTree):
+                    switch (node.subElem.GetType().ToString())
+                    {
+                        case nameof(FSM):
+                            nodeMachineName = className + subFSMEnding;
+                            result += nodeMachineName + ".CreateExitTransition(\"" + nodeMachineName + " Exit" + "\", " + exitNode + ", " + perceptionName + ", ReturnValues.Succeed);\n" + tab + tab;
+                            break;
+                        case nameof(BehaviourTree):
+                            nodeMachineName = className + subBTEnding;
+                            result += nodeMachineName + ".CreateExitTransition(\"" + nodeMachineName + " Exit" + "\");\n" + tab + tab;
+                            break;
+                        case nameof(UtilitySystem):
+                            // Not contemplated
+                            break;
+                    }
+                    break;
+
+                // Parent machine is UtilitySystem
+                case nameof(UtilitySystem):
+                    switch (node.subElem.GetType().ToString())
+                    {
+                        case nameof(FSM):
+                            nodeMachineName = className + subFSMEnding;
+                            break;
+                        case nameof(BehaviourTree):
+                            nodeMachineName = className + subBTEnding;
+                            exitNode += ".StateNode";
+                            break;
+                        case nameof(UtilitySystem):
+                            nodeMachineName = className + subUSEnding;
+                            exitNode += ".utilityState";
+                            break;
+                    }
+
+                    result += nodeMachineName + ".CreateExitTransition(\"" + nodeMachineName + " Exit" + "\", " + exitNode + ", " + perceptionName + ", " + machineName + ");\n" + tab + tab;
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Writes all the exit <see cref="Perception"/> declaration and initialization
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <param name="engineEnding"></param>
+    /// <param name="folderPath"></param>
+    /// <returns></returns>
+    private static string GetExitPerceptions(ref string templateText, ClickableElement elem, string engineEnding, string folderPath = null)
+    {
+        string className = CleanName(elem.elementName);
+        string result = string.Empty;
+        string machineName = className + engineEnding;
+
+        foreach (TransitionGUI transition in elem.transitions.Where(t => t.isExit))
+        {
+            string transitionName = CleanName(transition.transitionName);
+
+            result += RecursivePerceptions(ref templateText, transition.rootPerception, transitionName, machineName, folderPath);
+        }
+
+        return result;
+    }
+
     #region FSM
 
     /// <summary>
@@ -898,7 +1026,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (TransitionGUI transition in elem.transitions)
+        foreach (TransitionGUI transition in elem.transitions.Where(t => !t.isExit))
         {
             string transitionName = CleanName(transition.transitionName);
 
@@ -1066,7 +1194,7 @@ public class NodeEditorUtilities
         string result = string.Empty;
         string machineName = className + engineEnding;
 
-        foreach (TransitionGUI transition in elem.transitions)
+        foreach (TransitionGUI transition in elem.transitions.Where(t => !t.isExit))
         {
             string transitionName = CleanName(transition.transitionName);
             string fromNodeName = CleanName(transition.fromNode.nodeName);
@@ -1168,7 +1296,7 @@ public class NodeEditorUtilities
     /// <param name="node"></param>
     private static void RecursiveDecorators(ref string templateText, ref string result, string machineName, ClickableElement elem, BehaviourNode node)
     {
-        foreach (BehaviourNode childNode in elem.transitions.FindAll(o => o.fromNode.Equals(node)).Select(o => o.toNode))
+        foreach (BehaviourNode childNode in elem.transitions.FindAll(o => !o.isExit && o.fromNode.Equals(node)).Select(o => o.toNode))
         {
             RecursiveDecorators(ref templateText, ref result, machineName, elem, childNode);
         }
@@ -1233,7 +1361,7 @@ public class NodeEditorUtilities
             return CleanName(node.nodeName);
         }
 
-        TransitionGUI decoratorConnection = elem.transitions.Where(t => node.Equals(t.fromNode)).FirstOrDefault();
+        TransitionGUI decoratorConnection = elem.transitions.Where(t => !t.isExit && node.Equals(t.fromNode)).FirstOrDefault();
 
         string subNodeName = decoratorConnection ? GetDecoratorName(elem, (BehaviourNode)decoratorConnection.toNode) : "null";
 
@@ -1271,16 +1399,16 @@ public class NodeEditorUtilities
         {
             string baseNodeName = CleanName(node.nodeName);
             result += "\n" + tab + tab;
-            foreach (BehaviourNode toNode in elem.transitions.FindAll(t => node.Equals(t.fromNode)).Select(o => o.toNode).OrderBy(n => ((BehaviourNode)n).index))
+            foreach (BehaviourNode toNode in elem.transitions.FindAll(t => !t.isExit && node.Equals(t.fromNode)).Select(o => o.toNode).OrderBy(n => ((BehaviourNode)n).index))
             {
                 string toNodeName = CleanName(toNode.nodeName);
-                TransitionGUI decoratorConnection = elem.transitions.Where(t => toNode.Equals(t.fromNode)).FirstOrDefault();
+                TransitionGUI decoratorConnection = elem.transitions.Where(t => !t.isExit && toNode.Equals(t.fromNode)).FirstOrDefault();
 
                 string nodeName = "null";
 
                 if (decoratorConnection?.toNode)
                 {
-                    TransitionGUI decoratorConnectionsub = elem.transitions.Where(t => decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
+                    TransitionGUI decoratorConnectionsub = elem.transitions.Where(t => !t.isExit && decoratorConnection.toNode.Equals(t.fromNode)).FirstOrDefault();
                     string subNodeName = "";
 
                     if (decoratorConnectionsub)
@@ -1378,71 +1506,6 @@ public class NodeEditorUtilities
                 }
 
                 result += machineName + ".SetRootNode(" + rootName + ");";
-            }
-        }
-
-        return result;
-    }
-
-    private static string GetExitTransitions(ClickableElement elem, string engineEnding)
-    {
-        string result = string.Empty;
-        string machineName = CleanName(elem.elementName) + engineEnding;
-
-        foreach (BaseNode node in elem.nodes.Where(n => n.subElem))
-        {
-            string className = CleanName(node.nodeName);
-
-            switch (node.subElem.GetType().ToString())
-            {
-                case nameof(FSM):
-                    string FSMName = className + subFSMEnding;
-                    switch (elem.GetType().ToString())
-                    {
-                        case nameof(FSM):
-                            TransitionGUI transition = elem.transitions.Where(t => t.fromNode.Equals(node)).FirstOrDefault();
-                            result += FSMName + ".CreateExitTransition(\"" + FSMName + "Exit" + "\", " + className + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + CleanName(transition.toNode.nodeName) + ");\n" + tab + tab;
-                            break;
-                        case nameof(BehaviourTree):
-                            result += FSMName + ".CreateExitTransition(\"" + FSMName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, ReturnValues.Succeed);\n" + tab + tab;
-                            break;
-                        case nameof(UtilitySystem):
-                            result += FSMName + ".CreateExitTransition(\"" + FSMName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, " + machineName + ");\n" + tab + tab;
-                            break;
-                    }
-                    break;
-                case nameof(BehaviourTree):
-                    string BTName = className + subBTEnding;
-                    switch (elem.GetType().ToString())
-                    {
-                        case nameof(FSM):
-                            TransitionGUI transition = elem.transitions.Where(t => t.fromNode.Equals(node)).FirstOrDefault();
-                            result += BTName + ".CreateExitTransition(\"" + BTName + "Exit" + "\", " + className + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + CleanName(transition.toNode.nodeName) + ");\n" + tab + tab;
-                            break;
-                        case nameof(BehaviourTree):
-                            result += BTName + ".CreateExitTransition(\"" + BTName + " Exit" + "\");\n" + tab + tab;
-                            break;
-                        case nameof(UtilitySystem):
-                            result += BTName + ".CreateExitTransition(\"" + BTName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, " + machineName + ");\n" + tab + tab;
-                            break;
-                    }
-                    break;
-                case nameof(UtilitySystem):
-                    string USName = className + subBTEnding;
-                    switch (elem.GetType().ToString())
-                    {
-                        case nameof(FSM):
-                            TransitionGUI transition = elem.transitions.Where(t => t.fromNode.Equals(node)).FirstOrDefault();
-                            result += USName + ".CreateExitTransition(\"" + USName + "Exit" + "\", " + className + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + CleanName(transition.toNode.nodeName) + ");\n" + tab + tab;
-                            break;
-                        case nameof(BehaviourTree):
-                            // Not contemplated
-                            break;
-                        case nameof(UtilitySystem):
-                            result += USName + ".CreateExitTransition(\"" + USName + " Exit" + "\", null /*Change this for a node*/, null /*Change this for a perception*/, " + machineName + ");\n" + tab + tab;
-                            break;
-                    }
-                    break;
             }
         }
 

@@ -19,7 +19,6 @@ public class BehaviourTree : ClickableElement
     {
         InitClickableElement();
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -42,7 +41,6 @@ public class BehaviourTree : ClickableElement
     {
         InitClickableElement(id);
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
         this.parent = parent;
 
         if (parent != null)
@@ -70,6 +68,10 @@ public class BehaviourTree : ClickableElement
             {
                 return rootNode.ToXMLElement(this);
             }),
+            transitions = transitions.FindAll(t => t.isExit).ConvertAll((exit) =>
+            {
+                return exit.ToXMLElement(this);
+            }),
             Id = this.identificator
         };
 
@@ -91,7 +93,6 @@ public class BehaviourTree : ClickableElement
         result.elementNamer = CreateInstance<UniqueNamer>();
         result.elementName = this.elementName;
         result.parent = parent;
-        result.editor = this.editor;
         result.windowRect = new Rect(this.windowRect);
 
         result.nodes = this.nodes.Select(o => (BaseNode)o.CopyElement(result)).ToList();
@@ -119,12 +120,19 @@ public class BehaviourTree : ClickableElement
         foreach (TransitionGUI elem in transitions)
         {
             if (elem.fromNode is null || elem.toNode is null)
+                continue;
+
+            if (elem.isExit && !(this.parent is UtilitySystem))
+            {
+                if(transitions.Remove(elem))
+                    elementNamer.RemoveName(elem.identificator);
                 break;
+            }
 
             Rect fromNodeRect = new Rect(elem.fromNode.windowRect);
             Rect toNodeRect = new Rect(elem.toNode.windowRect);
 
-            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem));
+            NodeEditor.DrawNodeCurve(fromNodeRect, toNodeRect, editor.focusedObjects.Contains(elem), false, false, elem.isExit);
         }
     }
 
@@ -140,12 +148,12 @@ public class BehaviourTree : ClickableElement
             {
                 foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
                 {
-                    transitions.Remove(transition);
+                    DeleteConnection(transition);
                     DeleteNode((BehaviourNode)transition.toNode);
                 }
                 foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.toNode)))
                 {
-                    transitions.Remove(transition);
+                    DeleteConnection(transition);
                 }
             }
 
@@ -176,7 +184,7 @@ public class BehaviourTree : ClickableElement
     {
         int res = 0;
 
-        foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => !t.isExit && node.Equals(t.fromNode)))
         {
             res += 1;
 
@@ -197,7 +205,7 @@ public class BehaviourTree : ClickableElement
     {
         List<BehaviourNode> children = new List<BehaviourNode>();
 
-        foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => !t.isExit && node.Equals(t.fromNode)))
         {
             children.Add((BehaviourNode)transition.toNode);
 
@@ -236,7 +244,7 @@ public class BehaviourTree : ClickableElement
         if (node.type < behaviourType.Leaf)
             return false;
 
-        foreach (TransitionGUI transition in transitions.FindAll(t => node.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => !t.isExit && node.Equals(t.fromNode)))
         {
             return BadRootCheck((BehaviourNode)transition.toNode);
         }
@@ -252,7 +260,7 @@ public class BehaviourTree : ClickableElement
     /// <returns></returns>
     public bool ConnectedCheck(BehaviourNode start, BehaviourNode end)
     {
-        foreach (TransitionGUI transition in transitions.FindAll(t => start.Equals(t.fromNode)))
+        foreach (TransitionGUI transition in transitions.FindAll(t => !t.isExit && start.Equals(t.fromNode)))
         {
             if (end.Equals((BehaviourNode)transition.toNode))
             {

@@ -44,10 +44,20 @@ public class UtilityNode : BaseNode
     /// </summary>
     public curveType curveType;
 
+    private NodeEditor privateEditor;
+
     /// <summary>
     /// Reference to the editor
     /// </summary>
-    public NodeEditor editor;
+    public NodeEditor editor
+    {
+        get
+        {
+            if (!privateEditor)
+                privateEditor = EditorWindow.GetWindow<NodeEditor>();
+            return privateEditor;
+        }
+    }
 
     /// <summary>
     /// Base height that will change depending on the number of Points when it's a curve node
@@ -128,8 +138,9 @@ public class UtilityNode : BaseNode
     {
         InitBaseNode(parent, id);
 
+        var foo = editor;
+
         this.type = type;
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
 
         if (subElem != null)
         {
@@ -175,7 +186,7 @@ public class UtilityNode : BaseNode
     {
         InitBaseNode(parent, id);
 
-        this.editor = EditorWindow.GetWindow<NodeEditor>();
+        var foo = editor;
 
         this.type = type;
         this.fusionType = fusionType;
@@ -554,7 +565,6 @@ public class UtilityNode : BaseNode
         result.identificator = this.identificator;
         result.nodeName = this.nodeName;
         result.parent = parent;
-        result.editor = editor;
         result.windowRect = new Rect(this.windowRect);
         result.type = this.type;
         result.fusionType = this.fusionType;
@@ -582,7 +592,7 @@ public class UtilityNode : BaseNode
     public List<KeyValuePair<float, UtilityNode>> GetWeightsAndFactors()
     {
         List<KeyValuePair<float, UtilityNode>> weightsFactorPair = new List<KeyValuePair<float, UtilityNode>>();
-        List<TransitionGUI> transitions = parent.transitions.Where(t => t.toNode.Equals(this)).ToList();
+        List<TransitionGUI> transitions = parent.transitions.Where(t => !t.isExit && t.toNode.Equals(this)).ToList();
 
         foreach (TransitionGUI t in transitions)
         {

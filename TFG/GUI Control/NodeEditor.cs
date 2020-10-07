@@ -97,6 +97,11 @@ public class NodeEditor : EditorWindow
     private float topBarOffset;
 
     /// <summary>
+    /// Vertical offset for exitTransitions
+    /// </summary>
+    private static float exitTransVerticalOffset = 80;
+
+    /// <summary>
     /// Fixed offset for the <see cref="TransitionGUI.windowRect"/> when there's two of them in the same pair of nodes
     /// </summary>
     private static float pairTransitionsOffset = 20;
@@ -321,6 +326,10 @@ public class NodeEditor : EditorWindow
                                 {
                                     menu.AddItem(new GUIContent("Make Transition"), false, ContextCallback, new string[] { "makeTransition", selectIndex.ToString() });
 
+                                    if ((currentElem.parent is BehaviourTree || currentElem.parent is UtilitySystem) && !currentElem.transitions.Exists(t => t.isExit && t.fromNode.Equals(currentElem.nodes[selectIndex])))
+                                    {
+                                        menu.AddItem(new GUIContent("Add Exit Transition"), false, ContextCallback, new string[] { "exitTrans", selectIndex.ToString() });
+                                    }
                                     if (!((FSM)currentElem).isEntryState((StateNode)currentElem.nodes[selectIndex]))
                                     {
                                         menu.AddItem(new GUIContent("Convert to Entry State"), false, ContextCallback, new string[] { "entryState", selectIndex.ToString() });
@@ -384,6 +393,13 @@ public class NodeEditor : EditorWindow
 
                                         menu.AddSeparator("");
                                     }
+                                    else
+                                    {
+                                        if (currentElem.parent is UtilitySystem && !currentElem.transitions.Exists(t => t.isExit && t.fromNode.Equals(currentElem.nodes[selectIndex])))
+                                        {
+                                            menu.AddItem(new GUIContent("Add Exit Transition"), false, ContextCallback, new string[] { "exitTrans", selectIndex.ToString() });
+                                        }
+                                    }
                                 }
                                 break;
                             case nameof(UtilitySystem):
@@ -406,6 +422,11 @@ public class NodeEditor : EditorWindow
                                         menu.AddItem(new GUIContent("Factors/Add Fusion"), false, ContextCallback, new string[] { "Fusion", selectIndex.ToString() });
                                         menu.AddItem(new GUIContent("Factors/Add Curve"), false, ContextCallback, new string[] { "Curve", selectIndex.ToString() });
                                         menu.AddSeparator("");
+                                    }
+
+                                    if (((UtilityNode)currentElem.nodes[selectIndex]).type == utilityType.Action && currentElem.parent is UtilitySystem && !currentElem.transitions.Exists(t => t.isExit && t.fromNode.Equals(currentElem.nodes[selectIndex])))
+                                    {
+                                        menu.AddItem(new GUIContent("Add Exit Transition"), false, ContextCallback, new string[] { "exitTrans", selectIndex.ToString() });
                                     }
                                 }
                                 break;
@@ -570,7 +591,7 @@ public class NodeEditor : EditorWindow
                             {
                                 if (clickedOnWindow)// && !currentElem.nodes[selectIndex].Equals(selectednode))
                                 {
-                                    if (!currentElem.transitions.Exists(t => t.fromNode.Equals(selectednode) && t.toNode.Equals(currentElem.nodes[selectIndex])))
+                                    if (!currentElem.transitions.Exists(t => !t.isExit && t.fromNode.Equals(selectednode) && t.toNode.Equals(currentElem.nodes[selectIndex])))
                                     {
                                         NodeEditorUtilities.GenerateUndoStep(currentElem);
 
@@ -596,7 +617,7 @@ public class NodeEditor : EditorWindow
                             {
                                 if (clickedOnWindow
                                     && !currentElem.nodes[selectIndex].Equals(selectedTransition.toNode)
-                                    && !currentElem.transitions.Exists(t => t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(currentElem.nodes[selectIndex])))
+                                    && !currentElem.transitions.Exists(t => !t.isExit && t.fromNode.Equals(selectedTransition.fromNode) && t.toNode.Equals(currentElem.nodes[selectIndex])))
                                 {
                                     NodeEditorUtilities.GenerateUndoStep(currentElem);
 
@@ -844,14 +865,15 @@ public class NodeEditor : EditorWindow
                     for (int i = 0; i < currentElem.transitions.Count; i++)
                     {
                         Vector2 offset = Vector2.zero;
+                        Rect transitionRect;
                         TransitionGUI elem = currentElem.transitions[i];
 
-                        if (elem.fromNode is null || elem.toNode is null)
-                            break;
+                        if (elem.isExit || elem.fromNode is null || elem.toNode is null)
+                            continue;
 
                         // If there is two transitions with the same two nodes (->)
                         //                                                     (<-)
-                        if (currentElem.transitions.Exists(t => t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
+                        if (currentElem.transitions.Exists(t => t.fromNode && t.toNode && t.fromNode.Equals(elem.toNode) && t.toNode.Equals(elem.fromNode)))
                         {
                             float ang = Vector2.SignedAngle(elem.toNode.windowRect.position - elem.fromNode.windowRect.position, Vector2.right);
 
@@ -886,7 +908,7 @@ public class NodeEditor : EditorWindow
 
                         Vector2 pos = new Vector2(elem.fromNode.windowRect.center.x + (elem.toNode.windowRect.x - elem.fromNode.windowRect.x) / 2,
                                                   elem.fromNode.windowRect.center.y + (elem.toNode.windowRect.y - elem.fromNode.windowRect.y) / 2);
-                        Rect transitionRect = new Rect(pos.x - 75, pos.y - 15, elem.width, elem.height);
+                        transitionRect = new Rect(pos.x - 75, pos.y - 15, elem.width, elem.height);
                         transitionRect.position += offset;
 
                         elem.windowRect = GUI.Window(i + currentElem.nodes.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
@@ -938,8 +960,8 @@ public class NodeEditor : EditorWindow
 
                     foreach (TransitionGUI elem in currentElem.transitions.Where(t => ((BehaviourNode)t.fromNode).type == behaviourType.Sequence && !((BehaviourNode)t.fromNode).isRandom && ((BehaviourTree)currentElem).ChildrenCount((BehaviourNode)t.fromNode) > 1))
                     {
-                        if (elem.fromNode is null || elem.toNode is null)
-                            break;
+                        if (elem.isExit || elem.fromNode is null || elem.toNode is null)
+                            continue;
 
                         Vector2 pos = new Vector2(elem.toNode.windowRect.x, elem.toNode.windowRect.y);
                         Rect transitionRect = new Rect(pos.x, pos.y - 30, 70, 25);
@@ -996,8 +1018,8 @@ public class NodeEditor : EditorWindow
 
                     foreach (TransitionGUI elem in currentElem.transitions.Where(t => ((UtilityNode)t.toNode).type == utilityType.Fusion && ((UtilityNode)t.toNode).fusionType == fusionType.Weighted))
                     {
-                        if (elem.fromNode is null || elem.toNode is null)
-                            break;
+                        if (elem.isExit || elem.fromNode is null || elem.toNode is null)
+                            continue;
 
                         Vector2 pos = new Vector2(elem.fromNode.windowRect.x, elem.fromNode.windowRect.y);
                         Rect transitionRect = new Rect(pos.x, pos.y - 30, 70, 25);
@@ -1012,6 +1034,24 @@ public class NodeEditor : EditorWindow
                         });
                     }
                     break;
+            }
+
+            // Exit Transition
+            TransitionGUI exitTrans = currentElem.transitions.Find(t => t.isExit);
+
+            if (exitTrans)
+            {
+                Vector2 exitPos = new Vector2(exitTrans.fromNode.windowRect.center.x,
+                                          exitTrans.fromNode.windowRect.center.y + exitTrans.fromNode.windowRect.height / 2 + exitTransVerticalOffset);
+                Rect transitionRect = new Rect(exitPos.x - exitTrans.windowRect.width / 2, exitPos.y, exitTrans.width, exitTrans.height);
+
+                exitTrans.windowRect = GUI.Window(currentElem.transitions.IndexOf(exitTrans) + currentElem.nodes.Count, transitionRect, DrawTransitionBox, "", new GUIStyle(Styles.SubTitleText)
+                {
+                    normal = new GUIStyleState()
+                    {
+                        background = GetBackground(exitTrans)
+                    }
+                });
             }
         }
         else
@@ -1162,7 +1202,7 @@ public class NodeEditor : EditorWindow
                     if (((UtilityNode)currentElem.nodes[i]).type == utilityType.Variable)
                         clickedOnVariable = 1;
 
-                    else if (((UtilityNode)currentElem.nodes[i]).type == utilityType.Action && currentElem.transitions.Exists(t => t.toNode.Equals(currentElem.nodes[i])))
+                    else if (((UtilityNode)currentElem.nodes[i]).type == utilityType.Action && currentElem.transitions.Exists(t => !t.isExit && t.toNode.Equals(currentElem.nodes[i])))
                         actionWithOneFactor = 1;
 
                     else if (((UtilityNode)currentElem.nodes[i]).type == utilityType.Curve && currentElem.transitions.Exists(t => t.toNode.Equals(currentElem.nodes[i])))
@@ -1434,7 +1474,10 @@ public class NodeEditor : EditorWindow
 
             // FSM Transition
             case nameof(TransitionGUI):
-                originalTexture = Resources.Load<Texture2D>("Transition_Rect");
+                if (((TransitionGUI)elem).isExit)
+                    originalTexture = Resources.Load<Texture2D>("Exit_Transition_Rect");
+                else
+                    originalTexture = Resources.Load<Texture2D>("Transition_Rect");
                 col = Color.yellow;
                 break;
             default:
@@ -1581,7 +1624,7 @@ public class NodeEditor : EditorWindow
     {
         if (currentElem.transitions.Count > id - currentElem.nodes.Count)
         {
-            currentElem.transitions[id - currentElem.nodes.Count].DrawBox();
+            currentElem.transitions[id - currentElem.nodes.Count].DrawWindow();
         }
 
         GUI.DragWindow();
@@ -1685,6 +1728,9 @@ public class NodeEditor : EditorWindow
             case "connectNode":
                 ConnectNode(index);
                 break;
+            case "exitTrans":
+                MakeExitTransition(index);
+                break;
         }
     }
 
@@ -1777,7 +1823,8 @@ public class NodeEditor : EditorWindow
     {
         if (elem is null)
         {
-            Debug.LogError("[Delete] Element was null");
+            if (Debugger.isDebug)
+                Debug.LogError("[Delete] Element was null");
             return;
         }
 
@@ -1857,7 +1904,7 @@ public class NodeEditor : EditorWindow
     /// <param name="end"></param>
     /// <param name="isFocused"></param>
     /// <param name="isDouble"></param>
-    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isDouble = false, bool isLoop = false)
+    public static void DrawNodeCurve(Rect start, Rect end, bool isFocused, bool isDouble = false, bool isLoop = false, bool isExit = false)
     {
         // We add an offset so the start and end points are centered in their respective nodes
 
@@ -1873,6 +1920,14 @@ public class NodeEditor : EditorWindow
         Vector3 direction = Vector3.right;
         Vector3 startDirection;
         Vector3 endDirection;
+
+        if (isExit)
+        {
+            ang = -90;
+
+            end.x = end.x;
+            end.y = end.center.y + end.height / 2 + exitTransVerticalOffset;
+        }
 
         if (isLoop)
         {
@@ -1943,10 +1998,15 @@ public class NodeEditor : EditorWindow
 
         // Draw curve
         // Curve parameters
+        float tangentMagnitude = 50;
+
+        if (isExit)
+            tangentMagnitude = 0;
+
         Vector3 startPos = new Vector3(start.x, start.y, 0);
         Vector3 endPos = new Vector3(end.x, end.y, 0);
-        Vector3 startTan = startPos + startDirection * 50;
-        Vector3 endTan = endPos - endDirection * 50;
+        Vector3 startTan = startPos + startDirection * tangentMagnitude;
+        Vector3 endTan = endPos - endDirection * tangentMagnitude;
 
         // Arrow parameters
         Vector3 pos1 = endPos - endDirection.normalized * 10;
@@ -2436,7 +2496,7 @@ public class NodeEditor : EditorWindow
 
         BehaviourNode selNode = (BehaviourNode)currentElem.nodes[selectIndex];
 
-        foreach (TransitionGUI tr in currentElem.transitions.FindAll(t => t.toNode.Equals(selNode)))
+        foreach (TransitionGUI tr in currentElem.transitions.FindAll(t => !t.isExit && t.toNode.Equals(selNode)))
         {
             ((BehaviourTree)currentElem).DeleteConnection(tr);
         }
@@ -2455,6 +2515,16 @@ public class NodeEditor : EditorWindow
         if (currentElem is UtilitySystem)
             selectednode = currentElem.nodes[selectIndex];
         makeConnectionMode = true;
+    }
+
+    private void MakeExitTransition(int selectIndex)
+    {
+        NodeEditorUtilities.GenerateUndoStep(currentElem);
+
+        TransitionGUI transition = CreateInstance<TransitionGUI>();
+        transition.InitTransitionGUI(currentElem, currentElem.nodes[selectIndex], currentElem.nodes[selectIndex], false);
+
+        currentElem.AddAsExit(transition);
     }
 
     /// <summary>
@@ -2733,7 +2803,6 @@ public class NodeEditor : EditorWindow
                     {
                         if (transition.fromNode is StateNode && transition.toNode is StateNode)
                         {
-                            transition.sender = this;
                             transition.transitionName = currentElem.elementNamer.AddName(transition.identificator, transition.transitionName);
 
                             // We reassign the connecting nodes. This is to fix a bug that made them look unconnected
@@ -2799,7 +2868,6 @@ public class NodeEditor : EditorWindow
                     {
                         if (transition.fromNode is BehaviourNode && (transition.toNode is BehaviourNode))
                         {
-                            transition.sender = this;
                             transition.transitionName = currentElem.elementNamer.AddName(transition.identificator, transition.transitionName);
 
                             // We reassign the connecting nodes. This is to fix a bug that made them look unconnected
@@ -2865,7 +2933,6 @@ public class NodeEditor : EditorWindow
                     {
                         if (transition.fromNode is UtilityNode && transition.toNode is UtilityNode)
                         {
-                            transition.sender = this;
                             transition.transitionName = currentElem.elementNamer.AddName(transition.identificator, transition.transitionName);
 
                             // We reassign the connecting nodes. This is to fix a bug that made them look unconnected
