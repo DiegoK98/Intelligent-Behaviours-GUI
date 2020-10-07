@@ -1879,19 +1879,22 @@ public class NodeEditor : EditorWindow
                 break;
 
             case nameof(TransitionGUI):
-                if (parentElement is FSM)
-                {
-                    TransitionGUI transition = (TransitionGUI)elem;
-                    ((FSM)parentElement).DeleteTransition(transition);
+                TransitionGUI transition = (TransitionGUI)elem;
 
-                    focusedObjects.Remove(transition);
-                }
-                else if (parentElement is UtilitySystem)
+                switch (parentElement.GetType().ToString())
                 {
-                    TransitionGUI transition = (TransitionGUI)elem;
-                    ((UtilitySystem)parentElement).DeleteConnection(transition);
-
-                    focusedObjects.Remove(transition);
+                    case nameof(FSM):
+                        ((FSM)parentElement).DeleteTransition(transition);
+                        focusedObjects.Remove(transition);
+                        break;
+                    case nameof(BehaviourTree):
+                        ((BehaviourTree)parentElement).DeleteConnection(transition);
+                        focusedObjects.Remove(transition);
+                        break;
+                    case nameof(UtilitySystem):
+                        ((UtilitySystem)parentElement).DeleteConnection(transition);
+                        focusedObjects.Remove(transition);
+                        break;
                 }
                 break;
 
@@ -2458,7 +2461,11 @@ public class NodeEditor : EditorWindow
     /// </summary>
     private void DeleteElement(int selectIndex, bool isTransition)
     {
-        if (currentElem is FSM)
+        if (currentElem is null)
+        {
+            PopupWindow.InitDelete(Elements[selectIndex]);
+        }
+        else
         {
             if (isTransition)
             {
@@ -2468,21 +2475,6 @@ public class NodeEditor : EditorWindow
             {
                 PopupWindow.InitDelete(currentElem.nodes[selectIndex]);
             }
-        }
-
-        if (currentElem is BehaviourTree)
-        {
-            PopupWindow.InitDelete(currentElem.nodes[selectIndex]);
-        }
-
-        if (currentElem is UtilitySystem)
-        {
-            PopupWindow.InitDelete(currentElem.nodes[selectIndex]);
-        }
-
-        if (currentElem is null)
-        {
-            PopupWindow.InitDelete(Elements[selectIndex]);
         }
     }
 
