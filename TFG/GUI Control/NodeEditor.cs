@@ -1631,7 +1631,7 @@ public class NodeEditor : EditorWindow
     /// <param name="id"></param>
     void DrawTransitionBox(int id)
     {
-        if (currentElem.transitions.Count > id - currentElem.nodes.Count)
+        if (currentElem && currentElem.transitions.Count > id - currentElem.nodes.Count)
         {
             currentElem.transitions[id - currentElem.nodes.Count].DrawWindow();
         }

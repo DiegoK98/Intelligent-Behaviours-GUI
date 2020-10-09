@@ -308,7 +308,7 @@ public class FSM : ClickableElement
         {
             if (node.subElem != null)
             {
-                result.AddRange(node.subElem.GetSubElems(includeSelf));
+                result.AddRange(node.subElem.GetSubElems());
                 result.Add(node.subElem);
             }
         }

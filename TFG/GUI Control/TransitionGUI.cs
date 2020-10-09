@@ -286,7 +286,11 @@ public class TransitionGUI : GUIElement
 
                         GUILayout.Space(5);
 
-                        List<FSM> subFSMsList = sender.currentElem.GetMaxParent().GetSubElems(true).Where(e => e is FSM).Cast<FSM>().ToList();
+                        List<FSM> subFSMsList = new List<FSM>();
+                        foreach (ClickableElement elem in sender.Elements)
+                        {
+                            subFSMsList.AddRange(elem.GetSubElems(true).Where(e => e is FSM).Cast<FSM>());
+                        }
 
                         GUI.enabled = subFSMsList.Count > 0;
 
@@ -359,7 +363,12 @@ public class TransitionGUI : GUIElement
 
                         GUILayout.Space(5);
 
-                        List<BehaviourTree> subBTsList = sender.currentElem.GetMaxParent().GetSubElems(true).Where(e => e is BehaviourTree).Cast<BehaviourTree>().ToList();
+                        List<BehaviourTree> subBTsList = new List<BehaviourTree>();
+
+                        foreach (ClickableElement elem in sender.Elements)
+                        {
+                            subBTsList.AddRange(elem.GetSubElems(true).Where(e => e is BehaviourTree).Cast<BehaviourTree>());
+                        }
 
                         GUI.enabled = subBTsList.Count > 0;
                         if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
