@@ -137,7 +137,7 @@ public class StateNode : BaseNode
     public override string GetTypeString()
     {
         if (subElem is null)
-            return "Node";
+            return "State";
         else
             return subElem.GetTypeString();
     }

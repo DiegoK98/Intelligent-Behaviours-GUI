@@ -30,6 +30,22 @@ public class PerceptionGUI : GUIElement
     public float timerNumber;
 
     /// <summary>
+    /// Change this to get the timer to work in ms
+    /// </summary>
+    public bool timerInSeconds = true;
+
+    public string timerUnit
+    {
+        get
+        {
+            if (timerInSeconds)
+                return "s";
+            else
+                return "ms";
+        }
+    }
+
+    /// <summary>
     /// Name of the selected <see cref="FSM"/> or <see cref="BehaviourTree"/> for IsInState and BehaviourTreeStatus Perceptions
     /// </summary>
     public string elemName; // Should be a reference to a FSM of BT, not just the name, ¡¡¡¡which means to change the ToXML, the Copy, etc!!!!

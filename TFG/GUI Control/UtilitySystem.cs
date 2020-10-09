@@ -190,7 +190,7 @@ public class UtilitySystem : ClickableElement
         return false;
     }
 
-    public override List<ClickableElement> GetSubElems()
+    public override List<ClickableElement> GetSubElems(bool includeSelf = false)
     {
         List<ClickableElement> result = new List<ClickableElement>();
 
@@ -198,10 +198,13 @@ public class UtilitySystem : ClickableElement
         {
             if (node.subElem != null)
             {
-                result.AddRange(node.subElem.GetSubElems());
+                result.AddRange(node.subElem.GetSubElems(includeSelf));
                 result.Add(node.subElem);
             }
         }
+
+        if (includeSelf)
+            result.Add(this);
 
         return result;
     }

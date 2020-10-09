@@ -124,7 +124,7 @@ public class BehaviourTree : ClickableElement
 
             if (elem.isExit && !(this.parent is UtilitySystem))
             {
-                if(transitions.Remove(elem))
+                if (transitions.Remove(elem))
                     elementNamer.RemoveName(elem.identificator);
                 break;
             }
@@ -277,7 +277,7 @@ public class BehaviourTree : ClickableElement
     /// Returns the list of <see cref="ClickableElement"/> that exist inside each <see cref="BehaviourNode"/> of this <see cref="BehaviourTree"/> 
     /// </summary>
     /// <returns>The list of <see cref="ClickableElement"/> that exist inside each <see cref="BehaviourNode"/> of this <see cref="BehaviourTree"/></returns>
-    public override List<ClickableElement> GetSubElems()
+    public override List<ClickableElement> GetSubElems(bool includeSelf = false)
     {
         List<ClickableElement> result = new List<ClickableElement>();
 
@@ -285,10 +285,13 @@ public class BehaviourTree : ClickableElement
         {
             if (node.subElem != null)
             {
-                result.AddRange(node.subElem.GetSubElems());
+                result.AddRange(node.subElem.GetSubElems(includeSelf));
                 result.Add(node.subElem);
             }
         }
+
+        if (includeSelf)
+            result.Add(this);
 
         return result;
     }

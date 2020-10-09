@@ -300,7 +300,7 @@ public class FSM : ClickableElement
     /// Returns the list of <see cref="ClickableElement"/> that exist inside each <see cref="StateNode"/> of this <see cref="FSM"/> 
     /// </summary>
     /// <returns>The list of <see cref="ClickableElement"/> that exist inside each <see cref="StateNode"/> of this <see cref="FSM"/></returns>
-    public override List<ClickableElement> GetSubElems()
+    public override List<ClickableElement> GetSubElems(bool includeSelf = false)
     {
         List<ClickableElement> result = new List<ClickableElement>();
 
@@ -308,10 +308,13 @@ public class FSM : ClickableElement
         {
             if (node.subElem != null)
             {
-                result.AddRange(node.subElem.GetSubElems());
+                result.AddRange(node.subElem.GetSubElems(includeSelf));
                 result.Add(node.subElem);
             }
         }
+
+        if (includeSelf)
+            result.Add(this);
 
         return result;
     }

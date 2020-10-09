@@ -254,13 +254,18 @@ public class TransitionGUI : GUIElement
                             GUILayout.Label("Time: ", new GUIStyle(Styles.TitleText)
                             {
                                 alignment = TextAnchor.MiddleCenter
-                            }, GUILayout.Height(20), GUILayout.Width(width * 0.5f));
+                            }, GUILayout.Height(20), GUILayout.ExpandWidth(true));
 
 
                             float.TryParse(EditorGUILayout.TextField(currentPerception.timerNumber.ToString(CultureInfo.CreateSpecificCulture("en-US")), new GUIStyle(Styles.TitleText)
                             {
                                 alignment = TextAnchor.MiddleCenter
-                            }, GUILayout.Height(20), GUILayout.Width(20)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out float number);
+                            }, GUILayout.Height(20), GUILayout.Width(50)), NumberStyles.Any, CultureInfo.CreateSpecificCulture("en-US"), out float number);
+
+                            GUILayout.Label(currentPerception.timerUnit, new GUIStyle(Styles.TitleText)
+                            {
+                                alignment = TextAnchor.MiddleRight
+                            }, GUILayout.Height(20), GUILayout.ExpandWidth(true));
 
                             currentPerception.timerNumber = number;
                         }
@@ -281,7 +286,7 @@ public class TransitionGUI : GUIElement
 
                         GUILayout.Space(5);
 
-                        List<FSM> subFSMsList = sender.currentElem.GetSubElems().Where(e => e is FSM).Cast<FSM>().ToList();
+                        List<FSM> subFSMsList = sender.currentElem.GetMaxParent().GetSubElems(true).Where(e => e is FSM).Cast<FSM>().ToList();
 
                         GUI.enabled = subFSMsList.Count > 0;
 
@@ -354,7 +359,7 @@ public class TransitionGUI : GUIElement
 
                         GUILayout.Space(5);
 
-                        List<BehaviourTree> subBTsList = sender.currentElem.GetSubElems().Where(e => e is BehaviourTree).Cast<BehaviourTree>().ToList();
+                        List<BehaviourTree> subBTsList = sender.currentElem.GetMaxParent().GetSubElems(true).Where(e => e is BehaviourTree).Cast<BehaviourTree>().ToList();
 
                         GUI.enabled = subBTsList.Count > 0;
                         if (GUILayout.Button(currentPerception.elemName, EditorStyles.toolbarDropDown))
@@ -552,7 +557,8 @@ public class TransitionGUI : GUIElement
                 {
                     DefaultPerceptionEditor();
                 }
-                else {
+                else
+                {
                     // If the parent node is a non-random sequence we add an index selector
                     GUILayout.BeginHorizontal();
                     GUILayout.Space(10);

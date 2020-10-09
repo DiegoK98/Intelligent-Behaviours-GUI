@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -124,7 +125,7 @@ public abstract class ClickableElement : GUIElement
     /// Returns the list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/> 
     /// </summary>
     /// <returns>The list of <see cref="ClickableElement"/> that exist inside each node of this <see cref="ClickableElement"/></returns>
-    public abstract List<ClickableElement> GetSubElems();
+    public abstract List<ClickableElement> GetSubElems(bool includeSelf = false);
 
     /// <summary>
     /// Add <paramref name="trans"/> as an Exit transition
@@ -274,5 +275,15 @@ public abstract class ClickableElement : GUIElement
     public void RemoveWarning(Warning warning)
     {
         warnings.Remove(warning);
+    }
+
+    public ClickableElement GetMaxParent()
+    {
+        ClickableElement maxParent = this;
+
+        while (maxParent.parent)
+            maxParent = maxParent.parent;
+
+        return maxParent;
     }
 }

@@ -1107,7 +1107,13 @@ public class NodeEditorUtilities
         switch (perception.type)
         {
             case perceptionType.Timer:
-                result = perception.timerNumber.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f";
+                float timerInSeconds;
+                if (perception.timerInSeconds)
+                    timerInSeconds = perception.timerNumber;
+                else
+                    timerInSeconds = perception.timerNumber * 1000;
+
+                result = timerInSeconds.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f";
                 break;
             case perceptionType.IsInState:
                 result = CleanName(perception.elemName) + subFSMEnding + ", " + "\"" + perception.stateName + "\"";
