@@ -1111,7 +1111,7 @@ public class NodeEditorUtilities
                 if (perception.timerInSeconds)
                     timerInSeconds = perception.timerNumber;
                 else
-                    timerInSeconds = perception.timerNumber * 1000;
+                    timerInSeconds = perception.timerNumber * 0.001f;
 
                 result = timerInSeconds.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "f";
                 break;
