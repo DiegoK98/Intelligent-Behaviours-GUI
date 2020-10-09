@@ -1126,7 +1126,7 @@ public class NodeEditorUtilities
                 result = uniqueNamer.GetName(perception.firstChild.identificator) + ", " + uniqueNamer.GetName(perception.secondChild.identificator);
                 break;
             case perceptionType.Custom:
-                result = "new " + uniqueNamer.GetName(perception.identificator) + "()";
+                result = "new " + CleanName(perception.customName) + "Perception()";
                 break;
         }
 
