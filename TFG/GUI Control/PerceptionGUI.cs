@@ -32,7 +32,7 @@ public class PerceptionGUI : GUIElement
     /// <summary>
     /// Change this to get the timer to work in ms
     /// </summary>
-    public bool timerInSeconds = false;
+    public bool timerInSeconds = true;
 
     public string timerUnit
     {

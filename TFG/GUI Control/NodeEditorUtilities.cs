@@ -44,13 +44,13 @@ public class NodeEditorUtilities
         + tab + "{\n"
         + tab + tab + "// Perceptions\n"
         + tab + tab + "// Modify or add new Perceptions, see the guide for more\n"
-        + tab + tab + "#PERCEPIONS#\n"
+        + tab + tab + "#PERCEPTIONS#\n"
         + tab + tab + "// States\n"
         + tab + tab + "#STATES#\n"
         + tab + tab + "// Transitions#TRANSITIONS#\n"
         + tab + tab + "\n"
         + tab + tab + "// ExitPerceptions\n"
-        + tab + tab + "#EXIT_PERCEPIONS#\n"
+        + tab + tab + "#EXIT_PERCEPTIONS#\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -73,7 +73,7 @@ public class NodeEditorUtilities
         + tab + tab + "#SETROOT#\n"
         + tab + tab + "\n"
         + tab + tab + "// ExitPerceptions\n"
-        + tab + tab + "#EXIT_PERCEPIONS#\n"
+        + tab + tab + "#EXIT_PERCEPTIONS#\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -95,7 +95,7 @@ public class NodeEditorUtilities
         + tab + tab + "#ACTIONS#\n"
         + tab + tab + "\n"
         + tab + tab + "// ExitPerceptions\n"
-        + tab + tab + "#EXIT_PERCEPIONS#\n"
+        + tab + tab + "#EXIT_PERCEPTIONS#\n"
         + tab + tab + "// ExitTransitions\n"
         + tab + tab + "#EXITS#\n"
         + tab + "}";
@@ -740,7 +740,7 @@ public class NodeEditorUtilities
         switch (elem.GetType().ToString())
         {
             case nameof(FSM):
-                templateSub = templateSub.Replace("#PERCEPIONS#", GetPerceptions(ref templateText, elem, engineEnding, folderPath));
+                templateSub = templateSub.Replace("#PERCEPTIONS#", GetPerceptions(ref templateText, elem, engineEnding, folderPath));
                 templateSub = templateSub.Replace("#STATES#", GetStates(ref templateText, elem, engineEnding, ref subElems));
                 templateSub = templateSub.Replace("#TRANSITIONS#", GetTransitions(elem, engineEnding));
                 break;
@@ -755,7 +755,7 @@ public class NodeEditorUtilities
                 break;
         }
 
-        templateSub = templateSub.Replace("#EXIT_PERCEPIONS#", GetExitPerceptions(ref templateText, elem, engineEnding, folderPath));
+        templateSub = templateSub.Replace("#EXIT_PERCEPTIONS#", GetExitPerceptions(ref templateText, elem, engineEnding, folderPath));
         templateSub = templateSub.Replace("#EXITS#", GetExitTransitions(elem, engineEnding));
 
         return templateSub;
