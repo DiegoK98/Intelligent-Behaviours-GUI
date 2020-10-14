@@ -74,6 +74,7 @@ public class PopupWindow : EditorWindow
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
         window.ShowModalUtility();
 
+        window.titleContent = new GUIContent("Delete");
         window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
     }
 
@@ -91,8 +92,11 @@ public class PopupWindow : EditorWindow
         exportingElem = elem;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+
+        window.titleContent = new GUIContent("Export");
         window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
-        window.ShowPopup();
+
+        window.ShowModalUtility();
     }
 
     /// <summary>
@@ -107,8 +111,11 @@ public class PopupWindow : EditorWindow
         PopupType = typeOfPopup.Warning;
 
         PopupWindow window = ScriptableObject.CreateInstance<PopupWindow>();
+
+        window.titleContent = new GUIContent("Warning");
         window.position = new Rect(senderEditor.position.center.x - width / 2, senderEditor.position.center.y - height / 2, width, height);
-        window.ShowPopup();
+
+        window.ShowModalUtility();
     }
 
     /// <summary>
