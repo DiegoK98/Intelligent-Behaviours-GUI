@@ -941,8 +941,10 @@ public class NodeEditorUtilities
                             break;
                     }
 
-                    TransitionGUI transition = elem.transitions.Where(t => !t.isExit && t.fromNode.Equals(node)).FirstOrDefault();
-                    result += nodeMachineName + ".CreateExitTransition(\"" + nodeMachineName + "Exit" + "\", " + className + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + CleanName(transition.toNode.nodeName) + ");\n" + tab + tab;
+                    List<TransitionGUI> exitTransitionsList = elem.transitions.Where(t => !t.isExit && t.fromNode.Equals(node)).ToList();
+
+                    foreach (TransitionGUI transition in exitTransitionsList)
+                        result += nodeMachineName + ".CreateExitTransition(\"" + nodeMachineName + "Exit" + "\", " + className + ", " + uniqueNamer.GetName(transition.rootPerception.identificator) + ", " + CleanName(transition.toNode.nodeName) + ");\n" + tab + tab;
                     break;
 
                 // Parent machine is BehaviourTree
@@ -1030,7 +1032,7 @@ public class NodeEditorUtilities
         {
             string transitionName = CleanName(transition.transitionName);
 
-            result += RecursivePerceptions(ref templateText, transition.rootPerception, transitionName, machineName, folderPath);
+            result += RecursivePerceptions(ref templateText, transition.rootPerception, machineName, folderPath, transitionName);
         }
 
         return result;
@@ -1044,7 +1046,7 @@ public class NodeEditorUtilities
     /// <param name="machineName"></param>
     /// <param name="folderPath"></param>
     /// <returns></returns>
-    private static string RecursivePerceptions(ref string templateText, PerceptionGUI perception, string transitionName, string machineName, string folderPath)
+    private static string RecursivePerceptions(ref string templateText, PerceptionGUI perception, string machineName, string folderPath, string transitionName = null)
     {
         string res = "";
         string auxAndOr = "";
@@ -1052,8 +1054,8 @@ public class NodeEditorUtilities
         if (perception.type == perceptionType.And || perception.type == perceptionType.Or)
         {
             auxAndOr = perception.type.ToString();
-            res += RecursivePerceptions(ref templateText, perception.firstChild, transitionName, machineName, folderPath);
-            res += RecursivePerceptions(ref templateText, perception.secondChild, transitionName, machineName, folderPath);
+            res += RecursivePerceptions(ref templateText, perception.firstChild, machineName, folderPath);
+            res += RecursivePerceptions(ref templateText, perception.secondChild, machineName, folderPath);
         }
 
         string typeName;
@@ -1087,7 +1089,18 @@ public class NodeEditorUtilities
             typeName = perception.type.ToString();
         }
 
-        string perceptionName = uniqueNamer.AddName(perception.identificator, typeName + "Perception");
+        string perceptionName;
+
+        if (string.IsNullOrEmpty(transitionName))
+        {
+            perceptionName = typeName + "Perception";
+        }
+        else
+        {
+            perceptionName = transitionName + "Perception";
+        }
+
+        perceptionName = uniqueNamer.AddName(perception.identificator, perceptionName);
 
         templateText = templateText.Replace("#VAR_DECL#", "private " + typeName + "Perception " + perceptionName + ";\n" + tab + "#VAR_DECL#");
         res += perceptionName + " = " + machineName + ".Create" + auxAndOr + "Perception<" + typeName + "Perception" + ">(" + GetPerceptionParameters(perception) + ");\n" + tab + tab;
@@ -1106,6 +1119,9 @@ public class NodeEditorUtilities
 
         switch (perception.type)
         {
+            case perceptionType.Value:
+                result = "() => false /*Replace this with a boolean function*/";
+                break;
             case perceptionType.Timer:
                 float timerInSeconds;
                 if (perception.timerInSeconds)

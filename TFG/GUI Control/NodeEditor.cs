@@ -967,7 +967,7 @@ public class NodeEditor : EditorWindow
                         });
                     }
 
-                    foreach (TransitionGUI elem in currentElem.transitions.Where(t => ((BehaviourNode)t.fromNode).type == behaviourType.Sequence && !((BehaviourNode)t.fromNode).isRandom && ((BehaviourTree)currentElem).ChildrenCount((BehaviourNode)t.fromNode) > 1))
+                    foreach (TransitionGUI elem in currentElem.transitions.Where(t => (((BehaviourNode)t.fromNode).type == behaviourType.Sequence && !((BehaviourNode)t.fromNode).isRandom) || ((BehaviourNode)t.fromNode).type == behaviourType.Selector && ((BehaviourTree)currentElem).ChildrenCount((BehaviourNode)t.fromNode) > 1))
                     {
                         if (elem.isExit || elem.fromNode is null || elem.toNode is null)
                             continue;

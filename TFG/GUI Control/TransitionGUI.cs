@@ -97,7 +97,7 @@ public class TransitionGUI : GUIElement
         {
             ((BehaviourNode)toNode).index = ((BehaviourNode)to).index;
         }
-        else if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
+        else if (fromNode is BehaviourNode && ((((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom) || ((BehaviourNode)fromNode).type == behaviourType.Selector))
         {
             ((BehaviourNode)toNode).index = ((BehaviourTree)parent).ChildrenCount((BehaviourNode)fromNode) + 1;
         }
@@ -129,7 +129,7 @@ public class TransitionGUI : GUIElement
 
         this.isExit = isExit;
 
-        if (fromNode is BehaviourNode && ((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom)
+        if (fromNode is BehaviourNode && ((((BehaviourNode)fromNode).type == behaviourType.Sequence && !((BehaviourNode)fromNode).isRandom) || ((BehaviourNode)fromNode).type == behaviourType.Selector))
         {
             ((BehaviourNode)toNode).index = ((BehaviourNode)to).index;
         }

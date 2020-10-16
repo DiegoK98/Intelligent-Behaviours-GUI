@@ -139,7 +139,7 @@ public class BehaviourNode : BaseNode
     public override void DrawWindow()
     {
         // If this node is a non-random sequence, check if there's a new child or one was deleted, then ReIndex
-        if (this.type == behaviourType.Sequence && !this.isRandom)
+        if ((this.type == behaviourType.Sequence && !this.isRandom) || this.type == behaviourType.Selector)
         {
             List<BehaviourNode> children = ((BehaviourTree)parent).ChildrenGet(this).OrderBy(n => n.index).ToList();
             int updatedChildrenCount = children.Count;
