@@ -113,6 +113,8 @@ public class NodeEditor : EditorWindow
 
     private static bool CtrlDown = false;
 
+    private Texture BoxTexture;
+
     /// <summary>
     /// This will be called when the user opens the window
     /// </summary>
@@ -141,7 +143,7 @@ public class NodeEditor : EditorWindow
 
         // Show the GUI elements that are over the rest of the GUI
         #region GUI overlay elements
-
+        ShowColorLegend();
         ShowTopBar();
         if (currentElem != null)
         {
@@ -1253,6 +1255,193 @@ public class NodeEditor : EditorWindow
     }
 
     /// <summary>
+    /// Draws the color legend
+    /// </summary>
+    private void ShowColorLegend()
+    {
+        float rightOffset = 200;
+        float bottomOffset = 100;
+        float itemWidth = 15;
+        float itemHeight = 5;
+        string content = "";
+
+        Rect panel = new Rect(position.width - (rightOffset + 10), position.height - (bottomOffset + 35), rightOffset, bottomOffset);
+        float leftPos = panel.xMin + 10;
+        float topStartPos = panel.yMin + 3;
+
+        // Write the content of the legend
+        if (currentElem)
+            switch (currentElem.GetType().ToString())
+            {
+                case nameof(FSM):
+                    content = "Entry State\nConnected State\nDisconnected State\nTransition Box\nExit Transition Box";
+                    break;
+                case nameof(BehaviourTree):
+                    content = "Sequence Node\nSelector node\nLeaf Node\nDecorator Node\nExit Transition Box";
+                    break;
+                case nameof(UtilitySystem):
+                    content = "Action Node\nFusion Node\nCurve Node\nVariable Node\nExit Transition Box";
+                    break;
+            }
+        else
+            content = "FSM\nBehaviour Tree\nUtility System";
+
+        // Draw panel
+        GUI.Box(panel, content, new GUIStyle(GUI.skin.box)
+        {
+            alignment = TextAnchor.UpperLeft,
+            contentOffset = new Vector2(30, 10),
+            normal = new GUIStyleState()
+            {
+                background = GetLegendRect("Box", null)
+            },
+        });
+
+        // Draw the little rects with the colors
+        if (currentElem)
+        {
+            switch (currentElem.GetType().ToString())
+            {
+                case nameof(FSM):
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(StateNode), stateType.Entry)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(StateNode), stateType.Default)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(StateNode), stateType.Unconnected)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(TransitionGUI), false)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(TransitionGUI), true)
+                        },
+                    });
+                    break;
+                case nameof(BehaviourTree):
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(BehaviourNode), behaviourType.Sequence)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(BehaviourNode), behaviourType.Selector)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(BehaviourNode), behaviourType.Leaf)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(BehaviourNode), behaviourType.LoopN)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(TransitionGUI), true)
+                        },
+                    });
+                    break;
+                case nameof(UtilitySystem):
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(UtilityNode), utilityType.Action)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(UtilityNode), utilityType.Fusion)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(UtilityNode), utilityType.Curve)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(UtilityNode), utilityType.Variable)
+                        },
+                    });
+                    GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+                    {
+                        normal = new GUIStyleState()
+                        {
+                            background = GetLegendRect(nameof(TransitionGUI), true)
+                        },
+                    });
+                    break;
+            }
+        }
+        else
+        {
+            GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+            {
+                normal = new GUIStyleState()
+                {
+                    background = GetLegendRect(nameof(FSM), null)
+                },
+            });
+            GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+            {
+                normal = new GUIStyleState()
+                {
+                    background = GetLegendRect(nameof(BehaviourTree), null)
+                },
+            });
+            GUI.Box(new Rect(leftPos, topStartPos += 15, itemWidth, itemHeight), "", new GUIStyle()
+            {
+                normal = new GUIStyleState()
+                {
+                    background = GetLegendRect(nameof(UtilitySystem), null)
+                },
+            });
+        }
+    }
+
+    /// <summary>
     /// Draws the top bar elements
     /// </summary>
     private void ShowTopBar()
@@ -1586,6 +1775,137 @@ public class NodeEditor : EditorWindow
             resultTexture.SetPixels32(pixels);
             resultTexture.Apply();
         }
+
+        return resultTexture;
+    }
+
+    /// <summary>
+    /// Configures the Texture using the sprite resources and returns it
+    /// </summary>
+    /// <param name="elem"></param>
+    /// <returns></returns>
+    private Texture2D GetLegendRect(string type, object subType)
+    {
+        Color col = Color.white;
+
+        switch (type)
+        {
+            // Main box
+            case "Box":
+                col = new Color(0, 0, 0, 0.1f);
+                break;
+
+            // FSM
+            case nameof(FSM):
+                col = Color.blue;
+                break;
+
+            // BT
+            case nameof(BehaviourTree):
+                col = Color.cyan;
+                break;
+
+            // US
+            case nameof(UtilitySystem):
+                col = new Color(0, 0.75f, 0, 1); //dark green
+                break;
+
+            // FSM Node
+            case nameof(StateNode):
+                stateType StType = (stateType)subType;
+
+                switch (StType)
+                {
+                    case stateType.Default:
+                        col = Color.grey;
+                        break;
+                    case stateType.Entry:
+                        col = Color.green;
+                        break;
+                    case stateType.Unconnected:
+                        col = Color.red;
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+
+            // BehaviourNode
+            case nameof(BehaviourNode):
+                behaviourType BNType = (behaviourType)subType;
+
+                switch (BNType)
+                {
+                    case behaviourType.Sequence:
+                        col = Color.yellow;
+                        break;
+                    case behaviourType.Selector:
+                        col = new Color(1, 0.5f, 0, 1); //orange
+                        break;
+                    case behaviourType.Leaf:
+                        col = new Color(0, 0.75f, 0, 1); //dark green
+                        break;
+                    case behaviourType.LoopN:
+                    case behaviourType.LoopUntilFail:
+                    case behaviourType.Inverter:
+                    case behaviourType.DelayT:
+                    case behaviourType.Succeeder:
+                    case behaviourType.Conditional:
+                        col = Color.grey;
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+
+            // UtilityNode
+            case nameof(UtilityNode):
+                utilityType UNType = (utilityType)subType;
+
+                switch (UNType)
+                {
+                    case utilityType.Variable:
+                        col = new Color(1, 0.5f, 0, 1); //orange
+                        break;
+                    case utilityType.Fusion:
+                        col = Color.yellow;
+                        break;
+                    case utilityType.Action:
+                        col = new Color(0, 0.75f, 0, 1); //dark green
+                        break;
+                    case utilityType.Curve:
+                        col = Color.blue;
+                        break;
+                    default:
+                        col = Color.white;
+                        break;
+                }
+                break;
+
+            // FSM Transition
+            case nameof(TransitionGUI):
+                if ((bool)subType)
+                    col = new Color(0.37f, 0, 0.5f, 1); //purple
+                else
+                    col = Color.yellow;
+                break;
+            default:
+                col = Color.clear;
+                break;
+        }
+
+        Color[] pix = new Color[2 * 2];
+
+        for (int i = 0; i < pix.Length; ++i)
+        {
+            pix[i] = col;
+        }
+
+        Texture2D resultTexture = new Texture2D(2, 2);
+        resultTexture.SetPixels(pix);
+        resultTexture.Apply();
 
         return resultTexture;
     }
