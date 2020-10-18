@@ -104,7 +104,12 @@ public class NodeEditor : EditorWindow
     /// <summary>
     /// Fixed offset for the <see cref="TransitionGUI.windowRect"/> when there's two of them in the same pair of nodes
     /// </summary>
-    private static float pairTransitionsOffset = 20;
+    private static float doubleTransRectOffset = 35;
+
+    /// <summary>
+    /// Fixed offset for the <see cref="TransitionGUI.windowRect"/> when there's two of them in the same pair of nodes
+    /// </summary>
+    private static float doubleTransCurveOffset = 20;
 
     private static bool CtrlDown = false;
 
@@ -888,23 +893,23 @@ public class NodeEditor : EditorWindow
 
                             if (ang > -45 && ang <= 45)
                             {
-                                offset.y = pairTransitionsOffset;
-                                offset.x = pairTransitionsOffset;
+                                offset.y = doubleTransRectOffset;
+                                offset.x = doubleTransRectOffset;
                             }
                             else if (ang > 45 && ang <= 135)
                             {
-                                offset.x = pairTransitionsOffset;
-                                offset.y = -pairTransitionsOffset;
+                                offset.x = doubleTransRectOffset;
+                                offset.y = -doubleTransRectOffset;
                             }
                             else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
                             {
-                                offset.y = -pairTransitionsOffset;
-                                offset.x = -pairTransitionsOffset;
+                                offset.y = -doubleTransRectOffset;
+                                offset.x = -doubleTransRectOffset;
                             }
                             else if (ang > -135 && ang <= -45)
                             {
-                                offset.x = -pairTransitionsOffset;
-                                offset.y = pairTransitionsOffset;
+                                offset.x = -doubleTransRectOffset;
+                                offset.y = doubleTransRectOffset;
                             }
                         }
 
@@ -1960,8 +1965,8 @@ public class NodeEditor : EditorWindow
 
                 if (isDouble)
                 {
-                    start.y += pairTransitionsOffset;
-                    end.y += pairTransitionsOffset;
+                    start.y += doubleTransCurveOffset;
+                    end.y += doubleTransCurveOffset;
                 }
             }
             else if (ang > 45 && ang <= 135)
@@ -1973,8 +1978,8 @@ public class NodeEditor : EditorWindow
 
                 if (isDouble)
                 {
-                    start.x += pairTransitionsOffset;
-                    end.x += pairTransitionsOffset;
+                    start.x += doubleTransCurveOffset;
+                    end.x += doubleTransCurveOffset;
                 }
             }
             else if ((ang > 135 && ang <= 180) || (ang > -180 && ang <= -135))
@@ -1986,8 +1991,8 @@ public class NodeEditor : EditorWindow
 
                 if (isDouble)
                 {
-                    start.y -= pairTransitionsOffset;
-                    end.y -= pairTransitionsOffset;
+                    start.y -= doubleTransCurveOffset;
+                    end.y -= doubleTransCurveOffset;
                 }
             }
             else if (ang > -135 && ang <= -45)
@@ -1999,8 +2004,8 @@ public class NodeEditor : EditorWindow
 
                 if (isDouble)
                 {
-                    start.x -= pairTransitionsOffset;
-                    end.x -= pairTransitionsOffset;
+                    start.x -= doubleTransCurveOffset;
+                    end.x -= doubleTransCurveOffset;
                 }
             }
 
