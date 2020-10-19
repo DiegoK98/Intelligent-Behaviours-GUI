@@ -336,7 +336,7 @@ public class NodeEditor : EditorWindow
                             case nameof(FSM):
                                 if (!clickedOnWindow && !clickedOnTransition)
                                 {
-                                    menu.AddItem(new GUIContent("Add Node"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
+                                    menu.AddItem(new GUIContent("Add State"), false, ContextCallback, new string[] { "Node", selectIndex.ToString() });
                                 }
                                 else if (clickedOnWindow)
                                 {
